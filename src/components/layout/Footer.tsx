@@ -1,4 +1,5 @@
 import React from 'react'
+import Logo from '../common/Logo'
 
 export default function Footer() {
   const links = [
@@ -30,7 +31,7 @@ export default function Footer() {
 
   return (
     <footer className="relative bg-black border-t border-white/10 text-white overflow-hidden font-sans">
-      {/* Video Background (Giữ chính xác 100% video & lớp phủ như project cũ để hiện ánh xanh mượt) */}
+      {/* Video Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <video
           autoPlay
@@ -40,7 +41,7 @@ export default function Footer() {
           className="w-full h-full object-cover"
           src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260302_085844_21a8f4b3-dea5-4ede-be16-d53f6973bb14.mp4"
         />
-        {/* Gradient Overlay cho hiệu ứng ánh xanh kim loại sâu thẳm chuẩn như cũ */}
+        {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
       </div>
 
@@ -53,15 +54,8 @@ export default function Footer() {
             {/* Brand Section */}
             <div className="md:col-span-5 lg:col-span-4 flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#0ea5b7] flex items-center justify-center font-bold text-white shadow-md shadow-[#0ea5b7]/30">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                  </div>
-                  <div className="font-black text-xl text-white tracking-wide">
-                    Hybrid<span className="text-[#0ea5b7]">Wash</span>
-                  </div>
+                <div className="mb-4">
+                  <Logo size="md" />
                 </div>
                 <p className="text-sm text-white/70 leading-relaxed mb-6 max-w-sm">
                   Hệ thống rửa xe tự động thông minh hàng đầu. Đặt lịch nhanh chóng, tích điểm thành viên và chăm sóc phương tiện chuẩn 5 sao.

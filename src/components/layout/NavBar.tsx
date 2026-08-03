@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Car, Menu, X, Calendar, User, Sparkles } from 'lucide-react'
+import { Menu, X, Calendar, User, Sparkles } from 'lucide-react'
 import ThemeToggleButton from '../common/ThemeToggleButton'
+import Logo from '../common/Logo'
 
 export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -16,29 +17,16 @@ export default function NavBar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
           ? 'bg-white/90 dark:bg-dark-900/85 backdrop-blur-md border-b border-slate-200 dark:border-white/10 py-3 shadow-md dark:shadow-2xl shadow-brand-500/5'
           : 'bg-gradient-to-b from-slate-100/90 via-slate-100/50 to-transparent dark:from-dark-900/90 dark:via-dark-900/40 dark:to-transparent py-5'
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-500 to-cyan-400 p-0.5 shadow-lg shadow-brand-500/30 group-hover:shadow-brand-500/50 transition-all">
-              <div className="w-full h-full bg-white dark:bg-dark-900 rounded-[10px] flex items-center justify-center">
-                <Car className="w-5 h-5 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform" />
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-1">
-                HYBRID<span className="gradient-text">WASH</span>
-              </span>
-              <span className="text-[10px] tracking-widest uppercase text-slate-500 dark:text-slate-400 font-medium">
-                Car Detailing & Care
-              </span>
-            </div>
+          {/* Logo Brand */}
+          <a href="#" className="group">
+            <Logo size="md" />
           </a>
 
           {/* Desktop Navigation */}
