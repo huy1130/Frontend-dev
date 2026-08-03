@@ -1,17 +1,24 @@
 import React from 'react'
 import { Sparkles, Check, Clock, Award, ArrowRight } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { mockComboPackages } from '../../mock/homeData'
 
 export default function ComboPackages() {
   return (
-    <section id="combos" className="py-24 bg-slate-50 dark:bg-dark-900 relative transition-colors duration-300">
+    <section id="combos" className="py-24 bg-slate-50 dark:bg-dark-900 relative transition-colors duration-300 overflow-hidden">
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-96 bg-brand-500/10 blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="text-center max-w-3xl mx-auto space-y-4 mb-16"
+        >
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
             Tiết Kiệm Lên Đến 30%
           </div>
@@ -21,13 +28,30 @@ export default function ComboPackages() {
           <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg">
             Được thiết kế tối ưu giữa chi phí và hiệu quả bảo vệ xe. Lựa chọn hàng đầu của hơn 15,000+ chủ xe.
           </p>
-        </div>
+        </motion.div>
 
         {/* Combo Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <motion.div 
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-50px' }}
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.15 }
+            }
+          }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
+        >
           {mockComboPackages.map((combo) => (
-            <div
+            <motion.div
               key={combo.id}
+              variants={{
+                hidden: { opacity: 0, y: 40, scale: 0.95 },
+                show: { opacity: 1, y: 0, scale: combo.isBestSeller ? 1.05 : 1, transition: { duration: 0.5, ease: 'easeOut' } }
+              }}
+              whileHover={{ y: -8, transition: { duration: 0.2 } }}
               className={`rounded-3xl p-8 border flex flex-col justify-between relative transition-all duration-300 ${
                 combo.isBestSeller
                   ? 'border-brand-500 shadow-2xl shadow-brand-500/20 bg-white dark:bg-dark-800 scale-105 z-20'
@@ -112,9 +136,9 @@ export default function ComboPackages() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
 
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
       </div>
     </section>
