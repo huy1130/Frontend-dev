@@ -4,6 +4,22 @@ Hệ thống đặt lịch rửa xe, chăm sóc xe detailing & tích điểm th�
 
 ---
 
+## 💻 Tech Stack & Thư Viện Đã Setup
+
+- **Core Framework**: [React 19](https://react.dev/) + [TypeScript 5](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite 6](https://vitejs.dev/) - Siêu nhanh & tối ưu bundler
+- **Routing**: [React Router DOM v7](https://reactrouter.com/) - Quản lý điều hướng trang & phân quyền
+- **Styling & UI Systems**:
+  - **Tailwind CSS v3** + PostCSS + Autoprefixer
+  - **Design System**: Dark Mode Theme, Glassmorphism backdrop, Custom Gradients & Micro-animations
+  - **Utility Helpers**: `clsx` & `tailwind-merge` (xử lý kết hợp Tailwind class động)
+- **UI Components & Icons**:
+  - **Lucide React**: Bộ icon vector phong phú & hiện đại
+  - **Framer Motion v12**: Thư viện xử lý hiệu ứng chuyển động & animation mượt mà
+  - **Sonner**: Thư viện thông báo Toast chuyên nghiệp
+
+---
+
 ## 🛠️ 1. Hướng Dẫn Chạy Dự Án (Getting Started)
 
 Cài đặt phụ thuộc và khởi chạy dự án ở môi trường local:
