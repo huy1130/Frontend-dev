@@ -15,7 +15,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-dark-900 text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-white">
       <NavBar />
-      <main className="flex-1">
+      <main className="flex-1 pt-[72px] sm:pt-[76px]">
         <Hero />
         <HowItWorks />
         <Features />
