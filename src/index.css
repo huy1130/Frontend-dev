@@ -6,24 +6,44 @@
   :root {
     color-scheme: dark;
   }
-  
+
+  html.light {
+    color-scheme: light;
+  }
+
   body {
     background-color: #0b0f17;
     color: #f1f5f9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  html.light body {
+    background-color: #f8fafc;
+    color: #0f172a;
   }
 }
 
-/* Glassmorphism custom classes */
+/* Glassmorphism custom classes - Dark Mode Default */
 .glass-panel {
-  background: rgba(17, 24, 39, 0.7);
+  background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glassmorphism custom classes - Light Mode */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06);
 }
 
 .glass-panel-hover {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .glass-panel-hover:hover {
   background: rgba(31, 41, 55, 0.85);
   border-color: rgba(56, 189, 248, 0.3);
@@ -31,8 +51,21 @@
   transform: translateY(-2px);
 }
 
+html.light .glass-panel-hover:hover {
+  background: #ffffff;
+  border-color: rgba(12, 141, 228, 0.4);
+  box-shadow: 0 12px 32px -8px rgba(12, 141, 228, 0.18);
+}
+
+/* Gradient text utility */
 .gradient-text {
   background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+html.light .gradient-text {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #1d4ed8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -43,8 +76,18 @@
   -webkit-text-fill-color: transparent;
 }
 
+html.light .gradient-gold {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .heading-glow {
   text-shadow: 0 0 40px rgba(56, 189, 248, 0.35);
+}
+
+html.light .heading-glow {
+  text-shadow: none;
 }
 
 /* Custom Scrollbar */
@@ -54,10 +97,13 @@
 ::-webkit-scrollbar-track {
   background: #0b0f17;
 }
+html.light ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
 ::-webkit-scrollbar-thumb {
   background: #1f2937;
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
 }

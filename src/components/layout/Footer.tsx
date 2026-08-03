@@ -1,97 +1,136 @@
 import React from 'react'
-import { Car, Phone, Mail, MapPin, Clock, ShieldCheck, Heart } from 'lucide-react'
 
 export default function Footer() {
+  const links = [
+    {
+      title: 'KHÁM PHÁ',
+      items: [
+        { name: 'Trang chủ', href: '#' },
+        { name: 'Tính năng', href: '#features' },
+        { name: 'Hạng thành viên', href: '#tiers' },
+        { name: 'Cách hoạt động', href: '#how-it-works' },
+      ],
+    },
+    {
+      title: 'ỨNG DỤNG',
+      items: [
+        { name: 'Đặt lịch rửa xe', href: '#booking' },
+        { name: 'Quản lý phương tiện', href: '#vehicles' },
+        { name: 'Lịch sử đặt lịch', href: '#bookings' },
+      ],
+    },
+    {
+      title: 'HỖ TRỢ & LIÊN HỆ',
+      items: [
+        { name: 'Chi nhánh hệ thống', href: '#branches' },
+        { name: 'Hotline: 0933 003 999', href: 'tel:0933003999' },
+      ],
+    },
+  ]
+
   return (
-    <footer className="bg-dark-900 border-t border-white/10 pt-16 pb-12 relative overflow-hidden">
-      {/* Glow effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-brand-500/10 blur-[100px] pointer-events-none" />
+    <footer className="relative bg-black border-t border-white/10 text-white overflow-hidden font-sans">
+      {/* Video Background (Giữ chính xác 100% video & lớp phủ như project cũ để hiện ánh xanh mượt) */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260302_085844_21a8f4b3-dea5-4ede-be16-d53f6973bb14.mp4"
+        />
+        {/* Gradient Overlay cho hiệu ứng ánh xanh kim loại sâu thẳm chuẩn như cũ */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90" />
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/10">
-          
-          {/* Brand Info */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-cyan-400 p-0.5 shadow-lg shadow-brand-500/30">
-                <div className="w-full h-full bg-dark-900 rounded-[10px] flex items-center justify-center">
-                  <Car className="w-5 h-5 text-brand-400" />
+      {/* Main Content */}
+      <div className="relative z-10 px-6 md:px-16 py-16 md:py-20">
+        <div className="max-w-6xl mx-auto">
+          {/* Main Footer Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
+            
+            {/* Brand Section */}
+            <div className="md:col-span-5 lg:col-span-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#0ea5b7] flex items-center justify-center font-bold text-white shadow-md shadow-[#0ea5b7]/30">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <div className="font-black text-xl text-white tracking-wide">
+                    Hybrid<span className="text-[#0ea5b7]">Wash</span>
+                  </div>
                 </div>
+                <p className="text-sm text-white/70 leading-relaxed mb-6 max-w-sm">
+                  Hệ thống rửa xe tự động thông minh hàng đầu. Đặt lịch nhanh chóng, tích điểm thành viên và chăm sóc phương tiện chuẩn 5 sao.
+                </p>
               </div>
-              <span className="text-2xl font-black text-white">
-                HYBRID<span className="gradient-text">WASH</span>
-              </span>
+
+              {/* Premium Social Icons */}
+              <div className="flex gap-3">
+                <a
+                  href="#"
+                  aria-label="Facebook"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#0ea5b7] border border-white/10 hover:border-[#0ea5b7] flex items-center justify-center text-white/80 hover:text-white transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-[#0ea5b7]/20"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  aria-label="Instagram"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#0ea5b7] border border-white/10 hover:border-[#0ea5b7] flex items-center justify-center text-white/80 hover:text-white transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-[#0ea5b7]/20"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051c-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  aria-label="TikTok"
+                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-[#0ea5b7] border border-white/10 hover:border-[#0ea5b7] flex items-center justify-center text-white/80 hover:text-white transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-[#0ea5b7]/20"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.99-1.72-.08-.07-.17-.14-.24-.22v6.56c0 1.94-.48 3.93-1.63 5.49-1.16 1.56-2.99 2.58-4.93 2.78-1.92.2-3.97-.24-5.46-1.51-1.49-1.26-2.36-3.26-2.22-5.21.14-1.96 1.34-3.79 3.09-4.7 1.65-.86 3.65-.96 5.37-.24v4.09c-1.12-.55-2.52-.45-3.5 0.35-.98.79-1.37 2.22-1.02 3.42.35 1.19 1.52 2.04 2.77 2.05 1.25.01 2.45-.78 2.83-1.96.11-.35.15-.72.15-1.09V0l.02.02z" />
+                  </svg>
+                </a>
+              </div>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-              Hệ thống quản lý và chăm sóc xe thông minh hàng đầu. Trải nghiệm dịch vụ rửa xe sinh thái, dọn nội thất chuyên sâu và phủ Ceramic bảo vệ bề mặt sơn đạt tiêu chuẩn 5 sao.
-            </p>
-            <div className="flex items-center gap-4 pt-2">
-              <div className="flex items-center gap-2 text-xs text-brand-400 font-semibold bg-brand-500/10 px-3 py-1.5 rounded-full border border-brand-500/20">
-                <ShieldCheck className="w-4 h-4" />
-                Chuẩn quy trình Châu Âu
-              </div>
-            </div>
-          </div>
 
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h4 className="text-white font-bold text-base tracking-wide">Dịch Vụ Nổi Bật</h4>
-            <ul className="space-y-2.5 text-sm text-slate-400">
-              <li><a href="#combos" className="hover:text-brand-400 transition-colors">Combo Rửa Xe Sinh Thái</a></li>
-              <li><a href="#combos" className="hover:text-brand-400 transition-colors">Hybrid Ultimate Detailing</a></li>
-              <li><a href="#services" className="hover:text-brand-400 transition-colors">Dọn Nội Thất Hơi Nước</a></li>
-              <li><a href="#services" className="hover:text-brand-400 transition-colors">Tẩy Khoang Máy Chuyên Sâu</a></li>
-              <li><a href="#services" className="hover:text-brand-400 transition-colors">Phủ Ceramic Sơn & Kính</a></li>
-            </ul>
-          </div>
-
-          {/* Customer Care */}
-          <div className="space-y-4">
-            <h4 className="text-white font-bold text-base tracking-wide">Khách Hàng & Thành Viên</h4>
-            <ul className="space-y-2.5 text-sm text-slate-400">
-              <li><a href="#tiers" className="hover:text-brand-400 transition-colors">Chính Sách Tích Điểm</a></li>
-              <li><a href="#tiers" className="hover:text-brand-400 transition-colors">Hạng Thẻ & Đặc Quyền</a></li>
-              <li><a href="#promotions" className="hover:text-brand-400 transition-colors">Voucher Khuyến Mãi</a></li>
-              <li><a href="#how-it-works" className="hover:text-brand-400 transition-colors">Hướng Dẫn Đặt Lịch</a></li>
-              <li><a href="#faq" className="hover:text-brand-400 transition-colors">Câu Hỏi Thường Gặp</a></li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div className="space-y-4">
-            <h4 className="text-white font-bold text-base tracking-wide">Liên Hệ Hotline</h4>
-            <div className="space-y-3 text-sm text-slate-300">
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-brand-400 shrink-0" />
-                <span className="font-semibold text-white">1900 888 999</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-brand-400 shrink-0" />
-                <span>support@hybridwash.vn</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <Clock className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
-                <span>07:00 - 21:00 (Thứ 2 - Chủ Nhật)</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
-                <span>124 Nguyễn Trãi, P. Bến Thành, Q.1, TP.HCM</span>
-              </div>
+            {/* Links Sections Column */}
+            <div className="md:col-span-7 lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {links.map((section, i) => (
+                <div key={i}>
+                  <h4 className="font-bold text-white mb-5 text-sm tracking-wider uppercase">{section.title}</h4>
+                  <ul className="space-y-3.5">
+                    {section.items.map((item, j) => (
+                      <li key={j}>
+                        <a
+                          href={item.href}
+                          className="text-sm text-white/70 hover:text-[#0ea5b7] transition-colors duration-200"
+                        >
+                          {item.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </div>
 
-        </div>
-
-        {/* Bottom copyright */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 HYBRID WASH. All rights reserved. Hệ Thống Chăm Sóc Xe Đẳng Cấp.</p>
-          <div className="flex items-center gap-1">
-            <span>Thiết kế với</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 mx-0.5" />
-            <span>cho trải nghiệm khách hàng tối ưu</span>
+          {/* Bottom copyright bar */}
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
+            <p>© {new Date().getFullYear()} HybridWash. Tất cả các quyền được bảo lưu.</p>
+            <div className="flex gap-5">
+              <a href="#" className="hover:text-white transition-colors duration-200">Điều khoản sử dụng</a>
+              <a href="#" className="hover:text-white transition-colors duration-200">Chính sách bảo mật</a>
+            </div>
           </div>
         </div>
-
       </div>
     </footer>
   )

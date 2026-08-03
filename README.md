@@ -11,7 +11,7 @@ Hệ thống đặt lịch rửa xe, chăm sóc xe detailing & tích điểm th�
 - **Routing**: [React Router DOM v7](https://reactrouter.com/) - Quản lý điều hướng trang & phân quyền
 - **Styling & UI Systems**:
   - **Tailwind CSS v3** + PostCSS + Autoprefixer
-  - **Design System**: Dark Mode Theme, Glassmorphism backdrop, Custom Gradients & Micro-animations
+  - **Design System**: Dual Mode Theme (Dark/Light Toggle nút chuyển giao diện thông minh, lưu localStorage), Glassmorphism backdrop, Custom Gradients & Micro-animations
   - **Utility Helpers**: `clsx` & `tailwind-merge` (xử lý kết hợp Tailwind class động)
 - **UI Components & Icons**:
   - **Lucide React**: Bộ icon vector phong phú & hiện đại

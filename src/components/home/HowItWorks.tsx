@@ -3,26 +3,26 @@ import { CalendarCheck, ClipboardCheck, Sparkles, Award, ArrowRight } from 'luci
 import { mockProcessSteps } from '../../mock/homeData'
 
 const iconMap: Record<string, React.ReactNode> = {
-  CalendarCheck: <CalendarCheck className="w-7 h-7 text-brand-400" />,
-  ClipboardCheck: <ClipboardCheck className="w-7 h-7 text-amber-400" />,
-  Sparkles: <Sparkles className="w-7 h-7 text-cyan-400" />,
-  Award: <Award className="w-7 h-7 text-emerald-400" />,
+  CalendarCheck: <CalendarCheck className="w-7 h-7 text-brand-600 dark:text-brand-400" />,
+  ClipboardCheck: <ClipboardCheck className="w-7 h-7 text-amber-600 dark:text-amber-400" />,
+  Sparkles: <Sparkles className="w-7 h-7 text-cyan-600 dark:text-cyan-400" />,
+  Award: <Award className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />,
 }
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 bg-dark-900 relative">
+    <section id="how-it-works" className="py-24 bg-slate-50 dark:bg-dark-900 relative transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold uppercase tracking-wider">
             Trải Nghiệm Đơn Giản & Minh Bạch
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             QUY TRÌNH DỊCH VỤ <span className="gradient-text">4 BƯỚC THÔNG MINH</span>
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg">
+          <p className="text-slate-600 dark:text-slate-400 text-base sm:text-lg">
             Khác biệt hoàn toàn so với tiệm rửa xe truyền thống. Trải nghiệm dịch vụ chuyên nghiệp, minh bạch và tiết kiệm thời gian tối đa.
           </p>
         </div>
@@ -32,24 +32,24 @@ export default function HowItWorks() {
           {mockProcessSteps.map((step, index) => (
             <div
               key={step.id}
-              className="glass-panel p-8 rounded-3xl relative border border-white/10 glass-panel-hover flex flex-col justify-between group"
+              className="bg-white dark:bg-dark-800/80 p-8 rounded-3xl relative border border-slate-200 dark:border-white/10 glass-panel-hover flex flex-col justify-between group shadow-sm dark:shadow-none"
             >
               {/* Step Badge */}
               <div className="flex items-center justify-between mb-8">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:border-brand-500/40 transition-all shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:border-brand-500/40 transition-all shadow-inner">
                   {iconMap[step.iconName]}
                 </div>
-                <span className="text-4xl font-black text-white/20 group-hover:text-brand-500/40 transition-colors font-sans">
+                <span className="text-4xl font-black text-slate-300 dark:text-white/20 group-hover:text-brand-500/40 transition-colors font-sans">
                   {step.stepNumber}
                 </span>
               </div>
 
               {/* Text */}
               <div className="space-y-3">
-                <h3 className="text-xl font-bold text-white group-hover:text-brand-300 transition-colors">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
                   {step.title}
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -57,7 +57,7 @@ export default function HowItWorks() {
               {/* Connecting indicator arrow for larger screens */}
               {index < mockProcessSteps.length - 1 && (
                 <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
-                  <div className="w-8 h-8 rounded-full bg-dark-800 border border-white/10 flex items-center justify-center text-slate-500">
+                  <div className="w-8 h-8 rounded-full bg-white dark:bg-dark-800 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 shadow-sm">
                     <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
