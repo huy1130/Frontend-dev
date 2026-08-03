@@ -24,7 +24,7 @@ export default function NavBar() {
           <a href="#" className="group shrink-0 flex items-center select-none ml-2 lg:ml-6">
             <div className="relative h-16 md:h-20 shrink-0 transition-transform duration-300 group-hover:scale-105 flex items-center justify-center">
               <img
-                src="/LOGO-HYBRID-transparent.png"
+                src="/logo-wash.png"
                 alt="HYBRIDWASH Logo"
                 className="w-auto h-full object-contain scale-125"
               />

@@ -8,9 +8,9 @@ interface LogoProps {
 
 export default function Logo({ size = 'md', showText = true, className = '' }: LogoProps) {
   const sizeClasses = {
-    sm: 'h-10',
-    md: 'h-14 md:h-16',
-    lg: 'h-16 md:h-20',
+    sm: 'h-12',
+    md: 'h-20 md:h-24',
+    lg: 'h-24 md:h-32',
   }
 
   const currentSize = sizeClasses[size]
@@ -18,7 +18,7 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
   return (
     <div className={`relative ${currentSize} shrink-0 transition-transform duration-300 hover:scale-105 inline-flex items-center justify-center select-none ml-2 lg:ml-6 ${className}`}>
       <img
-        src="/LOGO-HYBRID-transparent.png"
+        src="/logo-wash.png"
         alt="HYBRIDWASH Logo"
         className="w-auto h-full object-contain scale-110"
       />
