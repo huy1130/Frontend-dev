@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Menu, X, Calendar, ChevronRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -77,14 +78,14 @@ export default function NavBar() {
           {/* Right Action: Nút "Đặt lịch ngay" màu trắng đục nổi bật sát bên phải */}
           <div className="hidden md:flex items-center gap-3 shrink-0">
 
-            <a
-              href="#booking"
+            <Link
+              to="/login"
               className="px-7 py-3 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-base shadow-xl transition-all hover:scale-105 flex items-center gap-2 group border border-orange-100"
             >
               <Calendar className="w-5 h-5 text-orange-600" />
               <span>Đặt lịch ngay</span>
               <ChevronRight className="w-5 h-5 text-orange-600 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Right Bar (Menu trigger) */}
@@ -149,14 +150,14 @@ export default function NavBar() {
           </nav>
 
           <div className="pt-4 border-t border-white/20 flex flex-col gap-3">
-            <a
-              href="#booking"
+            <Link
+              to="/login"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2"
             >
               <Calendar className="w-5 h-5 text-orange-600" />
               <span>Đặt lịch ngay</span>
-            </a>
+            </Link>
           </div>
         </div>
       )}

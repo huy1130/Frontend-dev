@@ -1,5 +1,6 @@
 import React from 'react'
 import { Calendar } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function Hero() {
   return (
@@ -50,13 +51,13 @@ export default function Hero() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-6 pt-8">
-            <a
-              href="#booking"
+            <Link
+              to="/login"
               className="px-8 py-3.5 bg-[#f97316] text-white font-semibold text-base sm:text-lg hover:bg-orange-600 transition-colors flex items-center gap-3 drop-shadow-lg rounded-sm"
             >
               Đặt Hẹn Online
               <Calendar className="w-5 h-5" />
-            </a>
+            </Link>
 
             <a
               href="tel:1900888999"
