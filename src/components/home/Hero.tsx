@@ -1,5 +1,5 @@
 import React from 'react'
-import { Calendar, Sparkles, ChevronRight, CheckCircle2, PhoneCall, Users, Award, MapPin } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
 export default function Hero() {
   return (
@@ -13,20 +13,22 @@ export default function Hero() {
       />
 
       {/* Lớp màu tối phủ lên để chữ nổi bật trên nền ảnh */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-      <div className="absolute inset-0 z-0 bg-black/20" /> {/* Thêm lớp màu tối nhẹ toàn màn hình cho an toàn */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/90 via-black/65 to-black/30" />
+      <div className="absolute inset-0 z-0 bg-black/25" /> {/* Thêm lớp màu tối nhẹ toàn màn hình cho an toàn */}
 
       {/* Nội dung hiển thị nổi trên ảnh */}
       <div className="absolute inset-0 z-10 flex items-center w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
-        <div className="max-w-3xl space-y-8 text-left font-['Montserrat',sans-serif]">
+        <div className="max-w-4xl space-y-8 text-left font-['Montserrat',sans-serif]">
 
           {/* Headline */}
           <div className="space-y-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-white tracking-wide leading-[1.2] uppercase drop-shadow-lg">
-              HYBRIDWASH - HỆ THỐNG RỬA XE & CHĂM SÓC XE HÀNG ĐẦU VIỆT NAM
+            <h1 className="text-[24px] sm:text-3xl lg:text-[46px] xl:text-[52px] font-extrabold text-white tracking-normal leading-[1.4] uppercase font-['Montserrat',sans-serif] drop-shadow-lg">
+              <span className="block sm:whitespace-nowrap pb-2 sm:pb-3">HYBRIDWASH - HỆ THỐNG RỬA XE</span>
+              <span className="block sm:whitespace-nowrap pb-2 sm:pb-3">&amp; CHĂM SÓC XE HÀNG ĐẦU</span>
+              <span className="block sm:whitespace-nowrap">VIỆT NAM</span>
             </h1>
-            <p className="text-white text-base sm:text-lg lg:text-xl font-medium drop-shadow-md">
-              Quy trình rửa xe & chăm sóc xe ô tô đúng cách hàng đầu tại TPHCM. Đặt lịch giữ chỗ trong 30s và tự động tích điểm nâng hạng thành viên.
+            <p className="text-slate-100 text-base sm:text-lg lg:text-xl font-medium leading-relaxed max-w-3xl">
+              Quy trình rửa xe &amp; chăm sóc xe ô tô đúng cách hàng đầu tại TPHCM. Đặt lịch giữ chỗ trong 30s và tự động tích điểm nâng hạng thành viên.
             </p>
           </div>
 
