@@ -268,8 +268,8 @@ export const mockTiers: MembershipTier[] = [
     minPoints: 0,
     pointMultiplier: '1.0x',
     discountPercent: 0,
-    color: 'from-amber-700 to-amber-900',
-    badgeBg: 'bg-amber-900/40 text-amber-300 border-amber-700/50',
+    color: 'from-orange-700 to-orange-900',
+    badgeBg: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30',
     benefits: [
       'Tích lũy 10% điểm thưởng cho mỗi hóa đơn',
       'Nhắc lịch bảo dưỡng định kỳ tự động',
@@ -284,7 +284,7 @@ export const mockTiers: MembershipTier[] = [
     pointMultiplier: '1.2x',
     discountPercent: 5,
     color: 'from-slate-400 to-slate-600',
-    badgeBg: 'bg-slate-700/40 text-slate-200 border-slate-500/50',
+    badgeBg: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/20 dark:text-slate-300 dark:border-slate-500/30',
     benefits: [
       'Tất cả đặc quyền Hạng Đồng',
       'Giảm 5% cho tất cả các dịch vụ đơn lẻ',
@@ -299,8 +299,8 @@ export const mockTiers: MembershipTier[] = [
     minPoints: 2000,
     pointMultiplier: '1.5x',
     discountPercent: 10,
-    color: 'from-amber-400 to-yellow-600',
-    badgeBg: 'bg-amber-500/20 text-amber-400 border-amber-500/50',
+    color: 'from-yellow-400 to-yellow-600',
+    badgeBg: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30',
     benefits: [
       'Tất cả đặc quyền Hạng Bạc',
       'Giảm 10% trực tiếp trên tổng hóa đơn',
@@ -316,7 +316,7 @@ export const mockTiers: MembershipTier[] = [
     pointMultiplier: '2.0x',
     discountPercent: 15,
     color: 'from-cyan-400 to-blue-600',
-    badgeBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50',
+    badgeBg: 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-500/30',
     benefits: [
       'Đặc quyền cao cấp bậc nhất hệ thống',
       'Giảm 15% tất cả dịch vụ & Combo Detailing',

@@ -10,7 +10,7 @@ export default function CallToAction() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-20">
-        
+
         {/* Customer Reviews Carousel / Cards */}
         <div className="space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -63,7 +63,7 @@ export default function CallToAction() {
         {/* Big Banner CTA Box */}
         <div className="p-10 sm:p-14 rounded-3xl border border-brand-500/30 relative overflow-hidden bg-gradient-to-r from-brand-700 via-brand-600 to-cyan-600 dark:from-brand-950 dark:via-dark-800 dark:to-dark-900 shadow-2xl shadow-brand-500/20 text-white">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-            
+
             <div className="lg:col-span-8 space-y-4">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 dark:bg-brand-500/20 text-white dark:text-brand-300 border border-white/30 dark:border-brand-500/30 text-xs font-bold">
                 <Sparkles className="w-4 h-4 text-amber-300 dark:text-amber-400" />
@@ -75,9 +75,7 @@ export default function CallToAction() {
                 <span className="text-cyan-200 dark:gradient-text">DỊCH VỤ RỬA XE ĐẲNG CẤP?</span>
               </h2>
 
-              <p className="text-slate-100 dark:text-slate-300 text-base max-w-xl">
-                Đặt lịch giữ chỗ ngay hôm nay để nhận ngay voucher <span className="text-amber-300 dark:text-amber-400 font-bold">50.000đ</span> cho khách hàng mới và tích điểm thành viên x2.
-              </p>
+
             </div>
 
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4">
