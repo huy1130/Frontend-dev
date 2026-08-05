@@ -46,7 +46,7 @@ export default function HowItWorks() {
 
               {/* Text */}
               <div className="space-y-3">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors min-h-[56px]">
                   {step.title}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">

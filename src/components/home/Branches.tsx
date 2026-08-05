@@ -27,9 +27,9 @@ export default function Branches() {
               key={br.id}
               className="bg-white dark:bg-dark-800/80 rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 glass-panel-hover flex flex-col justify-between group shadow-sm dark:shadow-none"
             >
-              <div>
+              <div className="flex flex-col flex-1">
                 {/* Image & Status Overlay */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-48 overflow-hidden shrink-0">
                   <img
                     src={br.imageUrl}
                     alt={br.name}
@@ -49,12 +49,12 @@ export default function Branches() {
                 </div>
 
                 {/* Details */}
-                <div className="p-6 space-y-4">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
+                <div className="p-6 space-y-4 flex flex-col flex-1">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors min-h-[56px]">
                     {br.name}
                   </h3>
 
-                  <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 min-h-[104px]">
                     <div className="flex items-start gap-2.5">
                       <MapPin className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
                       <span className="leading-relaxed">{br.address}</span>
@@ -72,7 +72,7 @@ export default function Branches() {
                   </div>
 
                   {/* Facilities */}
-                  <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
+                  <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-2 mt-auto">
                     <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tiện ích cơ sở:</p>
                     <div className="flex flex-wrap gap-1.5">
                       {br.facilities.map((fac, idx) => (
