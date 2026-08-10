@@ -23,11 +23,15 @@ export default function Hero() {
 
           {/* Headline */}
           <div className="space-y-3">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[38px] font-extrabold text-white tracking-tight leading-[1.3] uppercase font-['Montserrat',sans-serif] drop-shadow-lg text-balance">
-              HYBRIDWASH - HỆ THỐNG RỬA XE &amp; CHĂM SÓC XE HÀNG ĐẦU VIỆT NAM
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[38px] font-extrabold text-white tracking-tight leading-[1.3] uppercase font-['Montserrat',sans-serif] drop-shadow-lg">
+              HYBRID WASH - HỆ THỐNG RỬA XE<br />
+              &amp; CHĂM SÓC XE<br />
+              HÀNG ĐẦU VIỆT NAM
             </h1>
             <p className="text-slate-100 text-sm sm:text-base font-medium leading-relaxed max-w-xl pt-1">
-              Quy trình rửa xe &amp; chăm sóc xe ô tô đúng cách hàng đầu tại TPHCM. Đặt lịch giữ chỗ trong 30s và tự động tích điểm nâng hạng thành viên.
+              Quy trình rửa xe &amp; chăm sóc xe ô tô đúng cách hàng đầu tại TPHCM.<br />
+              Đặt lịch giữ chỗ trong 30s<br />
+              và tự động tích điểm nâng hạng thành viên.
             </p>
           </div>
 

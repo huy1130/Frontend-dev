@@ -101,7 +101,7 @@ export default function NavBar() {
                   className="px-4 py-2 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-xs lg:text-sm transition-colors flex items-center gap-1.5 shadow-md"
                 >
                   <CalendarDays className="w-4 h-4 text-orange-600" />
-                  <span>Đặt lịch ngay</span>
+                  <span>Đăng ký ngay</span>
                 </Link>
 
                 <div className="relative ml-1">
@@ -113,54 +113,54 @@ export default function NavBar() {
                     <User className="w-5 h-5" />
                   </button>
 
-                {/* Dropdown Menu */}
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-up">
-                    <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                      <p className="font-bold text-gray-800">Xin chào, Khách Hàng</p>
-                      <p className="text-xs text-orange-600 font-medium mt-0.5">Thành viên Vàng</p>
+                  {/* Dropdown Menu */}
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-up">
+                      <div className="p-4 border-b border-gray-50 bg-gray-50/50">
+                        <p className="font-bold text-gray-800">Xin chào, Khách Hàng</p>
+                        <p className="text-xs text-orange-600 font-medium mt-0.5">Thành viên Vàng</p>
+                      </div>
+                      <div className="p-2 space-y-1">
+                        <Link
+                          to="/customer/history"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                        >
+                          <History className="w-4 h-4" />
+                          <span>Lịch sử đặt lịch</span>
+                        </Link>
+                        <Link
+                          to="/customer/booking"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                        >
+                          <CalendarDays className="w-4 h-4" />
+                          <span>Đặt lịch mới</span>
+                        </Link>
+                      </div>
+                      <div className="p-2 border-t border-gray-50">
+                        <button
+                          onClick={() => {
+                            setProfileDropdownOpen(false)
+                            handleLogout()
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Đăng xuất</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="p-2 space-y-1">
-                      <Link
-                        to="/customer/history"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
-                      >
-                        <History className="w-4 h-4" />
-                        <span>Lịch sử đặt lịch</span>
-                      </Link>
-                      <Link
-                        to="/customer/booking"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
-                      >
-                        <CalendarDays className="w-4 h-4" />
-                        <span>Đặt lịch mới</span>
-                      </Link>
-                    </div>
-                    <div className="p-2 border-t border-gray-50">
-                      <button
-                        onClick={() => {
-                          setProfileDropdownOpen(false)
-                          handleLogout()
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Đăng xuất</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
+                  )}
+                </div>
+              </>
             ) : (
               <Link
                 to="/login"
                 className="px-7 py-3 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-base shadow-xl transition-all hover:scale-105 flex items-center gap-2 group border border-orange-100"
               >
                 <Calendar className="w-5 h-5 text-orange-600" />
-                <span>Đặt lịch ngay</span>
+                <span>Đăng ký ngay</span>
                 <ChevronRight className="w-5 h-5 text-orange-600 group-hover:translate-x-1 transition-transform" />
               </Link>
             )}
@@ -271,7 +271,7 @@ export default function NavBar() {
                 className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2"
               >
                 <Calendar className="w-5 h-5 text-orange-600" />
-                <span>Đặt lịch ngay</span>
+                <span>Đăng ký ngay</span>
               </Link>
             )}
           </div>

@@ -171,14 +171,9 @@ export default function CustomerBooking() {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       <NavBar />
 
-      <main className="flex-1 pt-20 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
+      <main className="flex-1 pt-28 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
         
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-          <Link to="/customer" className="hover:text-orange-600 transition-colors">Cổng Khách Hàng</Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-slate-800 font-bold">Đặt Lịch Dịch Vụ</span>
-        </div>
+
 
         {/* Title & Progress Bar */}
         {!isSuccess && (
