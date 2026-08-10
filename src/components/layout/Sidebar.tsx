@@ -7,35 +7,58 @@ import {
   CreditCard, 
   History, 
   Users,
-  LogOut 
+  LogOut,
+  Package,
+  Tag,
+  Award,
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react'
-import Logo from '../common/Logo'
 
 const menuItems = [
-  { path: '/dashboard', name: 'Tổng quan', icon: LayoutDashboard, exact: true },
-  { path: '/dashboard/reports', name: 'Báo cáo', icon: BarChart3 },
-  { path: '/dashboard/appointments', name: 'Lịch hẹn', icon: CalendarDays },
-  { path: '/dashboard/payments', name: 'Quản lý thanh toán', icon: CreditCard },
-  { path: '/dashboard/transactions', name: 'Lịch sử giao dịch', icon: History },
-  { path: '/dashboard/employees', name: 'Nhân viên', icon: Users },
+  { path: '/dashboard', name: 'Tổng Quan', icon: LayoutDashboard, exact: true },
+  { path: '/dashboard/services', name: 'Gói Dịch Vụ', icon: Package },
+  { path: '/dashboard/promotions', name: 'Khuyến Mãi', icon: Tag },
+  { path: '/dashboard/tiers', name: 'Hạng Thành Viên', icon: Award },
+  { path: '/dashboard/reports', name: 'Báo Cáo Thống Kê', icon: BarChart3 },
+  { path: '/dashboard/appointments', name: 'Lịch Hẹn Khách', icon: CalendarDays },
+  { path: '/dashboard/payments', name: 'Quản Lý Thanh Toán', icon: CreditCard },
+  { path: '/dashboard/transactions', name: 'Lịch Sử Giao Dịch', icon: History },
+  { path: '/dashboard/employees', name: 'Quản Lý Nhân Viên', icon: Users },
 ]
 
 export default function Sidebar() {
   const navigate = useNavigate()
   
   const handleLogout = () => {
+    localStorage.removeItem('userRole')
     navigate('/login')
   }
 
   return (
-    <div className="w-64 min-h-screen bg-dark-900/80 backdrop-blur-xl border-r border-white/5 flex flex-col font-['Montserrat',sans-serif]">
-      {/* Logo Area */}
-      <div className="h-20 flex items-center justify-center border-b border-white/5">
-        <Logo size="sm" />
+    <aside className="w-64 min-h-screen bg-white border-r border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col font-sans relative z-20">
+      
+      {/* Logo Header */}
+      <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-orange-50/50 to-white">
+        <div className="flex items-center gap-3">
+          <img
+            src="/logo-wash.png"
+            alt="HYBRIDWASH Logo"
+            className="h-10 w-auto object-contain"
+          />
+          <div>
+            <span className="text-xs font-extrabold text-orange-600 uppercase tracking-widest block">ADMIN</span>
+            <span className="text-[10px] text-slate-400 font-semibold block">HYBRIDWASH</span>
+          </div>
+        </div>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 py-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+      {/* Navigation Section */}
+      <div className="flex-1 py-6 px-3.5 space-y-1.5 overflow-y-auto custom-scrollbar">
+        <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">
+          Danh Mục Quản Trị
+        </p>
+
         {menuItems.map((item) => {
           const Icon = item.icon
           return (
@@ -44,41 +67,46 @@ export default function Sidebar() {
               to={item.path}
               end={item.exact}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                `flex items-center gap-3 px-3.5 py-3 rounded-xl font-extrabold text-xs transition-all duration-200 ${
                   isActive
-                    ? 'bg-gradient-to-r from-orange-500/20 to-orange-500/5 text-orange-400 border border-orange-500/20'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-[1.02]'
+                    : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50/80 font-bold'
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{item.name}</span>
             </NavLink>
           )
         })}
       </div>
 
-      {/* User Info / Logout (Optional placeholder) */}
-      <div className="p-4 border-t border-white/5">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-black/40 border border-white/5 group">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold text-sm">
+      {/* Admin Profile Footer */}
+      <div className="p-3.5 border-t border-slate-100 bg-slate-50/60">
+        <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md shadow-orange-500/20">
               A
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">Admin User</p>
-              <p className="text-xs text-white/40 truncate">admin@hybridwash.vn</p>
+              <p className="text-xs font-extrabold text-slate-900 truncate flex items-center gap-1">
+                <span>Admin User</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+              </p>
+              <p className="text-[10px] text-slate-400 truncate">admin@hybridwash.vn</p>
             </div>
           </div>
+
           <button 
             onClick={handleLogout}
             title="Đăng xuất"
-            className="p-2 shrink-0 text-white/40 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
       </div>
-    </div>
+
+    </aside>
   )
 }

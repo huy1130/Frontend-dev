@@ -168,25 +168,25 @@ export default function CustomerBooking() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-900 text-slate-100 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       <NavBar />
 
       <main className="flex-1 pt-20 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
         
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-          <Link to="/customer" className="hover:text-orange-400 transition-colors">Cổng Khách Hàng</Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-          <span className="text-slate-200 font-semibold">Đặt Lịch Dịch Vụ</span>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+          <Link to="/customer" className="hover:text-orange-600 transition-colors">Cổng Khách Hàng</Link>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-slate-800 font-bold">Đặt Lịch Dịch Vụ</span>
         </div>
 
         {/* Title & Progress Bar */}
         {!isSuccess && (
           <div className="text-center space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Đặt Lịch Dịch Vụ Rửa Xe
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto">
+            <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto">
               Chỉ với 3 bước đơn giản để giữ chỗ ưu tiên và áp dụng các khuyến mãi độc quyền.
             </p>
 
@@ -194,38 +194,38 @@ export default function CustomerBooking() {
             <div className="flex items-center justify-center gap-2 sm:gap-3 pt-3 max-w-2xl mx-auto flex-wrap">
               
               {/* Step 1 */}
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all ${
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${
                 currentStep === 1 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md font-extrabold text-xs' 
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs' 
                   : currentStep > 1 
-                  ? 'bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs font-semibold' 
-                  : 'bg-slate-800 text-slate-400 border-slate-700 text-xs'
+                  ? 'bg-orange-50 text-orange-600 border-orange-200 text-xs font-semibold' 
+                  : 'bg-white text-slate-500 border-slate-200 text-xs'
               }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</span>
                 <span>Thời Gian & Địa Điểm</span>
               </div>
 
-              <div className="hidden sm:block h-0.5 w-6 bg-slate-700" />
+              <div className="hidden sm:block h-0.5 w-6 bg-slate-300" />
 
               {/* Step 2 */}
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all ${
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${
                 currentStep === 2 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md font-extrabold text-xs' 
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs' 
                   : currentStep > 2 
-                  ? 'bg-orange-500/20 text-orange-400 border-orange-500/30 text-xs font-semibold' 
-                  : 'bg-slate-800 text-slate-400 border-slate-700 text-xs'
+                  ? 'bg-orange-50 text-orange-600 border-orange-200 text-xs font-semibold' 
+                  : 'bg-white text-slate-500 border-slate-200 text-xs'
               }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">2</span>
                 <span>Chọn Dịch Vụ</span>
               </div>
 
-              <div className="hidden sm:block h-0.5 w-6 bg-slate-700" />
+              <div className="hidden sm:block h-0.5 w-6 bg-slate-300" />
 
               {/* Step 3 */}
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all ${
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${
                 currentStep === 3 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md font-extrabold text-xs' 
-                  : 'bg-slate-800 text-slate-400 border-slate-700 text-xs'
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs' 
+                  : 'bg-white text-slate-500 border-slate-200 text-xs'
               }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">3</span>
                 <span>Xác Nhận & Ưu Đãi</span>
@@ -237,52 +237,52 @@ export default function CustomerBooking() {
 
         {/* SUCCESS CONFIRMATION SCREEN */}
         {isSuccess ? (
-          <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-6 sm:p-8 text-center max-w-xl mx-auto shadow-xl space-y-5">
-            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto border border-emerald-500/40">
-              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center max-w-xl mx-auto shadow-xl shadow-slate-200/50 space-y-5">
+            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
             
             <div>
-              <h2 className="text-2xl font-extrabold text-white mb-1">Đặt Lịch Thành Công!</h2>
-              <p className="text-slate-300 text-xs sm:text-sm">
-                Mã lịch hẹn của bạn là <span className="text-orange-400 font-bold">{bookingRef}</span>. Nhân viên sẽ liên hệ xác nhận trong ít phút.
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Đặt Lịch Thành Công!</h2>
+              <p className="text-slate-600 text-xs sm:text-sm">
+                Mã lịch hẹn của bạn là <span className="text-orange-600 font-extrabold">{bookingRef}</span>. Nhân viên sẽ liên hệ xác nhận trong ít phút.
               </p>
             </div>
 
             {/* Summary Ticket */}
-            <div className="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-6 text-left space-y-3 text-sm">
-              <div className="flex justify-between border-b border-slate-700/60 pb-3">
-                <span className="text-slate-400">Chi nhánh:</span>
-                <span className="font-bold text-white">{branches.find(b => b.id === selectedBranch)?.name}</span>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left space-y-2.5 text-sm">
+              <div className="flex justify-between border-b border-slate-200 pb-2.5">
+                <span className="text-slate-500">Chi nhánh:</span>
+                <span className="font-bold text-slate-900">{branches.find(b => b.id === selectedBranch)?.name}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-700/60 pb-3">
-                <span className="text-slate-400">Thời gian:</span>
-                <span className="font-bold text-white">{selectedTimeSlot} - {selectedDate}</span>
+              <div className="flex justify-between border-b border-slate-200 pb-2.5">
+                <span className="text-slate-500">Thời gian:</span>
+                <span className="font-bold text-slate-900">{selectedTimeSlot} - {selectedDate}</span>
               </div>
-              <div className="flex justify-between border-b border-slate-700/60 pb-3">
-                <span className="text-slate-400">Dịch vụ đã chọn:</span>
-                <span className="font-bold text-white text-right">{selectedServices.map(s => s.name).join(', ')}</span>
+              <div className="flex justify-between border-b border-slate-200 pb-2.5">
+                <span className="text-slate-500">Dịch vụ đã chọn:</span>
+                <span className="font-bold text-slate-900 text-right">{selectedServices.map(s => s.name).join(', ')}</span>
               </div>
               <div className="flex justify-between pt-1">
-                <span className="text-slate-400">Tổng thanh toán:</span>
-                <span className="font-extrabold text-orange-400 text-xl">{finalTotal.toLocaleString('vi-VN')}đ</span>
+                <span className="text-slate-500">Tổng thanh toán:</span>
+                <span className="font-extrabold text-orange-600 text-xl">{finalTotal.toLocaleString('vi-VN')}đ</span>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <Link 
                 to="/customer/history" 
-                className="px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-2xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20"
+                className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 text-sm"
               >
                 <span>Xem Lịch Sử Đặt Lịch</span>
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </Link>
               <button 
                 onClick={() => {
                   setIsSuccess(false)
                   setCurrentStep(1)
                 }}
-                className="px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-2xl transition-colors border border-slate-600"
+                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors border border-slate-200 text-sm"
               >
                 Đặt Thêm Lịch Mới
               </button>
@@ -290,31 +290,31 @@ export default function CustomerBooking() {
           </div>
         ) : (
           /* STEP CONTENT CARD */
-          <div className="bg-slate-800/90 border border-slate-700/80 rounded-3xl p-6 sm:p-10 shadow-2xl">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-xl shadow-slate-200/50">
             
             {/* STEP 1: DATE & TIME & BRANCH */}
             {currentStep === 1 && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 
                 {/* Branch Selection */}
                 <div>
-                  <label className="block text-base font-bold text-white mb-3 flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-orange-500" />
+                  <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-orange-600" />
                     <span>1. Chọn Chi Nhánh Phù Hợp:</span>
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {branches.map((b) => (
                       <div
                         key={b.id}
                         onClick={() => setSelectedBranch(b.id)}
-                        className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-all ${
                           selectedBranch === b.id
-                            ? 'bg-orange-500/20 border-orange-500 shadow-lg shadow-orange-500/20'
-                            : 'bg-slate-900/60 border-slate-700/80 hover:border-slate-600'
+                            ? 'bg-orange-50/80 border-orange-500 shadow-md'
+                            : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <h4 className="font-bold text-white text-base mb-1">{b.name}</h4>
-                        <p className="text-xs text-slate-400">{b.address}</p>
+                        <h4 className="font-extrabold text-slate-900 text-sm mb-1">{b.name}</h4>
+                        <p className="text-xs text-slate-500">{b.address}</p>
                       </div>
                     ))}
                   </div>
@@ -322,34 +322,34 @@ export default function CustomerBooking() {
 
                 {/* Date Selection */}
                 <div>
-                  <label className="block text-base font-bold text-white mb-3 flex items-center gap-2">
-                    <CalendarIcon className="w-5 h-5 text-orange-500" />
+                  <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-orange-600" />
                     <span>2. Chọn Ngày Đặt Lịch:</span>
                   </label>
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full sm:w-80 bg-slate-900 border border-slate-700 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:border-orange-500 transition-colors font-bold text-base"
+                    className="w-full sm:w-72 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:border-orange-500 font-bold text-sm"
                   />
                 </div>
 
                 {/* Time Slots */}
                 <div>
-                  <label className="block text-base font-bold text-white mb-3 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-orange-500" />
+                  <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-orange-600" />
                     <span>3. Chọn Khung Giờ Phù Hợp:</span>
                   </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-3">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2.5">
                     {timeSlots.map((slot) => (
                       <button
                         key={slot}
                         type="button"
                         onClick={() => setSelectedTimeSlot(slot)}
-                        className={`py-3.5 rounded-2xl border text-sm font-extrabold transition-all ${
+                        className={`py-2.5 rounded-xl border text-xs font-extrabold transition-all ${
                           selectedTimeSlot === slot
-                            ? 'bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20'
-                            : 'bg-slate-900/60 text-slate-300 border-slate-700/80 hover:bg-slate-700/50'
+                            ? 'bg-orange-500 text-white border-orange-500 shadow-md'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
                         {slot}
@@ -359,13 +359,13 @@ export default function CustomerBooking() {
                 </div>
 
                 {/* Next Action */}
-                <div className="pt-6 border-t border-slate-700/60 flex justify-end">
+                <div className="pt-5 border-t border-slate-200 flex justify-end">
                   <button
                     onClick={() => setCurrentStep(2)}
-                    className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-orange-500/20 text-base"
+                    className="px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-orange-500/20 text-sm"
                   >
                     <span>Tiếp Tục: Chọn Dịch Vụ</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -374,49 +374,49 @@ export default function CustomerBooking() {
 
             {/* STEP 2: SELECT SERVICES */}
             {currentStep === 2 && (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-1">Danh Sách Dịch Vụ Hệ Thống</h3>
-                  <p className="text-slate-400 text-sm">Bạn có thể chọn một hoặc kết hợp nhiều dịch vụ chăm sóc cho xe của mình.</p>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-0.5">Danh Sách Dịch Vụ Hệ Thống</h3>
+                  <p className="text-slate-500 text-xs sm:text-sm">Bạn có thể chọn một hoặc kết hợp nhiều dịch vụ chăm sóc cho xe của mình.</p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {availableServices.map((svc) => {
                     const isSelected = selectedServiceIds.includes(svc.id)
                     return (
                       <div
                         key={svc.id}
                         onClick={() => toggleService(svc.id)}
-                        className={`p-6 rounded-2xl border cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                           isSelected
-                            ? 'bg-orange-500/10 border-orange-500 shadow-lg shadow-orange-500/10'
-                            : 'bg-slate-900/60 border-slate-700/80 hover:border-slate-600'
+                            ? 'bg-orange-50/80 border-orange-500 shadow-sm'
+                            : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <div className="flex items-start gap-4">
-                          <div className={`w-6 h-6 rounded-lg border mt-1 flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-600 bg-slate-800'
+                        <div className="flex items-start gap-3">
+                          <div className={`w-5 h-5 rounded border mt-0.5 flex items-center justify-center transition-colors ${
+                            isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'
                           }`}>
-                            {isSelected && <Check className="w-4 h-4 text-white" />}
+                            {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <div>
-                            <div className="flex items-center gap-3 mb-1">
-                              <h4 className="font-extrabold text-white text-base sm:text-lg">{svc.name}</h4>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{svc.name}</h4>
                               {svc.popular && (
-                                <span className="text-[10px] uppercase font-extrabold bg-orange-500/20 text-orange-400 px-2.5 py-0.5 rounded-full border border-orange-500/30">
+                                <span className="text-[10px] uppercase font-extrabold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200">
                                   Phổ Biến
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs sm:text-sm text-slate-400 mb-2">{svc.description}</p>
-                            <span className="text-xs font-semibold px-3 py-1 bg-slate-800 rounded-lg text-slate-300 border border-slate-700">
+                            <p className="text-xs text-slate-500 mb-1.5">{svc.description}</p>
+                            <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200">
                               Thời gian thực hiện: {svc.duration}
                             </span>
                           </div>
                         </div>
 
-                        <div className="text-left md:text-right pl-10 md:pl-0">
-                          <p className="text-2xl font-extrabold text-orange-400">{svc.price.toLocaleString('vi-VN')}đ</p>
+                        <div className="text-left md:text-right pl-8 md:pl-0">
+                          <p className="text-xl font-extrabold text-orange-600">{svc.price.toLocaleString('vi-VN')}đ</p>
                         </div>
                       </div>
                     )
@@ -424,10 +424,10 @@ export default function CustomerBooking() {
                 </div>
 
                 {/* Step 2 Actions */}
-                <div className="pt-6 border-t border-slate-700/60 flex justify-between items-center">
+                <div className="pt-5 border-t border-slate-200 flex justify-between items-center">
                   <button
                     onClick={() => setCurrentStep(1)}
-                    className="px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-2xl transition-colors flex items-center gap-2 border border-slate-600 text-sm"
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors flex items-center gap-1.5 border border-slate-200 text-xs sm:text-sm"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Quay Lại</span>
@@ -435,10 +435,10 @@ export default function CustomerBooking() {
 
                   <button
                     onClick={() => setCurrentStep(3)}
-                    className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-orange-500/20 text-base"
+                    className="px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-orange-500/20 text-sm"
                   >
                     <span>Tiếp Tục: Xác Nhận & Ưu Đãi</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -447,26 +447,26 @@ export default function CustomerBooking() {
 
             {/* STEP 3: CONFIRM & PROMOTIONS */}
             {currentStep === 3 && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   
-                  {/* Left Column: Summary of Info & Available Promotions */}
-                  <div className="lg:col-span-7 space-y-6">
+                  {/* Left Column */}
+                  <div className="lg:col-span-7 space-y-5">
                     
                     {/* Booking Details Box */}
-                    <div className="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-6 space-y-3">
-                      <h4 className="font-extrabold text-white text-base border-b border-slate-700/60 pb-3 flex items-center gap-2">
-                        <ShieldCheck className="w-5 h-5 text-orange-500" />
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5">
+                      <h4 className="font-extrabold text-slate-900 text-sm border-b border-slate-200 pb-2 flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-orange-600" />
                         <span>Thông Tin Lịch Hẹn Đã Chọn</span>
                       </h4>
 
-                      <div className="text-sm space-y-2 text-slate-300">
-                        <p><span className="text-slate-400">Địa điểm:</span> <strong className="text-white">{branches.find(b => b.id === selectedBranch)?.name}</strong></p>
-                        <p><span className="text-slate-400">Thời gian:</span> <strong className="text-white">{selectedTimeSlot} ngày {selectedDate}</strong></p>
+                      <div className="text-xs space-y-1.5 text-slate-700">
+                        <p><span className="text-slate-500">Địa điểm:</span> <strong className="text-slate-900">{branches.find(b => b.id === selectedBranch)?.name}</strong></p>
+                        <p><span className="text-slate-500">Thời gian:</span> <strong className="text-slate-900">{selectedTimeSlot} ngày {selectedDate}</strong></p>
                         <div>
-                          <span className="text-slate-400 block mb-1">Dịch vụ đã chọn ({selectedServices.length}):</span>
-                          <ul className="pl-4 list-disc space-y-1 font-bold text-white">
+                          <span className="text-slate-500 block mb-0.5">Dịch vụ đã chọn ({selectedServices.length}):</span>
+                          <ul className="pl-4 list-disc space-y-0.5 font-bold text-slate-900">
                             {selectedServices.map(s => (
                               <li key={s.id}>{s.name} ({s.price.toLocaleString('vi-VN')}đ)</li>
                             ))}
@@ -477,38 +477,38 @@ export default function CustomerBooking() {
 
                     {/* System Active Promotions Selector */}
                     <div>
-                      <h4 className="font-extrabold text-white text-base mb-3 flex items-center gap-2">
-                        <Tag className="w-5 h-5 text-orange-500" />
+                      <h4 className="font-extrabold text-slate-900 text-sm mb-2.5 flex items-center gap-1.5">
+                        <Tag className="w-4 h-4 text-orange-600" />
                         <span>Khuyến Mãi Đang Có Của Hệ Thống:</span>
                       </h4>
 
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         {promotions.map((promo) => {
                           const isApplied = appliedPromoId === promo.id
                           return (
                             <div
                               key={promo.id}
                               onClick={() => setAppliedPromoId(isApplied ? '' : promo.id)}
-                              className={`p-5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between gap-4 ${
+                              className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
                                 isApplied
-                                  ? 'bg-orange-500/20 border-orange-500 shadow-md'
-                                  : 'bg-slate-900/60 border-slate-700/80 hover:border-slate-600'
+                                  ? 'bg-orange-50 border-orange-500 shadow-sm'
+                                  : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                               }`}
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold shrink-0">
-                                  <Percent className="w-5 h-5" />
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">
+                                  <Percent className="w-4 h-4" />
                                 </div>
                                 <div>
-                                  <h5 className="font-bold text-white text-sm sm:text-base mb-0.5">{promo.title}</h5>
-                                  <p className="text-xs text-slate-400">Mã: <span className="text-orange-400 font-bold">{promo.code}</span> • Hạn dùng: {promo.expiry}</p>
+                                  <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.title}</h5>
+                                  <p className="text-[11px] text-slate-500">Mã: <span className="text-orange-600 font-bold">{promo.code}</span> • Hạn: {promo.expiry}</p>
                                 </div>
                               </div>
 
-                              <span className={`text-xs font-extrabold px-3.5 py-2 rounded-xl border shrink-0 ${
+                              <span className={`text-[11px] font-extrabold px-3 py-1.5 rounded-lg border shrink-0 ${
                                 isApplied 
                                   ? 'bg-orange-500 text-white border-orange-500' 
-                                  : 'bg-slate-800 text-slate-300 border-slate-700'
+                                  : 'bg-white text-slate-700 border-slate-300'
                               }`}>
                                 {isApplied ? 'Đã áp dụng' : 'Áp dụng'}
                               </span>
@@ -522,28 +522,28 @@ export default function CustomerBooking() {
 
                   {/* Right Column: Pricing & Final Checkout Button */}
                   <div className="lg:col-span-5">
-                    <div className="bg-slate-900/90 border border-slate-700/80 rounded-3xl p-6 sticky top-24 space-y-6 shadow-xl">
-                      <h4 className="font-extrabold text-white text-lg border-b border-slate-700/60 pb-4">
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sticky top-20 space-y-5 shadow-md">
+                      <h4 className="font-extrabold text-slate-900 text-base border-b border-slate-200 pb-3">
                         Chi Tiết Thanh Toán
                       </h4>
 
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between text-slate-300">
+                      <div className="space-y-2.5 text-xs sm:text-sm">
+                        <div className="flex justify-between text-slate-600">
                           <span>Tạm tính ({selectedServices.length} dịch vụ):</span>
-                          <span className="font-bold text-white">{subtotalPrice.toLocaleString('vi-VN')}đ</span>
+                          <span className="font-bold text-slate-900">{subtotalPrice.toLocaleString('vi-VN')}đ</span>
                         </div>
 
                         {selectedPromo && (
-                          <div className="flex justify-between text-emerald-400 font-semibold">
+                          <div className="flex justify-between text-emerald-600 font-semibold">
                             <span>Giảm giá ({selectedPromo.code}):</span>
                             <span>-{discountValue.toLocaleString('vi-VN')}đ</span>
                           </div>
                         )}
 
-                        <div className="border-t border-slate-700/60 pt-4 flex justify-between items-end">
+                        <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                           <div>
-                            <span className="text-xs text-slate-400 block font-medium">Tổng tiền thanh toán</span>
-                            <span className="text-2xl sm:text-3xl font-extrabold text-orange-400">
+                            <span className="text-[11px] text-slate-500 block font-medium">Tổng tiền thanh toán</span>
+                            <span className="text-2xl font-extrabold text-orange-600">
                               {finalTotal.toLocaleString('vi-VN')}đ
                             </span>
                           </div>
@@ -552,13 +552,13 @@ export default function CustomerBooking() {
 
                       <button
                         onClick={handleConfirmBooking}
-                        className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-lg rounded-2xl transition-all shadow-xl shadow-orange-500/20 flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-base rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2"
                       >
-                        <Sparkles className="w-5 h-5" />
+                        <Sparkles className="w-4 h-4" />
                         <span>Xác Nhận Đặt Lịch Ngay</span>
                       </button>
 
-                      <p className="text-center text-xs text-slate-400 font-medium">
+                      <p className="text-center text-[11px] text-slate-500 font-medium">
                         Thanh toán trực tiếp tại spa rửa xe hoặc qua ứng dụng.
                       </p>
                     </div>
@@ -567,10 +567,10 @@ export default function CustomerBooking() {
                 </div>
 
                 {/* Step 3 Footer Actions */}
-                <div className="pt-6 border-t border-slate-700/60 flex justify-start">
+                <div className="pt-4 border-t border-slate-200 flex justify-start">
                   <button
                     onClick={() => setCurrentStep(2)}
-                    className="px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-2xl transition-colors flex items-center gap-2 border border-slate-600 text-sm"
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors flex items-center gap-1.5 border border-slate-200 text-xs sm:text-sm"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Quay Lại Chọn Dịch Vụ</span>

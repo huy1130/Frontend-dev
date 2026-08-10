@@ -15,6 +15,10 @@ import CustomerPortal from './pages/customer/CustomerPortal'
 import CustomerBooking from './pages/customer/CustomerBooking'
 import CustomerHistory from './pages/customer/CustomerHistory'
 
+import ServiceManagement from './pages/dashboard/ServiceManagement'
+import PromotionManagement from './pages/dashboard/PromotionManagement'
+import TierManagement from './pages/dashboard/TierManagement'
+
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
 
@@ -53,6 +57,9 @@ export default function App() {
         {/* Admin/Manager/Staff Dashboard Routes */}
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
+          <Route path="services" element={<ServiceManagement />} />
+          <Route path="promotions" element={<PromotionManagement />} />
+          <Route path="tiers" element={<TierManagement />} />
           <Route path="reports" element={<Reports />} />
           <Route path="appointments" element={<Appointments />} />
           <Route path="payments" element={<Payments />} />

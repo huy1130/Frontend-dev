@@ -4,10 +4,9 @@ import { Link, useNavigate } from 'react-router-dom'
 
 export default function NavBar() {
   const navigate = useNavigate()
-  const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem('userRole'))
 
   useEffect(() => {
     setUserRole(localStorage.getItem('userRole'))
@@ -19,28 +18,17 @@ export default function NavBar() {
     navigate('/')
   }
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-gradient-to-r from-white via-orange-500 via-30% to-orange-600 shadow-lg border-b border-orange-500/30 opacity-100 ${isScrolled ? 'py-2' : 'py-3'
-        }`}
-    >
+    <header className="fixed top-0 left-0 right-0 z-50 py-2.5 bg-gradient-to-r from-white via-orange-500 via-30% to-orange-600 shadow-lg border-b border-orange-500/30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
 
           <Link to="/" className="group shrink-0 flex items-center select-none ml-2 lg:ml-4">
-            <div className="relative h-10 md:h-12 shrink-0 transition-transform duration-300 group-hover:scale-105 flex items-center justify-center">
+            <div className="relative h-14 md:h-16 shrink-0 flex items-center justify-center py-1">
               <img
                 src="/logo-wash.png"
                 alt="HYBRIDWASH Logo"
-                className="w-auto h-full object-contain"
+                className="w-auto h-full object-contain scale-110"
               />
             </div>
           </Link>
@@ -49,19 +37,19 @@ export default function NavBar() {
           <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-7 flex-1 mx-4">
             <Link
               to="/"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Trang chủ
             </Link>
             <a
               href="/#how-it-works"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Quy trình
             </a>
             <a
               href="/#combos"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all flex items-center gap-1 drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors flex items-center gap-1 drop-shadow-sm"
             >
               Gói Combo
               <span className="bg-white/25 text-white border border-white/40 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
@@ -70,25 +58,25 @@ export default function NavBar() {
             </a>
             <a
               href="/#promotions"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Khuyến mãi
             </a>
             <a
               href="/#services"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Dịch vụ lẻ
             </a>
             <a
               href="/#branches"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Chi nhánh
             </a>
             <a
               href="/#tiers"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Hạng thẻ
             </a>
