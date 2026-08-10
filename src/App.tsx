@@ -1,5 +1,5 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -12,17 +12,43 @@ import Payments from './pages/dashboard/Payments'
 import Transactions from './pages/dashboard/Transactions'
 import Employees from './pages/dashboard/Employees'
 import CustomerPortal from './pages/customer/CustomerPortal'
+import CustomerBooking from './pages/customer/CustomerBooking'
+import CustomerHistory from './pages/customer/CustomerHistory'
+
+function ScrollToTop() {
+  const { pathname, hash } = useLocation()
+
+  useEffect(() => {
+    if (hash) {
+      const targetId = hash.replace('#', '')
+      const timer = setTimeout(() => {
+        const elem = document.getElementById(targetId)
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 100)
+      return () => clearTimeout(timer)
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
+  }, [pathname, hash])
+
+  return null
+}
 
 export default function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
-        {/* Customer Portal Route */}
+        {/* Customer Portal & Features */}
         <Route path="/customer" element={<CustomerPortal />} />
+        <Route path="/customer/booking" element={<CustomerBooking />} />
+        <Route path="/customer/history" element={<CustomerHistory />} />
 
         {/* Admin/Manager/Staff Dashboard Routes */}
         <Route path="/dashboard" element={<DashboardLayout />}>
