@@ -81,13 +81,17 @@ export default function CustomerHistory() {
         
 
 
+        {/* Back Link */}
+        <div className="mb-4">
+          <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-orange-600 font-semibold transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+            <span>Quay lại trang chính</span>
+          </Link>
+        </div>
+
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-md shadow-slate-200/50">
           <div>
-            <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-orange-600 font-semibold mb-3 transition-colors">
-              <ChevronLeft className="w-4 h-4" />
-              <span>Quay lại trang chính</span>
-            </Link>
             <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-1 flex items-center gap-2.5">
               <History className="w-6 h-6 text-orange-600" />
               <span>Lịch Sử Đặt Lịch & Dịch Vụ</span>
