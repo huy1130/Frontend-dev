@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, X, Calendar, ChevronRight } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Menu, X, Calendar, ChevronRight, User, LogOut, History, CalendarDays } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function NavBar() {
+  const navigate = useNavigate()
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem('userRole'))
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('userRole')
+    setUserRole(null)
+    navigate('/')
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,17 +88,67 @@ export default function NavBar() {
             </a>
           </nav>
 
-          {/* Right Action: Nút "Đặt lịch ngay" màu trắng đục nổi bật sát bên phải */}
-          <div className="hidden md:flex items-center gap-3 shrink-0">
+          {/* Right Action */}
+          <div className="hidden md:flex items-center gap-3 shrink-0 relative">
+            {userRole === 'customer' ? (
+              <div className="relative">
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="w-11 h-11 rounded-full bg-white text-orange-600 flex items-center justify-center font-bold shadow-xl hover:scale-105 transition-all border border-orange-100"
+                >
+                  <User className="w-6 h-6" />
+                </button>
 
-            <Link
-              to="/login"
-              className="px-7 py-3 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-base shadow-xl transition-all hover:scale-105 flex items-center gap-2 group border border-orange-100"
-            >
-              <Calendar className="w-5 h-5 text-orange-600" />
-              <span>Đặt lịch ngay</span>
-              <ChevronRight className="w-5 h-5 text-orange-600 group-hover:translate-x-1 transition-transform" />
-            </Link>
+                {/* Dropdown Menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-up">
+                    <div className="p-4 border-b border-gray-50 bg-gray-50/50">
+                      <p className="font-bold text-gray-800">Xin chào, Khách Hàng</p>
+                      <p className="text-xs text-orange-600 font-medium mt-0.5">Thành viên Vàng</p>
+                    </div>
+                    <div className="p-2 space-y-1">
+                      <Link
+                        to="/customer/history"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                      >
+                        <History className="w-4 h-4" />
+                        <span>Lịch sử dịch vụ</span>
+                      </Link>
+                      <Link
+                        to="/customer/booking"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                      >
+                        <CalendarDays className="w-4 h-4" />
+                        <span>Đặt lịch mới</span>
+                      </Link>
+                    </div>
+                    <div className="p-2 border-t border-gray-50">
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false)
+                          handleLogout()
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="px-7 py-3 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-base shadow-xl transition-all hover:scale-105 flex items-center gap-2 group border border-orange-100"
+              >
+                <Calendar className="w-5 h-5 text-orange-600" />
+                <span>Đặt lịch ngay</span>
+                <ChevronRight className="w-5 h-5 text-orange-600 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            )}
           </div>
 
           {/* Mobile Right Bar (Menu trigger) */}
@@ -150,14 +213,45 @@ export default function NavBar() {
           </nav>
 
           <div className="pt-4 border-t border-white/20 flex flex-col gap-3">
-            <Link
-              to="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2"
-            >
-              <Calendar className="w-5 h-5 text-orange-600" />
-              <span>Đặt lịch ngay</span>
-            </Link>
+            {userRole === 'customer' ? (
+              <>
+                <Link
+                  to="/customer/history"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3 bg-white/10 text-white font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
+                >
+                  <History className="w-5 h-5" />
+                  <span>Lịch sử dịch vụ</span>
+                </Link>
+                <Link
+                  to="/customer/booking"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-orange-50 transition-colors"
+                >
+                  <CalendarDays className="w-5 h-5 text-orange-600" />
+                  <span>Đặt lịch mới</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    handleLogout()
+                  }}
+                  className="w-full text-center py-3 bg-red-500/20 text-red-100 font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-red-500/30 transition-colors mt-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Đăng xuất</span>
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2"
+              >
+                <Calendar className="w-5 h-5 text-orange-600" />
+                <span>Đặt lịch ngay</span>
+              </Link>
+            )}
           </div>
         </div>
       )}

@@ -13,8 +13,10 @@ export default function Login() {
     
     // Fake login logic for demo
     if (phone === 'customer') {
-      navigate('/customer')
+      localStorage.setItem('userRole', 'customer')
+      navigate('/')
     } else {
+      localStorage.setItem('userRole', phone || 'admin')
       navigate('/dashboard')
     }
   }
