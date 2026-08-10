@@ -191,7 +191,8 @@ export default function CustomerBooking() {
         
 
 
-        <div className="mb-2 sm:mb-0">
+        {/* Back Link */}
+        <div className="mb-4">
           <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-orange-600 font-semibold transition-colors">
             <ChevronLeft className="w-4 h-4" />
             <span>Quay lại trang chính</span>

@@ -78,13 +78,17 @@ export default function CustomerCars() {
 
       <main className="flex-1 pt-24 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
 
+        {/* Back Link */}
+        <div className="mb-4">
+          <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-emerald-600 font-semibold transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+            <span>Quay lại trang chính</span>
+          </Link>
+        </div>
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-emerald-600 font-semibold mb-2 transition-colors">
-              <ChevronLeft className="w-4 h-4" />
-              <span>Quay lại trang chính</span>
-            </Link>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 flex items-center gap-3">
               <Car className="w-8 h-8 text-emerald-600" />
               <span>Quản Lý Xe Của Bạn</span>
