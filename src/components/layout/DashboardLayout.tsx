@@ -16,9 +16,17 @@ export default function DashboardLayout() {
       {/* Main Content Area */}
       <main className="flex-1 relative z-10 flex flex-col h-screen overflow-hidden">
         {/* Simple Header inside Dashboard */}
-        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-dark-900/40 backdrop-blur-md">
-          <h1 className="text-xl font-bold text-white tracking-tight">Trang Quản Trị</h1>
-          {/* Add more header items like notifications, profile dropdown here */}
+        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-dark-900/60 backdrop-blur-md">
+          <h1 className="text-lg font-extrabold text-white tracking-tight">Cổng Quản Trị Hệ Thống HYBRIDWASH</h1>
+          
+          <div className="flex items-center gap-3">
+            <a 
+              href="/"
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl text-xs font-bold transition-all border border-white/10 flex items-center gap-1.5"
+            >
+              <span>Xem Trang Chủ Web</span>
+            </a>
+          </div>
         </header>
 
         {/* Dynamic Nested Route Content */}

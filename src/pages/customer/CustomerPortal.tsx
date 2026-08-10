@@ -1,83 +1,85 @@
 import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { User, CalendarDays, ArrowLeft, History, LogOut } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { User, CalendarDays, History, ChevronRight, Award } from 'lucide-react'
+import NavBar from '../../components/layout/NavBar'
+import Footer from '../../components/layout/Footer'
 
 export default function CustomerPortal() {
   const navigate = useNavigate()
-  
-  const handleLogout = () => {
-    navigate('/login')
-  }
 
   return (
-    <div className="min-h-screen bg-dark-950 flex flex-col font-['Montserrat',sans-serif] relative overflow-hidden">
-      
-      {/* Background elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-500/10 rounded-full blur-3xl -mr-64 -mt-64 pointer-events-none" />
-      
-      {/* Header */}
-      <header className="relative z-10 p-6 flex justify-between items-center w-full max-w-7xl mx-auto border-b border-white/5">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2 text-white/70 hover:text-white transition-colors font-medium">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Trang chủ</span>
-          </Link>
-          <div className="h-6 w-px bg-white/20"></div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Cổng Khách Hàng</h1>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-white">Xin chào, Nguyễn Văn A</p>
-            <p className="text-xs text-orange-400">Thành viên Vàng</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-500 to-yellow-500 flex items-center justify-center text-white font-bold">
-            <User className="w-5 h-5" />
-          </div>
-          <button 
-            onClick={handleLogout}
-            title="Đăng xuất"
-            className="ml-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-orange-400 transition-colors border border-white/10"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
+      <NavBar />
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 p-6 md:p-12">
-        <div className="w-full max-w-7xl mx-auto space-y-8">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Action Card */}
-            <div className="bg-dark-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:border-orange-500/30 transition-colors group cursor-pointer">
-              <div className="w-14 h-14 bg-orange-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <CalendarDays className="w-7 h-7 text-orange-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Đặt lịch hẹn mới</h3>
-              <p className="text-white/60 mb-6">Chọn dịch vụ, thời gian và địa điểm mong muốn của bạn.</p>
-              <button className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors">
-                Đặt Ngay
-              </button>
+      <main className="flex-1 pt-20 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
+        
+        {/* User Welcome Banner */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-md shadow-slate-200/50">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20 shrink-0">
+              <User className="w-7 h-7" />
             </div>
+            <div>
+              <div className="flex items-center gap-2.5 mb-1">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Xin chào, Nguyễn Văn A</h1>
+                <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                  <Award className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Thành viên Vàng</span>
+                </span>
+              </div>
+              <p className="text-slate-500 text-xs sm:text-sm">Quản lý các dịch vụ rửa xe & tích điểm ưu đãi thành viên</p>
+            </div>
+          </div>
 
-            {/* Action Card */}
-            <div className="bg-dark-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-colors group cursor-pointer">
-              <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <History className="w-7 h-7 text-white/80" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Lịch sử dịch vụ</h3>
-              <p className="text-white/60 mb-6">Xem lại các lần rửa xe và bảo dưỡng trước đây của bạn.</p>
-              <button className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors">
-                Xem Lịch Sử
-              </button>
+          <div className="flex items-center gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 w-full md:w-auto justify-between md:justify-start">
+            <div className="text-left">
+              <span className="text-xs text-slate-500 block font-medium">Điểm thưởng tích lũy</span>
+              <span className="text-lg font-extrabold text-orange-600">1,250 điểm</span>
             </div>
-            
           </div>
         </div>
+
+        {/* Feature Action Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          
+          {/* Action Card: Booking */}
+          <div 
+            onClick={() => navigate('/customer/booking')}
+            className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-orange-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-orange-100">
+              <CalendarDays className="w-6 h-6 text-orange-600" />
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5">Đặt Lịch Hẹn Mới</h3>
+            <p className="text-slate-500 mb-5 text-xs sm:text-sm">Chọn dịch vụ rửa xe, thời gian slot và áp dụng mã giảm giá độc quyền.</p>
+            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-md shadow-orange-500/20 text-xs sm:text-sm">
+              <span>Đặt Ngay</span>
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </div>
+
+          {/* Action Card: History */}
+          <div 
+            onClick={() => navigate('/customer/history')}
+            className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-slate-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-slate-200">
+              <History className="w-6 h-6 text-slate-700" />
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5">Lịch Sử Dịch Vụ</h3>
+            <p className="text-slate-500 mb-5 text-xs sm:text-sm">Xem lại danh sách và trạng thái các lần rửa xe và bảo dưỡng trước đây.</p>
+            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-colors border border-slate-200 text-xs sm:text-sm">
+              <span>Xem Lịch Sử</span>
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </div>
+          
+        </div>
+
       </main>
 
+      <Footer />
     </div>
   )
 }

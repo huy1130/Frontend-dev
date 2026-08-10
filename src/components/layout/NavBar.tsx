@@ -4,10 +4,9 @@ import { Link, useNavigate } from 'react-router-dom'
 
 export default function NavBar() {
   const navigate = useNavigate()
-  const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem('userRole'))
 
   useEffect(() => {
     setUserRole(localStorage.getItem('userRole'))
@@ -19,85 +18,100 @@ export default function NavBar() {
     navigate('/')
   }
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-gradient-to-r from-white via-orange-500 via-30% to-orange-600 shadow-xl border-b border-orange-500/30 opacity-100 ${isScrolled ? 'py-3.5' : 'py-5'
-        }`}
-    >
-      <div className="w-full px-4 sm:px-6 lg:px-10">
+    <header className="fixed top-0 left-0 right-0 z-50 py-2.5 bg-gradient-to-r from-white via-orange-500 via-30% to-orange-600 shadow-lg border-b border-orange-500/30">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
 
-          <a href="#" className="group shrink-0 flex items-center select-none ml-2 lg:ml-6">
-            <div className="relative h-16 md:h-20 shrink-0 transition-transform duration-300 group-hover:scale-105 flex items-center justify-center">
+          <Link to="/" className="group shrink-0 flex items-center select-none ml-2 lg:ml-4">
+            <div className="relative h-14 md:h-16 shrink-0 flex items-center justify-center py-1">
               <img
                 src="/logo-wash.png"
                 alt="HYBRIDWASH Logo"
-                className="w-auto h-full object-contain scale-125"
+                className="w-auto h-full object-contain scale-110"
               />
             </div>
-          </a>
+          </Link>
 
-          {/* Desktop Navigation ở chính giữa (Chữ màu trắng đục 100%) */}
-          <nav className="hidden md:flex items-center justify-center gap-6 lg:gap-9 flex-1 mx-6">
+          {/* Desktop Navigation ở chính giữa */}
+          <nav className="hidden md:flex items-center justify-center gap-4 lg:gap-7 flex-1 mx-4">
+            <Link
+              to="/"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
+            >
+              Trang chủ
+            </Link>
             <a
-              href="#how-it-works"
-              className="text-base lg:text-lg font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              href="/#how-it-works"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Quy trình
             </a>
             <a
-              href="#combos"
-              className="text-base lg:text-lg font-bold text-white hover:text-amber-200 hover:scale-105 transition-all flex items-center gap-1.5 drop-shadow-sm"
+              href="/#combos"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors flex items-center gap-1 drop-shadow-sm"
             >
               Gói Combo
-              <span className="bg-white/25 text-white border border-white/40 text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-white/25 text-white border border-white/40 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                 Hot
               </span>
             </a>
             <a
-              href="#promotions"
-              className="text-base lg:text-lg font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              href="/#promotions"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Khuyến mãi
             </a>
             <a
-              href="#services"
-              className="text-base lg:text-lg font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              href="/#services"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Dịch vụ lẻ
             </a>
             <a
-              href="#branches"
-              className="text-base lg:text-lg font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              href="/#branches"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Chi nhánh
             </a>
             <a
-              href="#tiers"
-              className="text-base lg:text-lg font-bold text-white hover:text-amber-200 hover:scale-105 transition-all drop-shadow-sm"
+              href="/#tiers"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
               Hạng thẻ
             </a>
           </nav>
 
           {/* Right Action */}
-          <div className="hidden md:flex items-center gap-3 shrink-0 relative">
+          <div className="hidden md:flex items-center gap-2.5 shrink-0 relative">
             {userRole === 'customer' ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="w-11 h-11 rounded-full bg-white text-orange-600 flex items-center justify-center font-bold shadow-xl hover:scale-105 transition-all border border-orange-100"
+              <>
+                <Link
+                  to="/customer/history"
+                  onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
+                  className="px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs lg:text-sm transition-colors flex items-center gap-1.5 backdrop-blur-sm border border-white/20 shadow-sm"
                 >
-                  <User className="w-6 h-6" />
-                </button>
+                  <History className="w-4 h-4" />
+                  <span>Lịch sử</span>
+                </Link>
+
+                <Link
+                  to="/customer/booking"
+                  onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
+                  className="px-4 py-2 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-xs lg:text-sm transition-colors flex items-center gap-1.5 shadow-md"
+                >
+                  <CalendarDays className="w-4 h-4 text-orange-600" />
+                  <span>Đặt lịch ngay</span>
+                </Link>
+
+                <div className="relative ml-1">
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="w-10 h-10 rounded-full bg-white/90 text-orange-600 flex items-center justify-center font-bold shadow-md hover:bg-white transition-colors border border-orange-100"
+                    title="Thông tin tài khoản"
+                  >
+                    <User className="w-5 h-5" />
+                  </button>
 
                 {/* Dropdown Menu */}
                 {profileDropdownOpen && (
@@ -113,7 +127,7 @@ export default function NavBar() {
                         className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
                       >
                         <History className="w-4 h-4" />
-                        <span>Lịch sử dịch vụ</span>
+                        <span>Lịch sử đặt lịch</span>
                       </Link>
                       <Link
                         to="/customer/booking"
@@ -139,6 +153,7 @@ export default function NavBar() {
                   </div>
                 )}
               </div>
+            </>
             ) : (
               <Link
                 to="/login"
@@ -168,43 +183,50 @@ export default function NavBar() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-orange-600 border-b border-orange-500/40 px-4 pt-4 pb-6 space-y-4 animate-fade-up text-white shadow-2xl">
           <nav className="flex flex-col space-y-3">
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
+            >
+              Trang chủ
+            </Link>
             <a
-              href="#how-it-works"
+              href="/#how-it-works"
               onClick={() => setMobileMenuOpen(false)}
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
               Quy trình chăm sóc xe
             </a>
             <a
-              href="#combos"
+              href="/#combos"
               onClick={() => setMobileMenuOpen(false)}
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
               Gói Combo rửa xe
             </a>
             <a
-              href="#promotions"
+              href="/#promotions"
               onClick={() => setMobileMenuOpen(false)}
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
               Chương trình khuyến mãi
             </a>
             <a
-              href="#services"
+              href="/#services"
               onClick={() => setMobileMenuOpen(false)}
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
               Danh mục dịch vụ lẻ
             </a>
             <a
-              href="#branches"
+              href="/#branches"
               onClick={() => setMobileMenuOpen(false)}
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
               Hệ thống chi nhánh
             </a>
             <a
-              href="#tiers"
+              href="/#tiers"
               onClick={() => setMobileMenuOpen(false)}
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
@@ -221,7 +243,7 @@ export default function NavBar() {
                   className="w-full text-center py-3 bg-white/10 text-white font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
                 >
                   <History className="w-5 h-5" />
-                  <span>Lịch sử dịch vụ</span>
+                  <span>Lịch sử  đặt lịch</span>
                 </Link>
                 <Link
                   to="/customer/booking"
