@@ -1,27 +1,18 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone } from 'lucide-react'
 import Logo from '../components/common/Logo'
 
-export default function Login() {
-  const navigate = useNavigate()
+export default function Register() {
+  const [account, setAccount] = useState('')
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Fake login logic for demo
-    if (phone === 'customer') {
-      navigate('/customer')
-    } else {
-      navigate('/dashboard')
-    }
-  }
-
-  const fillDemoAccount = (role: 'admin' | 'manager' | 'staff' | 'customer') => {
-    setPhone(role)
-    setPassword('123456')
+    // TODO: Handle register logic
+    console.log('Register attempt:', { account, name, phone, password })
   }
 
   return (
@@ -59,13 +50,13 @@ export default function Login() {
               <Logo size="sm" className="mb-8" />
 
               <div className="text-center space-y-2 mb-10">
-                <h1 className="text-3xl font-extrabold text-white tracking-tight">Đăng Nhập</h1>
-                <p className="text-white/60 font-medium">Truy cập để đặt lịch và tích điểm thành viên</p>
+                <h1 className="text-3xl font-extrabold text-white tracking-tight">Đăng Ký</h1>
+                <p className="text-white/60 font-medium">Tạo tài khoản để đặt lịch và tích điểm thành viên</p>
               </div>
 
               <form onSubmit={handleSubmit} className="w-full space-y-6">
 
-                {/* Phone Input */}
+                {/* Account Input */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-white/80">Tài khoản</label>
                   <div className="relative group">
@@ -74,9 +65,45 @@ export default function Login() {
                     </div>
                     <input
                       type="text"
+                      value={account}
+                      onChange={(e) => setAccount(e.target.value)}
+                      placeholder="Nhập tên tài khoản"
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Name Input */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-white/80">Họ và tên</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                      <User className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
+                    </div>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Nhập họ và tên của bạn"
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Input */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-white/80">Số điện thoại</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                      <Phone className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
+                    </div>
+                    <input
+                      type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Nhập tài khoản của bạn"
+                      placeholder="Nhập số điện thoại"
                       className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
                       required
                     />
@@ -99,11 +126,6 @@ export default function Login() {
                       required
                     />
                   </div>
-                  <div className="flex justify-end pt-1">
-                    <a href="#" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">
-                      Quên mật khẩu?
-                    </a>
-                  </div>
                 </div>
 
                 {/* Submit Button */}
@@ -111,44 +133,10 @@ export default function Login() {
                   type="submit"
                   className="w-full bg-gradient-to-r from-orange-500 to-[#f97316] hover:from-orange-400 hover:to-orange-500 text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]"
                 >
-                  <span>Đăng Nhập Ngay</span>
+                  <span>Đăng Ký Ngay</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </form>
-
-              {/* Demo Accounts Section */}
-              <div className="w-full mt-6 pt-6 border-t border-white/10">
-                <div className="flex items-center gap-2 text-white/60 mb-4 justify-center text-sm font-medium">
-                  <Zap className="w-4 h-4 text-orange-400" />
-                  <span>Tài khoản Demo (Click để điền)</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => fillDemoAccount('admin')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Admin</span>
-                  </button>
-                  <button 
-                    onClick={() => fillDemoAccount('manager')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Manager</span>
-                  </button>
-                  <button 
-                    onClick={() => fillDemoAccount('staff')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Staff</span>
-                  </button>
-                  <button 
-                    onClick={() => fillDemoAccount('customer')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Customer</span>
-                  </button>
-                </div>
-              </div>
 
               {/* Security Badge */}
               <div className="mt-8 flex items-center justify-center gap-2 text-white/40 text-xs font-medium">
@@ -158,12 +146,12 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Register Link */}
+          {/* Login Link */}
           <div className="text-center mt-8">
             <p className="text-white/60 font-medium">
-              Chưa có tài khoản?{' '}
-              <Link to="/register" className="text-orange-400 hover:text-orange-300 font-bold transition-colors">
-                Đăng ký ngay
+              Đã có tài khoản?{' '}
+              <Link to="/login" className="text-orange-400 hover:text-orange-300 font-bold transition-colors">
+                Đăng nhập
               </Link>
             </p>
           </div>
