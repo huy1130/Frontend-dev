@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, X, Calendar, ChevronRight, User, LogOut, History, CalendarDays } from 'lucide-react'
+import { Menu, X, Calendar, ChevronRight, User, LogOut, History, CalendarDays, Car, LayoutDashboard } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 export default function NavBar() {
@@ -87,12 +87,12 @@ export default function NavBar() {
             {userRole === 'customer' ? (
               <>
                 <Link
-                  to="/customer/history"
+                  to="/customer"
                   onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
                   className="px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs lg:text-sm transition-colors flex items-center gap-1.5 backdrop-blur-sm border border-white/20 shadow-sm"
                 >
-                  <History className="w-4 h-4" />
-                  <span>Lịch sử</span>
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Quản lý tài khoản</span>
                 </Link>
 
                 <Link
@@ -101,7 +101,7 @@ export default function NavBar() {
                   className="px-4 py-2 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-xs lg:text-sm transition-colors flex items-center gap-1.5 shadow-md"
                 >
                   <CalendarDays className="w-4 h-4 text-orange-600" />
-                  <span>Đăng ký ngay</span>
+                  <span>Đặt lịch ngay</span>
                 </Link>
 
                 <div className="relative ml-1">
@@ -122,12 +122,28 @@ export default function NavBar() {
                       </div>
                       <div className="p-2 space-y-1">
                         <Link
+                          to="/customer"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          <span>Quản lý tài khoản</span>
+                        </Link>
+                        <Link
                           to="/customer/history"
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
                         >
                           <History className="w-4 h-4" />
                           <span>Lịch sử đặt lịch</span>
+                        </Link>
+                        <Link
+                          to="/customer/cars"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
+                        >
+                          <Car className="w-4 h-4" />
+                          <span>Quản lý xe</span>
                         </Link>
                         <Link
                           to="/customer/booking"
@@ -238,12 +254,28 @@ export default function NavBar() {
             {userRole === 'customer' ? (
               <>
                 <Link
+                  to="/customer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3 bg-white/10 text-white font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>Quản lý tài khoản</span>
+                </Link>
+                <Link
                   to="/customer/history"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-3 bg-white/10 text-white font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
                 >
                   <History className="w-5 h-5" />
-                  <span>Lịch sử  đặt lịch</span>
+                  <span>Lịch sử đặt lịch</span>
+                </Link>
+                <Link
+                  to="/customer/cars"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-3 bg-white/10 text-white font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
+                >
+                  <Car className="w-5 h-5" />
+                  <span>Quản lý xe</span>
                 </Link>
                 <Link
                   to="/customer/booking"

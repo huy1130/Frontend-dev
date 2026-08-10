@@ -14,6 +14,7 @@ import Employees from './pages/dashboard/Employees'
 import CustomerPortal from './pages/customer/CustomerPortal'
 import CustomerBooking from './pages/customer/CustomerBooking'
 import CustomerHistory from './pages/customer/CustomerHistory'
+import CustomerCars from './pages/customer/CustomerCars'
 
 import ServiceManagement from './pages/dashboard/ServiceManagement'
 import PromotionManagement from './pages/dashboard/PromotionManagement'
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/customer" element={<CustomerPortal />} />
         <Route path="/customer/booking" element={<CustomerBooking />} />
         <Route path="/customer/history" element={<CustomerHistory />} />
+        <Route path="/customer/cars" element={<CustomerCars />} />
 
         {/* Admin/Manager/Staff Dashboard Routes */}
         <Route path="/dashboard" element={<DashboardLayout />}>

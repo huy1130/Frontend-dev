@@ -8,7 +8,8 @@ import {
   CheckCircle2, 
   XCircle, 
   PlusCircle, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft, 
   AlertCircle,
   Car
 } from 'lucide-react'
@@ -76,13 +77,17 @@ export default function CustomerHistory() {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       <NavBar />
 
-      <main className="flex-1 pt-28 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
+      <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
         
 
 
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-md shadow-slate-200/50">
           <div>
+            <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-orange-600 font-semibold mb-3 transition-colors">
+              <ChevronLeft className="w-4 h-4" />
+              <span>Quay lại trang chính</span>
+            </Link>
             <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-1 flex items-center gap-2.5">
               <History className="w-6 h-6 text-orange-600" />
               <span>Lịch Sử Đặt Lịch & Dịch Vụ</span>
