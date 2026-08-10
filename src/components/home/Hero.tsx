@@ -10,7 +10,7 @@ export default function Hero() {
       <img
         src="/hero_banner_bg.png"
         alt="HYBRIDWASH - Hệ Thống Rửa Xe & Chăm Sóc Xe Hàng Đầu"
-        className="w-full h-auto min-h-[500px] max-h-[900px] object-cover object-center brightness-105 contrast-105"
+        className="w-full h-[400px] md:h-[800px] lg:h-[1000px] object-cover object-center brightness-105 contrast-105"
       />
 
       {/* Lớp màu tối phủ lên để chữ nổi bật trên nền ảnh */}
