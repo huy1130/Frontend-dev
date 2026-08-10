@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, CalendarDays, History, ChevronRight, Award } from 'lucide-react'
+import { User, CalendarDays, History, ChevronRight, Award, Car } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 
@@ -12,7 +12,7 @@ export default function CustomerPortal() {
       <NavBar />
 
       {/* Main Content */}
-      <main className="flex-1 pt-20 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
+      <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
         
         {/* User Welcome Banner */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-md shadow-slate-200/50">
@@ -41,7 +41,7 @@ export default function CustomerPortal() {
         </div>
 
         {/* Feature Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           
           {/* Action Card: Booking */}
           <div 
@@ -71,6 +71,22 @@ export default function CustomerPortal() {
             <p className="text-slate-500 mb-5 text-xs sm:text-sm">Xem lại danh sách và trạng thái các lần rửa xe và bảo dưỡng trước đây.</p>
             <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-colors border border-slate-200 text-xs sm:text-sm">
               <span>Xem Lịch Sử</span>
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </div>
+
+          {/* Action Card: Cars */}
+          <div 
+            onClick={() => navigate('/customer/cars')}
+            className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-emerald-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50"
+          >
+            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-emerald-100">
+              <Car className="w-6 h-6 text-emerald-600" />
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5">Quản Lý Xe</h3>
+            <p className="text-slate-500 mb-5 text-xs sm:text-sm">Thêm và quản lý danh sách xe của bạn để tiện lợi hơn khi đặt lịch.</p>
+            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-md shadow-emerald-500/20 text-xs sm:text-sm">
+              <span>Quản Lý Xe</span>
               <ChevronRight className="w-4 h-4" />
             </span>
           </div>

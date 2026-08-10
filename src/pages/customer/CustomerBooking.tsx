@@ -13,7 +13,9 @@ import {
   Car,
   Check,
   Percent,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft,
+  Plus
 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
@@ -38,12 +40,21 @@ interface PromotionItem {
   expiry: string
 }
 
+interface CarItem {
+  id: string
+  plateNumber: string
+  brand: string
+  model: string
+  color: string
+}
+
 export default function CustomerBooking() {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<number>(1)
 
   // Step 1 State: Date & Time & Branch
   const [selectedBranch, setSelectedBranch] = useState('b1')
+  const [selectedCarId, setSelectedCarId] = useState<string>('c1')
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   )
@@ -58,6 +69,11 @@ export default function CustomerBooking() {
   const [bookingRef, setBookingRef] = useState<string>('')
 
   // Mock Data
+  const myCars: CarItem[] = [
+    { id: 'c1', plateNumber: '51G-123.45', brand: 'Toyota', model: 'Camry 2023', color: 'Trắng' },
+    { id: 'c2', plateNumber: '51F-987.65', brand: 'Honda', model: 'CR-V 2022', color: 'Đen' },
+  ]
+
   const branches = [
     { id: 'b1', name: 'Chi nhánh Quận 1', address: '123 Nguyễn Trãi, P. Bến Thành, Q.1, TPHCM' },
     { id: 'b2', name: 'Chi nhánh Quận 7', address: '456 Nguyễn Thị Thập, P. Tân Phong, Q.7, TPHCM' },
@@ -171,9 +187,16 @@ export default function CustomerBooking() {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       <NavBar />
 
-      <main className="flex-1 pt-28 pb-12 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
+      <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
         
 
+
+        <div className="mb-2 sm:mb-0">
+          <Link to="/customer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-orange-600 font-semibold transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+            <span>Quay lại trang chính</span>
+          </Link>
+        </div>
 
         {/* Title & Progress Bar */}
         {!isSuccess && (
@@ -251,6 +274,10 @@ export default function CustomerBooking() {
                 <span className="font-bold text-slate-900">{branches.find(b => b.id === selectedBranch)?.name}</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
+                <span className="text-slate-500">Xe của bạn:</span>
+                <span className="font-bold text-slate-900">{myCars.find(c => c.id === selectedCarId)?.plateNumber} - {myCars.find(c => c.id === selectedCarId)?.brand} {myCars.find(c => c.id === selectedCarId)?.model}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Thời gian:</span>
                 <span className="font-bold text-slate-900">{selectedTimeSlot} - {selectedDate}</span>
               </div>
@@ -291,11 +318,55 @@ export default function CustomerBooking() {
             {currentStep === 1 && (
               <div className="space-y-6">
                 
+                {/* Car Selection */}
+                <div>
+                  <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
+                    <Car className="w-4 h-4 text-orange-600" />
+                    <span>1. Chọn Xe Của Bạn:</span>
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {myCars.map((car) => (
+                      <div
+                        key={car.id}
+                        onClick={() => setSelectedCarId(car.id)}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                          selectedCarId === car.id
+                            ? 'bg-orange-50/80 border-orange-500 shadow-md'
+                            : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            selectedCarId === car.id ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            <Car className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-sm mb-0.5">{car.plateNumber}</h4>
+                            <p className="text-xs text-slate-500">{car.brand} {car.model} • {car.color}</p>
+                          </div>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                          selectedCarId === car.id ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
+                        }`}>
+                          {selectedCarId === car.id && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2.5 text-right">
+                    <Link to="/customer/cars" className="text-xs text-orange-600 font-bold hover:underline inline-flex items-center gap-1">
+                      <Plus className="w-3 h-3" />
+                      <span>Thêm xe mới</span>
+                    </Link>
+                  </div>
+                </div>
+
                 {/* Branch Selection */}
                 <div>
                   <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-orange-600" />
-                    <span>1. Chọn Chi Nhánh Phù Hợp:</span>
+                    <span>2. Chọn Chi Nhánh Phù Hợp:</span>
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {branches.map((b) => (
@@ -319,10 +390,11 @@ export default function CustomerBooking() {
                 <div>
                   <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-orange-600" />
-                    <span>2. Chọn Ngày Đặt Lịch:</span>
+                    <span>3. Chọn Ngày Đặt Lịch:</span>
                   </label>
                   <input
                     type="date"
+                    min={new Date().toISOString().split('T')[0]}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     className="w-full sm:w-72 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:border-orange-500 font-bold text-sm"
@@ -333,7 +405,7 @@ export default function CustomerBooking() {
                 <div>
                   <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-orange-600" />
-                    <span>3. Chọn Khung Giờ Phù Hợp:</span>
+                    <span>4. Chọn Khung Giờ Phù Hợp:</span>
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2.5">
                     {timeSlots.map((slot) => (
@@ -457,6 +529,7 @@ export default function CustomerBooking() {
                       </h4>
 
                       <div className="text-xs space-y-1.5 text-slate-700">
+                        <p><span className="text-slate-500">Xe của bạn:</span> <strong className="text-slate-900">{myCars.find(c => c.id === selectedCarId)?.plateNumber} - {myCars.find(c => c.id === selectedCarId)?.brand} {myCars.find(c => c.id === selectedCarId)?.model}</strong></p>
                         <p><span className="text-slate-500">Địa điểm:</span> <strong className="text-slate-900">{branches.find(b => b.id === selectedBranch)?.name}</strong></p>
                         <p><span className="text-slate-500">Thời gian:</span> <strong className="text-slate-900">{selectedTimeSlot} ngày {selectedDate}</strong></p>
                         <div>
