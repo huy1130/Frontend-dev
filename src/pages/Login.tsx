@@ -16,27 +16,7 @@ export default function Login() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Bypass API cho các tài khoản Demo
-    const demoRoles = ['admin', 'manager', 'staff', 'customer'];
-    if (demoRoles.includes(phone.toLowerCase()) && password === '123456') {
-      const roleName = phone.charAt(0).toUpperCase() + phone.slice(1);
-      localStorage.setItem('token', 'demo-token-12345');
-      localStorage.setItem('userRole', phone.toLowerCase());
-      localStorage.setItem('fullName', `Demo ${roleName}`);
-      localStorage.setItem('phoneNumber', '0999999999');
-      localStorage.removeItem('currentTier');
-      localStorage.removeItem('currentPoints');
-      
-      toast.success(`Đăng nhập thành công với tài khoản Demo ${roleName}!`);
-      
-      setIsLoading(false);
-      if (phone.toLowerCase() === 'customer') {
-        navigate('/customer');
-      } else {
-        navigate('/dashboard');
-      }
-      return;
-    }
+
 
     try {
       const response = await authService.login({ 
@@ -54,8 +34,10 @@ export default function Login() {
       
       toast.success('Đăng nhập thành công!');
       
-      if (response.role === 'Customer') {
+      if (response.role.toLowerCase() === 'customer') {
         navigate('/customer');
+      } else if (response.role.toLowerCase() === 'staff') {
+        navigate('/dashboard/appointments');
       } else {
         navigate('/dashboard');
       }
@@ -65,11 +47,6 @@ export default function Login() {
     } finally {
       setIsLoading(false);
     }
-  }
-
-  const fillDemoAccount = (role: 'admin' | 'manager' | 'staff' | 'customer') => {
-    setPhone(role)
-    setPassword('123456')
   }
 
   return (
@@ -181,39 +158,6 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* Demo Accounts Section */}
-              <div className="w-full mt-6 pt-6 border-t border-white/10">
-                <div className="flex items-center gap-2 text-white/60 mb-4 justify-center text-sm font-medium">
-                  <Zap className="w-4 h-4 text-orange-400" />
-                  <span>Tài khoản Demo (Click để điền)</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => fillDemoAccount('admin')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Admin</span>
-                  </button>
-                  <button 
-                    onClick={() => fillDemoAccount('manager')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Manager</span>
-                  </button>
-                  <button 
-                    onClick={() => fillDemoAccount('staff')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Staff</span>
-                  </button>
-                  <button 
-                    onClick={() => fillDemoAccount('customer')}
-                    className="py-2 px-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/80 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <span>Customer</span>
-                  </button>
-                </div>
-              </div>
 
               {/* Security Badge */}
               <div className="mt-8 flex items-center justify-center gap-2 text-white/40 text-xs font-medium">
