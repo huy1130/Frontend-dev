@@ -1,5 +1,5 @@
 import React from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, 
   BarChart3, 
@@ -31,7 +31,12 @@ export default function Sidebar() {
   const navigate = useNavigate()
   
   const handleLogout = () => {
+    localStorage.removeItem('token')
     localStorage.removeItem('userRole')
+    localStorage.removeItem('fullName')
+    localStorage.removeItem('phoneNumber')
+    localStorage.removeItem('currentTier')
+    localStorage.removeItem('currentPoints')
     navigate('/login')
   }
 
@@ -39,19 +44,19 @@ export default function Sidebar() {
     <aside className="w-64 min-h-screen bg-white border-r border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col font-sans relative z-20">
       
       {/* Logo Header */}
-      <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-orange-50/50 to-white">
-        <div className="flex items-center gap-3">
+      <Link to="/" className="h-20 px-6 flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-orange-50/50 to-white hover:bg-orange-50 transition-colors group cursor-pointer block no-underline">
+        <div className="flex items-center gap-3 h-full">
           <img
             src="/logo-wash.png"
             alt="HYBRIDWASH Logo"
-            className="h-10 w-auto object-contain"
+            className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
           />
           <div>
             <span className="text-xs font-extrabold text-orange-600 uppercase tracking-widest block">ADMIN</span>
-            <span className="text-[10px] text-slate-400 font-semibold block">HYBRIDWASH</span>
+            <span className="text-[10px] text-slate-400 font-semibold block">Trang chủ / Home</span>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation Section */}
       <div className="flex-1 py-6 px-3.5 space-y-1.5 overflow-y-auto custom-scrollbar">

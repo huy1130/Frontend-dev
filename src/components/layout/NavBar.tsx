@@ -13,7 +13,12 @@ export default function NavBar() {
   }, [])
 
   const handleLogout = () => {
+    localStorage.removeItem('token')
     localStorage.removeItem('userRole')
+    localStorage.removeItem('fullName')
+    localStorage.removeItem('phoneNumber')
+    localStorage.removeItem('currentTier')
+    localStorage.removeItem('currentPoints')
     setUserRole(null)
     navigate('/')
   }
@@ -117,8 +122,8 @@ export default function NavBar() {
                   {profileDropdownOpen && (
                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-up">
                       <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                        <p className="font-bold text-gray-800">Xin chào, Khách Hàng</p>
-                        <p className="text-xs text-orange-600 font-medium mt-0.5">Thành viên Vàng</p>
+                        <p className="font-bold text-gray-800">Xin chào, {localStorage.getItem('fullName') || 'Khách Hàng'}</p>
+                        <p className="text-xs text-orange-600 font-medium mt-0.5">{localStorage.getItem('currentTier') || 'Thành viên'}</p>
                       </div>
                       <div className="p-2 space-y-1">
                         <Link
@@ -170,6 +175,16 @@ export default function NavBar() {
                   )}
                 </div>
               </>
+            ) : userRole && ['admin', 'manager', 'staff'].includes(userRole.toLowerCase()) ? (
+              <Link
+                to="/dashboard"
+                onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
+                className="px-6 py-2.5 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-sm shadow-xl transition-all hover:scale-105 flex items-center gap-2 group border border-orange-100"
+              >
+                <LayoutDashboard className="w-4 h-4 text-orange-600" />
+                <span>Vào trang Quản trị</span>
+                <ChevronRight className="w-4 h-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
+              </Link>
             ) : (
               <Link
                 to="/login"
@@ -296,6 +311,15 @@ export default function NavBar() {
                   <span>Đăng xuất</span>
                 </button>
               </>
+            ) : userRole && ['admin', 'manager', 'staff'].includes(userRole.toLowerCase()) ? (
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2"
+              >
+                <LayoutDashboard className="w-5 h-5 text-orange-600" />
+                <span>Vào trang Quản trị</span>
+              </Link>
             ) : (
               <Link
                 to="/login"

@@ -21,6 +21,7 @@ import ServiceManagement from './pages/dashboard/ServiceManagement'
 import PromotionManagement from './pages/dashboard/PromotionManagement'
 import TierManagement from './pages/dashboard/TierManagement'
 import { Toaster } from 'sonner'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -47,21 +48,45 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
-      <Toaster richColors position="top-right" duration={2000} />
+      <Toaster richColors position="top-right" duration={200} />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+
         {/* Customer Portal & Features */}
-        <Route path="/customer" element={<CustomerPortal />} />
-        <Route path="/customer/booking" element={<CustomerBooking />} />
-        <Route path="/customer/history" element={<CustomerHistory />} />
-        <Route path="/customer/cars" element={<CustomerCars />} />
-        <Route path="/customer/profile" element={<CustomerProfile />} />
+        <Route path="/customer" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerPortal />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer/booking" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerBooking />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer/history" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerHistory />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer/cars" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerCars />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer/profile" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerProfile />
+          </ProtectedRoute>
+        } />
 
         {/* Admin/Manager/Staff Dashboard Routes */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route path="/dashboard" element={
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'staff']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Dashboard />} />
           <Route path="services" element={<ServiceManagement />} />
           <Route path="promotions" element={<PromotionManagement />} />
