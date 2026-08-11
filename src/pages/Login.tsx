@@ -1,23 +1,63 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap } from 'lucide-react'
+import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react'
 import Logo from '../components/common/Logo'
+import { authService } from '../services/authService'
+import { toast } from 'sonner'
 
 export default function Login() {
   const navigate = useNavigate()
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Fake login logic for demo
-    if (phone === 'customer') {
-      localStorage.setItem('userRole', 'customer')
-      navigate('/')
-    } else {
-      localStorage.setItem('userRole', phone || 'admin')
-      navigate('/dashboard')
+    setIsLoading(true)
+
+    // Bypass API cho các tài khoản Demo
+    const demoRoles = ['admin', 'manager', 'staff', 'customer'];
+    if (demoRoles.includes(phone.toLowerCase()) && password === '123456') {
+      const roleName = phone.charAt(0).toUpperCase() + phone.slice(1);
+      localStorage.setItem('token', 'demo-token-12345');
+      localStorage.setItem('userRole', phone.toLowerCase());
+      localStorage.setItem('fullName', `Demo ${roleName}`);
+      localStorage.setItem('phoneNumber', '0999999999');
+      
+      toast.success(`Đăng nhập thành công với tài khoản Demo ${roleName}!`);
+      
+      setIsLoading(false);
+      if (phone.toLowerCase() === 'customer') {
+        navigate('/customer');
+      } else {
+        navigate('/dashboard');
+      }
+      return;
+    }
+
+    try {
+      const response = await authService.login({ 
+        phoneNumber: phone, 
+        password 
+      });
+      
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('userRole', response.role.toLowerCase());
+      localStorage.setItem('fullName', response.fullName);
+      localStorage.setItem('phoneNumber', phone);
+      
+      toast.success('Đăng nhập thành công!');
+      
+      if (response.role === 'Customer') {
+        navigate('/customer');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -111,10 +151,20 @@ export default function Login() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-orange-500 to-[#f97316] hover:from-orange-400 hover:to-orange-500 text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-orange-500 to-[#f97316] hover:from-orange-400 hover:to-orange-500 text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  <span>Đăng Nhập Ngay</span>
-                  <ArrowRight className="w-5 h-5" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Đăng Nhập Ngay</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
 

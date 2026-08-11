@@ -6,6 +6,9 @@ import Footer from '../../components/layout/Footer'
 
 export default function CustomerPortal() {
   const navigate = useNavigate()
+  const fullName = localStorage.getItem('fullName') || 'Khách hàng';
+  const currentTier = localStorage.getItem('currentTier') || 'Thành viên';
+  const currentPoints = localStorage.getItem('currentPoints') || '0';
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
@@ -22,10 +25,10 @@ export default function CustomerPortal() {
             </div>
             <div>
               <div className="flex items-center gap-2.5 mb-1">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Xin chào, Nguyễn Văn A</h1>
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Xin chào, {fullName}</h1>
                 <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
                   <Award className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Thành viên Vàng</span>
+                  <span>{currentTier}</span>
                 </span>
               </div>
               <button 
@@ -41,7 +44,7 @@ export default function CustomerPortal() {
           <div className="flex items-center gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 w-full md:w-auto justify-between md:justify-start">
             <div className="text-left">
               <span className="text-xs text-slate-500 block font-medium">Điểm thưởng tích lũy</span>
-              <span className="text-lg font-extrabold text-orange-600">1,250 điểm</span>
+              <span className="text-lg font-extrabold text-orange-600">{currentPoints} điểm</span>
             </div>
           </div>
         </div>

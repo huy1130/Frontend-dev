@@ -1,18 +1,38 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone } from 'lucide-react'
+import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone, Loader2 } from 'lucide-react'
 import Logo from '../components/common/Logo'
+import { authService } from '../services/authService'
+import { toast } from 'sonner'
+import { useNavigate } from 'react-router-dom'
 
 export default function Register() {
-  const [account, setAccount] = useState('')
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Handle register logic
-    console.log('Register attempt:', { account, name, phone, password })
+    setIsLoading(true)
+
+    try {
+      const response = await authService.register({
+        fullName: name,
+        phoneNumber: phone,
+        password: password
+      })
+      
+      toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.')
+      
+      navigate('/login')
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Đăng ký thất bại, vui lòng thử lại'
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -55,24 +75,6 @@ export default function Register() {
               </div>
 
               <form onSubmit={handleSubmit} className="w-full space-y-6">
-
-                {/* Account Input */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-white/80">Tài khoản</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                      <User className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
-                    </div>
-                    <input
-                      type="text"
-                      value={account}
-                      onChange={(e) => setAccount(e.target.value)}
-                      placeholder="Nhập tên tài khoản"
-                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
-                      required
-                    />
-                  </div>
-                </div>
 
                 {/* Name Input */}
                 <div className="space-y-2">
@@ -131,10 +133,20 @@ export default function Register() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-orange-500 to-[#f97316] hover:from-orange-400 hover:to-orange-500 text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-orange-500 to-[#f97316] hover:from-orange-400 hover:to-orange-500 text-white font-bold rounded-xl py-4 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  <span>Đăng Ký Ngay</span>
-                  <ArrowRight className="w-5 h-5" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Đăng Ký Ngay</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
 

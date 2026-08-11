@@ -11,6 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'https://localhost:7040',
+        changeOrigin: true,
+        secure: false, // In case of local self-signed SSL certificate
+      }
+    }
   }
 })
