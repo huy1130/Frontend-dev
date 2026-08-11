@@ -1,8 +1,14 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Calendar } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function Hero() {
+  const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem('userRole'))
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem('userRole'))
+  }, [])
+
   return (
     <section className="relative w-full bg-dark-950 text-white transition-colors duration-300 overflow-hidden">
 
@@ -54,7 +60,7 @@ export default function Hero() {
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-4 pt-4">
             <Link
-              to="/login"
+              to={userRole === 'customer' ? '/customer/booking' : '/login'}
               className="px-6 py-2.5 bg-[#f97316] text-white font-semibold text-sm sm:text-base hover:bg-orange-600 transition-colors flex items-center gap-2 drop-shadow-lg rounded-sm"
             >
               Đặt Hẹn Online

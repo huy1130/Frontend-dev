@@ -1,12 +1,21 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Ticket, Copy, Check, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { mockPromotions } from '../../mock/homeData'
+import { promotionService, PromotionDTO } from '../../services/promotionService'
 
 export default function PublicPromotions() {
-  const [copiedId, setCopiedId] = React.useState<string | null>(null)
+  const [copiedId, setCopiedId] = React.useState<number | null>(null)
+  const [promotions, setPromotions] = useState<PromotionDTO[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleCopy = (code: string, id: string) => {
+  useEffect(() => {
+    promotionService.getPublicPromotions().then(data => {
+      setPromotions(data.filter(p => p.isActive))
+    }).finally(() => setIsLoading(false))
+  }, [])
+
+  const handleCopy = (code: string | undefined, id: number) => {
+    if (!code) return;
     navigator.clipboard.writeText(code)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2500)
@@ -52,9 +61,13 @@ export default function PublicPromotions() {
           }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {mockPromotions.map((promo) => (
+          {isLoading ? (
+             <div className="col-span-1 md:col-span-3 text-center py-10 text-rose-600 font-bold">Đang tải danh sách khuyến mãi...</div>
+          ) : promotions.length === 0 ? (
+             <div className="col-span-1 md:col-span-3 text-center py-10 text-slate-500">Hiện tại không có chương trình khuyến mãi nào.</div>
+          ) : promotions.map((promo) => (
             <motion.div
-              key={promo.id}
+              key={promo.promotionId}
               variants={{
                 hidden: { opacity: 0, y: 35, scale: 0.95 },
                 show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } }
@@ -64,47 +77,49 @@ export default function PublicPromotions() {
             >
               {/* Badge */}
               <div className="flex items-center justify-between gap-2 mb-4">
-                <span className="bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-sm px-3 py-1 rounded-lg shadow-md">
-                  {promo.discountBadge}
+                <span className="bg-gradient-to-r from-rose-500 to-amber-500 text-white font-black text-xs px-3 py-1 rounded-lg shadow-md">
+                  {promo.promoType === 'Percentage' ? 'Giảm %' : promo.promoType === 'FixedAmount' ? 'Giảm Tiền' : 'Ưu Đãi'}
                 </span>
                 <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
                   <Clock className="w-3.5 h-3.5" />
-                  Hạn: {promo.validUntil}
+                  Hạn: {promo.validTo ? new Date(promo.validTo).toLocaleDateString('vi-VN') : 'Không giới hạn'}
                 </div>
               </div>
 
               {/* Title & Desc */}
               <div className="space-y-2 mb-6">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
-                  {promo.title}
+                  {promo.promoName}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {promo.description}
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
+                  {promo.description || 'Nhanh tay nhận ngay ưu đãi từ HybridWash.'}
                 </p>
               </div>
 
               {/* Code Box & Copy Trigger */}
               <div className="p-3 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-3">
                 <div className="font-mono font-bold text-brand-600 dark:text-brand-300 text-sm tracking-wider">
-                  {promo.code}
+                  {promo.promoCode || 'TỰ ĐỘNG'}
                 </div>
 
-                <button
-                  onClick={() => handleCopy(promo.code, promo.id)}
-                  className="px-3.5 py-1.5 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 hover:bg-brand-500/20 dark:hover:bg-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
-                >
-                  {copiedId === promo.id ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      Đã chép!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      Sao chép
-                    </>
-                  )}
-                </button>
+                {promo.promoCode && (
+                  <button
+                    onClick={() => handleCopy(promo.promoCode, promo.promotionId)}
+                    className="px-3.5 py-1.5 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 hover:bg-brand-500/20 dark:hover:bg-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  >
+                    {copiedId === promo.promotionId ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        Đã chép!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        Sao chép
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
             </motion.div>

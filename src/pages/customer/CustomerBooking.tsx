@@ -19,6 +19,11 @@ import {
 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
+import { customerService, VehicleResponseDTO } from '../../services/customerService'
+import { serviceService, ServiceDto } from '../../services/serviceService'
+import { bookingService } from '../../services/bookingService'
+import { promotionService, PromotionDTO } from '../../services/promotionService'
+import { toast } from 'sonner'
 
 interface ServiceItem {
   id: string
@@ -30,15 +35,6 @@ interface ServiceItem {
   popular?: boolean
 }
 
-interface PromotionItem {
-  id: string
-  code: string
-  title: string
-  discountText: string
-  discountAmount: number
-  minSpend: number
-  expiry: string
-}
 
 interface CarItem {
   id: string
@@ -52,135 +48,107 @@ export default function CustomerBooking() {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState<number>(1)
 
-  // Step 1 State: Date & Time & Branch
-  const [selectedBranch, setSelectedBranch] = useState('b1')
-  const [selectedCarId, setSelectedCarId] = useState<string>('c1')
+  // Step 1 State: Date & Time
+  const [selectedCarId, setSelectedCarId] = useState<number>(0)
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   )
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('09:00')
 
   // Step 2 State: Selected Services
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(['s1'])
+  const [selectedServiceId, setSelectedServiceId] = useState<number>(0)
 
   // Step 3 State: Selected Promotion & Booking Complete
-  const [appliedPromoId, setAppliedPromoId] = useState<string>('promo1')
+  const [appliedPromoId, setAppliedPromoId] = useState<number>(0)
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [bookingRef, setBookingRef] = useState<string>('')
 
-  // Mock Data
-  const myCars: CarItem[] = [
-    { id: 'c1', plateNumber: '51G-123.45', brand: 'Toyota', model: 'Camry 2023', color: 'Trắng' },
-    { id: 'c2', plateNumber: '51F-987.65', brand: 'Honda', model: 'CR-V 2022', color: 'Đen' },
-  ]
+  // API Data
+  const [myCars, setMyCars] = useState<VehicleResponseDTO[]>([])
+  const [availableServices, setAvailableServices] = useState<ServiceDto[]>([])
+  const [availablePromos, setAvailablePromos] = useState<PromotionDTO[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const branches = [
-    { id: 'b1', name: 'Chi nhánh Quận 1', address: '123 Nguyễn Trãi, P. Bến Thành, Q.1, TPHCM' },
-    { id: 'b2', name: 'Chi nhánh Quận 7', address: '456 Nguyễn Thị Thập, P. Tân Phong, Q.7, TPHCM' },
-    { id: 'b3', name: 'Chi nhánh Thủ Đức', address: '789 Võ Văn Ngân, P. Bình Thọ, TP. Thủ Đức' },
-  ]
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        const [carsRes, servicesRes, promosRes] = await Promise.all([
+          customerService.getMyVehicles(),
+          serviceService.getActiveServices(),
+          promotionService.getEligiblePromotions()
+        ])
+        if (carsRes.success) {
+          setMyCars(carsRes.data)
+          if (carsRes.data.length > 0) setSelectedCarId(carsRes.data[0].vehicleId)
+        }
+        if (servicesRes.length > 0) {
+          setAvailableServices(servicesRes)
+          setSelectedServiceId(servicesRes[0].serviceId)
+        }
+        if (promosRes.length > 0) {
+          setAvailablePromos(promosRes)
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  // Auto scroll to top when step changes
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentStep, isSuccess])
 
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', 
     '13:30', '14:30', '15:30', '16:30', '17:30'
   ]
 
-  const availableServices: ServiceItem[] = [
-    {
-      id: 's1',
-      name: 'Rửa Xe Bọt Tuyết & Hút Bụi Cao Cấp',
-      category: 'Chăm sóc cơ bản',
-      price: 150000,
-      duration: '30-45 phút',
-      description: 'Rửa sạch toàn bộ thân xe bằng dung dịch bọt tuyết chuyên dụng, sấy khô và hút bụi vệ sinh sàn xe.',
-      popular: true,
-    },
-    {
-      id: 's2',
-      name: 'Combo Vệ Sinh Nội Thất Chuyên Sâu',
-      category: 'Chăm sóc nội thất',
-      price: 450000,
-      duration: '60-90 phút',
-      description: 'Giặt ghế da/nỉ, dưỡng bề mặt nhựa tablo, khử trùng khoang xe bằng máy xông Ozon diệt khuẩn 99%.',
-    },
-    {
-      id: 's3',
-      name: 'Phủ Ceramic Bảo Vệ Sơn & Tẩy Ố Kính',
-      category: 'Bảo vệ sơn & kính',
-      price: 850000,
-      duration: '120 phút',
-      description: 'Tẩy màng bám kính chiếu hậu, tẩy ố mốc kính chắn gió và phủ lớp Ceramic tăng độ bóng cho lớp sơn.',
-      popular: true,
-    },
-    {
-      id: 's4',
-      name: 'Vệ Sinh Khoang Máy Bằng Hơi Nước Nóng',
-      category: 'Bảo dưỡng động cơ',
-      price: 300000,
-      duration: '45 phút',
-      description: 'Dùng công nghệ hơi nước nóng khoang máy loại bỏ dầu mỡ bám lâu ngày, xịt dung dịch dưỡng dây curoa.',
-    },
-  ]
 
-  const promotions: PromotionItem[] = [
-    {
-      id: 'promo1',
-      code: 'HYBRIDNEW',
-      title: 'Giảm 10% Cho Khách Hàng Đặt Lịch Online',
-      discountText: 'Giảm 10%',
-      discountAmount: 0.1,
-      minSpend: 100000,
-      expiry: '31/12/2026',
-    },
-    {
-      id: 'promo2',
-      code: 'GOLDVIP50K',
-      title: 'Ưu Đãi Hạng Thành Viên Vàng (Giảm 50.000đ)',
-      discountText: 'Giảm 50.000đ',
-      discountAmount: 50000,
-      minSpend: 300000,
-      expiry: '31/12/2026',
-    },
-    {
-      id: 'promo3',
-      code: 'SUMMER2026',
-      title: 'Khuyến Mãi Chăm Sóc Hè (Giảm 15%)',
-      discountText: 'Giảm 15%',
-      discountAmount: 0.15,
-      minSpend: 500000,
-      expiry: '30/09/2026',
-    },
-  ]
 
-  const toggleService = (id: string) => {
-    if (selectedServiceIds.includes(id)) {
-      if (selectedServiceIds.length > 1) {
-        setSelectedServiceIds(selectedServiceIds.filter((item) => item !== id))
-      }
-    } else {
-      setSelectedServiceIds([...selectedServiceIds, id])
-    }
+
+
+  const toggleService = (id: number) => {
+    setSelectedServiceId(id)
   }
 
   // Calculate pricing
-  const selectedServices = availableServices.filter((s) => selectedServiceIds.includes(s.id))
-  const subtotalPrice = selectedServices.reduce((acc, curr) => acc + curr.price, 0)
+  const selectedService = availableServices.find((s) => s.serviceId === selectedServiceId)
+  const subtotalPrice = selectedService ? selectedService.price : 0
   
-  const selectedPromo = promotions.find((p) => p.id === appliedPromoId)
+  const selectedPromo = availablePromos.find((p) => p.promotionId === appliedPromoId)
   let discountValue = 0
   if (selectedPromo) {
-    if (selectedPromo.discountAmount < 1) {
-      discountValue = subtotalPrice * selectedPromo.discountAmount
-    } else {
-      discountValue = selectedPromo.discountAmount
-    }
+    // Note: Temporary logic as Promotion entity doesn't have exact amount yet
+    discountValue = subtotalPrice * 0.1 // Apply fixed 10% for any valid promotion as a placeholder
   }
   const finalTotal = Math.max(0, subtotalPrice - discountValue)
 
-  const handleConfirmBooking = () => {
-    const randomRef = 'BK-' + Math.floor(100000 + Math.random() * 900000)
-    setBookingRef(randomRef)
-    setIsSuccess(true)
+  const handleConfirmBooking = async () => {
+    if (!selectedCarId || !selectedServiceId) {
+      toast.error('Vui lòng chọn đầy đủ Xe và Dịch vụ.');
+      return;
+    }
+    const slotIndex = timeSlots.indexOf(selectedTimeSlot) + 1;
+    try {
+      const res = await bookingService.createBooking({
+        vehicleId: selectedCarId,
+        serviceId: selectedServiceId,
+        slotId: slotIndex,
+        promotionId: appliedPromoId ? appliedPromoId : null
+      })
+      if (res.success) {
+        setBookingRef('BK-' + res.bookingId)
+        setIsSuccess(true)
+        toast.success('Đặt lịch thành công!')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đặt lịch.')
+    }
   }
 
   return (
@@ -221,7 +189,7 @@ export default function CustomerBooking() {
                   : 'bg-white text-slate-500 border-slate-200 text-xs'
               }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</span>
-                <span>Thời Gian & Địa Điểm</span>
+                <span>Thời Gian Đặt Lịch</span>
               </div>
 
               <div className="hidden sm:block h-0.5 w-6 bg-slate-300" />
@@ -270,13 +238,10 @@ export default function CustomerBooking() {
 
             {/* Summary Ticket */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left space-y-2.5 text-sm">
-              <div className="flex justify-between border-b border-slate-200 pb-2.5">
-                <span className="text-slate-500">Chi nhánh:</span>
-                <span className="font-bold text-slate-900">{branches.find(b => b.id === selectedBranch)?.name}</span>
-              </div>
+
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Xe của bạn:</span>
-                <span className="font-bold text-slate-900">{myCars.find(c => c.id === selectedCarId)?.plateNumber} - {myCars.find(c => c.id === selectedCarId)?.brand} {myCars.find(c => c.id === selectedCarId)?.model}</span>
+                <span className="font-bold text-slate-900">{myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - {myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Thời gian:</span>
@@ -284,7 +249,7 @@ export default function CustomerBooking() {
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Dịch vụ đã chọn:</span>
-                <span className="font-bold text-slate-900 text-right">{selectedServices.map(s => s.name).join(', ')}</span>
+                <span className="font-bold text-slate-900 text-right">{selectedService?.serviceName}</span>
               </div>
               <div className="flex justify-between pt-1">
                 <span className="text-slate-500">Tổng thanh toán:</span>
@@ -313,9 +278,9 @@ export default function CustomerBooking() {
           </div>
         ) : (
           /* STEP CONTENT CARD */
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-xl shadow-slate-200/50">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-xl shadow-slate-200/50 min-h-[600px] flex flex-col">
             
-            {/* STEP 1: DATE & TIME & BRANCH */}
+            {/* STEP 1: DATE & TIME */}
             {currentStep === 1 && (
               <div className="space-y-6">
                 
@@ -326,31 +291,33 @@ export default function CustomerBooking() {
                     <span>1. Chọn Xe Của Bạn:</span>
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {myCars.map((car) => (
+                    {isLoading ? (
+                      <div className="col-span-2 text-center p-4 text-orange-600 font-bold">Đang tải danh sách xe...</div>
+                    ) : myCars.map((car) => (
                       <div
-                        key={car.id}
-                        onClick={() => setSelectedCarId(car.id)}
+                        key={car.vehicleId}
+                        onClick={() => setSelectedCarId(car.vehicleId)}
                         className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                          selectedCarId === car.id
+                          selectedCarId === car.vehicleId
                             ? 'bg-orange-50/80 border-orange-500 shadow-md'
                             : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            selectedCarId === car.id ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-600'
+                            selectedCarId === car.vehicleId ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-600'
                           }`}>
                             <Car className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="font-extrabold text-slate-900 text-sm mb-0.5">{car.plateNumber}</h4>
-                            <p className="text-xs text-slate-500">{car.brand} {car.model} • {car.color}</p>
+                            <h4 className="font-extrabold text-slate-900 text-sm mb-0.5">{car.licensePlate}</h4>
+                            <p className="text-xs text-slate-500">{car.vehicleType}</p>
                           </div>
                         </div>
                         <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                          selectedCarId === car.id ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
+                          selectedCarId === car.vehicleId ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
                         }`}>
-                          {selectedCarId === car.id && <Check className="w-3 h-3 text-white" />}
+                          {selectedCarId === car.vehicleId && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
                     ))}
@@ -363,35 +330,11 @@ export default function CustomerBooking() {
                   </div>
                 </div>
 
-                {/* Branch Selection */}
-                <div>
-                  <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-orange-600" />
-                    <span>2. Chọn Chi Nhánh Phù Hợp:</span>
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {branches.map((b) => (
-                      <div
-                        key={b.id}
-                        onClick={() => setSelectedBranch(b.id)}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                          selectedBranch === b.id
-                            ? 'bg-orange-50/80 border-orange-500 shadow-md'
-                            : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <h4 className="font-extrabold text-slate-900 text-sm mb-1">{b.name}</h4>
-                        <p className="text-xs text-slate-500">{b.address}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Date Selection */}
                 <div>
                   <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-orange-600" />
-                    <span>3. Chọn Ngày Đặt Lịch:</span>
+                    <span>2. Chọn Ngày Đặt Lịch:</span>
                   </label>
                   <input
                     type="date"
@@ -406,7 +349,7 @@ export default function CustomerBooking() {
                 <div>
                   <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-orange-600" />
-                    <span>4. Chọn Khung Giờ Phù Hợp:</span>
+                    <span>3. Chọn Khung Giờ Phù Hợp:</span>
                   </label>
                   <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2.5">
                     {timeSlots.map((slot) => (
@@ -449,12 +392,14 @@ export default function CustomerBooking() {
                 </div>
 
                 <div className="space-y-3">
-                  {availableServices.map((svc) => {
-                    const isSelected = selectedServiceIds.includes(svc.id)
+                  {isLoading ? (
+                    <div className="text-center p-4 text-orange-600 font-bold">Đang tải danh sách dịch vụ...</div>
+                  ) : availableServices.map((svc) => {
+                    const isSelected = selectedServiceId === svc.serviceId
                     return (
                       <div
-                        key={svc.id}
-                        onClick={() => toggleService(svc.id)}
+                        key={svc.serviceId}
+                        onClick={() => toggleService(svc.serviceId)}
                         className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                           isSelected
                             ? 'bg-orange-50/80 border-orange-500 shadow-sm'
@@ -469,17 +414,9 @@ export default function CustomerBooking() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-0.5">
-                              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{svc.name}</h4>
-                              {svc.popular && (
-                                <span className="text-[10px] uppercase font-extrabold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full border border-orange-200">
-                                  Phổ Biến
-                                </span>
-                              )}
+                              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{svc.serviceName}</h4>
                             </div>
                             <p className="text-xs text-slate-500 mb-1.5">{svc.description}</p>
-                            <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200">
-                              Thời gian thực hiện: {svc.duration}
-                            </span>
                           </div>
                         </div>
 
@@ -530,15 +467,14 @@ export default function CustomerBooking() {
                       </h4>
 
                       <div className="text-xs space-y-1.5 text-slate-700">
-                        <p><span className="text-slate-500">Xe của bạn:</span> <strong className="text-slate-900">{myCars.find(c => c.id === selectedCarId)?.plateNumber} - {myCars.find(c => c.id === selectedCarId)?.brand} {myCars.find(c => c.id === selectedCarId)?.model}</strong></p>
-                        <p><span className="text-slate-500">Địa điểm:</span> <strong className="text-slate-900">{branches.find(b => b.id === selectedBranch)?.name}</strong></p>
+                        <p><span className="text-slate-500">Xe của bạn:</span> <strong className="text-slate-900">{myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - {myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}</strong></p>
                         <p><span className="text-slate-500">Thời gian:</span> <strong className="text-slate-900">{selectedTimeSlot} ngày {selectedDate}</strong></p>
                         <div>
-                          <span className="text-slate-500 block mb-0.5">Dịch vụ đã chọn ({selectedServices.length}):</span>
+                          <span className="text-slate-500 block mb-0.5">Dịch vụ đã chọn:</span>
                           <ul className="pl-4 list-disc space-y-0.5 font-bold text-slate-900">
-                            {selectedServices.map(s => (
-                              <li key={s.id}>{s.name} ({s.price.toLocaleString('vi-VN')}đ)</li>
-                            ))}
+                            {selectedService && (
+                              <li>{selectedService.serviceName} ({selectedService.price.toLocaleString('vi-VN')}đ)</li>
+                            )}
                           </ul>
                         </div>
                       </div>
@@ -552,12 +488,14 @@ export default function CustomerBooking() {
                       </h4>
 
                       <div className="space-y-2.5">
-                        {promotions.map((promo) => {
-                          const isApplied = appliedPromoId === promo.id
+                        {availablePromos.length === 0 ? (
+                          <div className="text-center p-3 text-slate-500 text-sm">Hiện không có mã khuyến mãi nào khả dụng.</div>
+                        ) : availablePromos.map((promo) => {
+                          const isApplied = appliedPromoId === promo.promotionId
                           return (
                             <div
-                              key={promo.id}
-                              onClick={() => setAppliedPromoId(isApplied ? '' : promo.id)}
+                              key={promo.promotionId}
+                              onClick={() => setAppliedPromoId(isApplied ? 0 : promo.promotionId)}
                               className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
                                 isApplied
                                   ? 'bg-orange-50 border-orange-500 shadow-sm'
@@ -569,8 +507,8 @@ export default function CustomerBooking() {
                                   <Percent className="w-4 h-4" />
                                 </div>
                                 <div>
-                                  <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.title}</h5>
-                                  <p className="text-[11px] text-slate-500">Mã: <span className="text-orange-600 font-bold">{promo.code}</span> • Hạn: {promo.expiry}</p>
+                                  <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.promoName}</h5>
+                                  <p className="text-[11px] text-slate-500">Mã: <span className="text-orange-600 font-bold">{promo.promoCode}</span> • Hạn: {promo.validTo ? new Date(promo.validTo).toLocaleDateString('vi-VN') : 'Không giới hạn'}</p>
                                 </div>
                               </div>
 
@@ -598,13 +536,13 @@ export default function CustomerBooking() {
 
                       <div className="space-y-2.5 text-xs sm:text-sm">
                         <div className="flex justify-between text-slate-600">
-                          <span>Tạm tính ({selectedServices.length} dịch vụ):</span>
+                          <span>Tạm tính (1 dịch vụ):</span>
                           <span className="font-bold text-slate-900">{subtotalPrice.toLocaleString('vi-VN')}đ</span>
                         </div>
 
                         {selectedPromo && (
                           <div className="flex justify-between text-emerald-600 font-semibold">
-                            <span>Giảm giá ({selectedPromo.code}):</span>
+                            <span>Giảm giá ({selectedPromo.promoCode}):</span>
                             <span>-{discountValue.toLocaleString('vi-VN')}đ</span>
                           </div>
                         )}
