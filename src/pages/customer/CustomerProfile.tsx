@@ -6,11 +6,17 @@ import Footer from '../../components/layout/Footer'
 
 export default function CustomerProfile() {
   const navigate = useNavigate()
+  
+  const fullName = localStorage.getItem('fullName') || '';
+  const phone = localStorage.getItem('phoneNumber') || '';
+  const currentTier = localStorage.getItem('currentTier') || 'Thành viên';
+  const currentPoints = localStorage.getItem('currentPoints') || '0';
+
   const [formData, setFormData] = useState({
-    fullName: 'Nguyễn Văn A',
-    email: 'nguyenvana@example.com',
-    phone: '0901234567',
-    address: '123 Đường ABC, Quận 1, TP.HCM'
+    fullName: fullName,
+    email: '',
+    phone: phone,
+    address: ''
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +54,7 @@ export default function CustomerProfile() {
             </div>
             <div className="text-center sm:text-left text-white">
               <h1 className="text-2xl sm:text-3xl font-extrabold mb-1">{formData.fullName}</h1>
-              <p className="text-white/80 font-medium">Thành viên Vàng • 1,250 điểm</p>
+              <p className="text-white/80 font-medium">{currentTier} • {currentPoints} điểm</p>
             </div>
           </div>
 

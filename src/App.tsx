@@ -20,6 +20,7 @@ import CustomerProfile from './pages/customer/CustomerProfile'
 import ServiceManagement from './pages/dashboard/ServiceManagement'
 import PromotionManagement from './pages/dashboard/PromotionManagement'
 import TierManagement from './pages/dashboard/TierManagement'
+import { Toaster } from 'sonner'
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -46,6 +47,7 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
+      <Toaster richColors position="top-right" />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
