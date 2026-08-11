@@ -122,12 +122,12 @@ export default function NavBar() {
                       </div>
                       <div className="p-2 space-y-1">
                         <Link
-                          to="/customer"
+                          to="/customer/profile"
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-colors"
                         >
-                          <LayoutDashboard className="w-4 h-4" />
-                          <span>Quản lý tài khoản</span>
+                          <User className="w-4 h-4" />
+                          <span>Hồ sơ cá nhân</span>
                         </Link>
                         <Link
                           to="/customer/history"
@@ -254,12 +254,12 @@ export default function NavBar() {
             {userRole === 'customer' ? (
               <>
                 <Link
-                  to="/customer"
+                  to="/customer/profile"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-3 bg-white/10 text-white font-semibold text-base rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors"
                 >
-                  <LayoutDashboard className="w-5 h-5" />
-                  <span>Quản lý tài khoản</span>
+                  <User className="w-5 h-5" />
+                  <span>Hồ sơ cá nhân</span>
                 </Link>
                 <Link
                   to="/customer/history"

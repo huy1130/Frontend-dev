@@ -28,7 +28,13 @@ export default function CustomerPortal() {
                   <span>Thành viên Vàng</span>
                 </span>
               </div>
-              <p className="text-slate-500 text-xs sm:text-sm">Quản lý các dịch vụ rửa xe & tích điểm ưu đãi thành viên</p>
+              <button 
+                onClick={() => navigate('/customer/profile')}
+                className="mt-2 text-sm font-bold text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-xl transition-all shadow-md shadow-orange-500/20 active:scale-95 w-fit flex items-center gap-2"
+              >
+                <User className="w-4 h-4" />
+                <span>Xem hồ sơ cá nhân</span>
+              </button>
             </div>
           </div>
 
