@@ -10,6 +10,7 @@ import Reports from './pages/dashboard/Reports'
 import Appointments from './pages/dashboard/Appointments'
 import Payments from './pages/dashboard/Payments'
 import Transactions from './pages/dashboard/Transactions'
+import Requests from './pages/dashboard/Requests'
 import Employees from './pages/dashboard/Employees'
 import CustomerPortal from './pages/customer/CustomerPortal'
 import CustomerBooking from './pages/customer/CustomerBooking'
@@ -87,15 +88,40 @@ export default function App() {
             <DashboardLayout />
           </ProtectedRoute>
         }>
-          <Route index element={<Dashboard />} />
-          <Route path="services" element={<ServiceManagement />} />
-          <Route path="promotions" element={<PromotionManagement />} />
-          <Route path="tiers" element={<TierManagement />} />
-          <Route path="reports" element={<Reports />} />
+          <Route index element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="services" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <ServiceManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="promotions" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <PromotionManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="tiers" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <TierManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="reports" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Reports />
+            </ProtectedRoute>
+          } />
           <Route path="appointments" element={<Appointments />} />
           <Route path="payments" element={<Payments />} />
           <Route path="transactions" element={<Transactions />} />
-          <Route path="employees" element={<Employees />} />
+          <Route path="requests" element={<Requests />} />
+          <Route path="employees" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <Employees />
+            </ProtectedRoute>
+          } />
         </Route>
 
         <Route path="*" element={<HomePage />} />
