@@ -1,16 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera, Loader2 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
+import { loyaltyService } from '../../services/loyaltyService'
 
 export default function CustomerProfile() {
   const navigate = useNavigate()
   
   const fullName = localStorage.getItem('fullName') || '';
   const phone = localStorage.getItem('phoneNumber') || '';
-  const currentTier = localStorage.getItem('currentTier') || 'Thành viên';
-  const currentPoints = localStorage.getItem('currentPoints') || '0';
+  const [currentTier, setCurrentTier] = useState<string | null>(localStorage.getItem('currentTier'));
+  const [currentPoints, setCurrentPoints] = useState<string | null>(localStorage.getItem('currentPoints'));
+  const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
+
+  useEffect(() => {
+    const fetchLoyalty = async () => {
+      try {
+        setIsLoadingLoyalty(true);
+        const data = await loyaltyService.getSummary();
+        const pointsStr = data.currentPoints.toString();
+        
+        setCurrentTier(data.currentTier);
+        setCurrentPoints(pointsStr);
+        
+        localStorage.setItem('currentTier', data.currentTier);
+        localStorage.setItem('currentPoints', pointsStr);
+      } catch (error) {
+        console.error('Failed to fetch loyalty summary:', error);
+      } finally {
+        setIsLoadingLoyalty(false);
+      }
+    };
+
+    if (localStorage.getItem('token')) {
+      fetchLoyalty();
+    }
+  }, []);
 
   const [formData, setFormData] = useState({
     fullName: fullName,
@@ -54,7 +80,14 @@ export default function CustomerProfile() {
             </div>
             <div className="text-center sm:text-left text-white">
               <h1 className="text-2xl sm:text-3xl font-extrabold mb-1">{formData.fullName}</h1>
-              <p className="text-white/80 font-medium">{currentTier} • {currentPoints} điểm</p>
+              {isLoadingLoyalty ? (
+                <div className="flex items-center gap-2 justify-center sm:justify-start text-white/80">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="font-medium">Đang tải...</span>
+                </div>
+              ) : (
+                <p className="text-white/80 font-medium">{currentTier} • {currentPoints} điểm</p>
+              )}
             </div>
           </div>
 
