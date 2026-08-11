@@ -12,13 +12,15 @@ import {
   Tag,
   Award,
   CalendarPlus,
-  ShieldCheck
+  ShieldCheck,
+  Gift
 } from 'lucide-react'
 
 const allMenuItems = [
   { path: '/dashboard', name: 'Tổng Quan', icon: LayoutDashboard, exact: true },
   { path: '/dashboard/services', name: 'Gói Dịch Vụ', icon: Package },
   { path: '/dashboard/promotions', name: 'Khuyến Mãi', icon: Tag },
+  { path: '/dashboard/rewards', name: 'Quản Lý Phần Thưởng', icon: Gift },
   { path: '/dashboard/tiers', name: 'Hạng Thành Viên', icon: Award },
   { path: '/dashboard/reports', name: 'Báo Cáo Thống Kê', icon: BarChart3 },
   { path: '/dashboard/appointments', name: 'Lịch Hẹn Khách', icon: CalendarDays },

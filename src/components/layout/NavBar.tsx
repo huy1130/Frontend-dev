@@ -73,12 +73,7 @@ export default function NavBar() {
             >
               Dịch vụ lẻ
             </a>
-            <a
-              href="/#branches"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
-            >
-              Chi nhánh
-            </a>
+
             <a
               href="/#tiers"
               className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
@@ -249,13 +244,7 @@ export default function NavBar() {
             >
               Danh mục dịch vụ lẻ
             </a>
-            <a
-              href="/#branches"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
-            >
-              Hệ thống chi nhánh
-            </a>
+
             <a
               href="/#tiers"
               onClick={() => setMobileMenuOpen(false)}
