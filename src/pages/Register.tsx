@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone, Loader2 } from 'lucide-react'
+import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone, Loader2, Car, Eye, EyeOff } from 'lucide-react'
 import Logo from '../components/common/Logo'
 import { authService } from '../services/authService'
 import { toast } from 'sonner'
@@ -11,21 +11,39 @@ export default function Register() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [licensePlate, setLicensePlate] = useState('')
+  const [vehicleType, setVehicleType] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const phoneRegex = /^\d{10}$/;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$/;
+
+    if (!phoneRegex.test(phone)) {
+      toast.error('Số điện thoại phải bao gồm chính xác 10 chữ số.')
+      return
+    }
+    if (!passwordRegex.test(password)) {
+      toast.error('Mật khẩu bắt buộc phải có ít nhất 1 ký tự đặc biệt, 1 chữ in hoa và 1 chữ số.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const response = await authService.register({
         fullName: name,
         phoneNumber: phone,
-        password: password
+        password: password,
+        licensePlate,
+        vehicleType
       })
-      
+
       toast.success('Đăng ký tài khoản thành công! Vui lòng đăng nhập.')
-      
+
       navigate('/login')
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Đăng ký thất bại, vui lòng thử lại'
@@ -58,7 +76,7 @@ export default function Register() {
 
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           {/* Card */}
           <div className="bg-dark-900/60 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8 sm:p-10 relative overflow-hidden">
 
@@ -120,13 +138,68 @@ export default function Register() {
                       <Lock className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
                     </div>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Nhập mật khẩu"
-                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-12 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-white/40 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Vehicle Type & License Plate Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Vehicle Type Input */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-white/80">Loại xe</label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <Car className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
+                      </div>
+                      <select
+                        value={vehicleType}
+                        onChange={(e) => setVehicleType(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-10 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium appearance-none"
+                        required
+                      >
+                        <option value="" disabled className="bg-slate-900 text-white/50">Chọn loại xe</option>
+                        <option value="Sedan" className="bg-slate-900 text-white">Sedan (4 chỗ)</option>
+                        <option value="SUV" className="bg-slate-900 text-white">SUV (7 chỗ)</option>
+                        <option value="Bán tải" className="bg-slate-900 text-white">Bán tải (Pickup)</option>
+                        <option value="Xe máy" className="bg-slate-900 text-white">Xe máy</option>
+                        <option value="Khác" className="bg-slate-900 text-white">Khác</option>
+                      </select>
+                      {/* Dropdown Arrow Icon */}
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                        <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* License Plate Input */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-white/80">Biển số xe</label>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                        <Car className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
+                      </div>
+                      <input
+                        type="text"
+                        value={licensePlate}
+                        onChange={(e) => setLicensePlate(e.target.value)}
+                        placeholder="VD: 51H-12345"
+                        className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30 uppercase"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
