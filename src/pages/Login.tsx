@@ -23,6 +23,8 @@ export default function Login() {
       localStorage.setItem('userRole', phone.toLowerCase());
       localStorage.setItem('fullName', `Demo ${roleName}`);
       localStorage.setItem('phoneNumber', '0999999999');
+      localStorage.removeItem('currentTier');
+      localStorage.removeItem('currentPoints');
       
       toast.success(`Đăng nhập thành công với tài khoản Demo ${roleName}!`);
       
@@ -45,6 +47,9 @@ export default function Login() {
       localStorage.setItem('userRole', response.role.toLowerCase());
       localStorage.setItem('fullName', response.fullName);
       localStorage.setItem('phoneNumber', phone);
+      // Xóa cache cũ nếu có để tránh lỗi hiển thị
+      localStorage.removeItem('currentTier');
+      localStorage.removeItem('currentPoints');
       
       toast.success('Đăng nhập thành công!');
       

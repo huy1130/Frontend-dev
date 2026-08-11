@@ -47,7 +47,7 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" duration={2000} />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />

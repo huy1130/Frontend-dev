@@ -1,14 +1,41 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, CalendarDays, History, ChevronRight, Award, Car } from 'lucide-react'
+import { User, CalendarDays, History, ChevronRight, Award, Car, Loader2 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
+import { loyaltyService } from '../../services/loyaltyService'
 
 export default function CustomerPortal() {
   const navigate = useNavigate()
   const fullName = localStorage.getItem('fullName') || 'Khách hàng';
-  const currentTier = localStorage.getItem('currentTier') || 'Thành viên';
-  const currentPoints = localStorage.getItem('currentPoints') || '0';
+  const [currentTier, setCurrentTier] = useState<string | null>(localStorage.getItem('currentTier'));
+  const [currentPoints, setCurrentPoints] = useState<string | null>(localStorage.getItem('currentPoints'));
+  const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
+
+  useEffect(() => {
+    const fetchLoyalty = async () => {
+      try {
+        setIsLoadingLoyalty(true);
+        const data = await loyaltyService.getSummary();
+        const pointsStr = data.currentPoints.toString();
+        
+        setCurrentTier(data.currentTier);
+        setCurrentPoints(pointsStr);
+        
+        localStorage.setItem('currentTier', data.currentTier);
+        localStorage.setItem('currentPoints', pointsStr);
+      } catch (error) {
+        console.error('Failed to fetch loyalty summary:', error);
+      } finally {
+        setIsLoadingLoyalty(false);
+      }
+    };
+
+    // If token exists, we can fetch
+    if (localStorage.getItem('token')) {
+      fetchLoyalty();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
@@ -28,7 +55,11 @@ export default function CustomerPortal() {
                 <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Xin chào, {fullName}</h1>
                 <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
                   <Award className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{currentTier}</span>
+                  {isLoadingLoyalty ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <span>{currentTier}</span>
+                  )}
                 </span>
               </div>
               <button 
@@ -44,7 +75,14 @@ export default function CustomerPortal() {
           <div className="flex items-center gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 w-full md:w-auto justify-between md:justify-start">
             <div className="text-left">
               <span className="text-xs text-slate-500 block font-medium">Điểm thưởng tích lũy</span>
-              <span className="text-lg font-extrabold text-orange-600">{currentPoints} điểm</span>
+              {isLoadingLoyalty ? (
+                <div className="flex items-center gap-2 text-orange-600">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-lg font-extrabold">Đang tải...</span>
+                </div>
+              ) : (
+                <span className="text-lg font-extrabold text-orange-600">{currentPoints} điểm</span>
+              )}
             </div>
           </div>
         </div>

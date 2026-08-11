@@ -1,16 +1,46 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera } from 'lucide-react'
+import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera, Loader2 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
+import { loyaltyService } from '../../services/loyaltyService'
 
 export default function CustomerProfile() {
   const navigate = useNavigate()
-  
+
   const fullName = localStorage.getItem('fullName') || '';
   const phone = localStorage.getItem('phoneNumber') || '';
-  const currentTier = localStorage.getItem('currentTier') || 'Thành viên';
-  const currentPoints = localStorage.getItem('currentPoints') || '0';
+  const [currentTier, setCurrentTier] = useState<string | null>(localStorage.getItem('currentTier'));
+  const [currentPoints, setCurrentPoints] = useState<string | null>(localStorage.getItem('currentPoints'));
+  const [totalSpent, setTotalSpent] = useState<number>(0);
+  const [totalVisits, setTotalVisits] = useState<number>(0);
+  const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
+
+  useEffect(() => {
+    const fetchLoyalty = async () => {
+      try {
+        setIsLoadingLoyalty(true);
+        const data = await loyaltyService.getSummary();
+        const pointsStr = data.currentPoints.toString();
+
+        setCurrentTier(data.currentTier);
+        setCurrentPoints(pointsStr);
+        setTotalSpent(data.totalSpent);
+        setTotalVisits(data.totalVisits);
+
+        localStorage.setItem('currentTier', data.currentTier);
+        localStorage.setItem('currentPoints', pointsStr);
+      } catch (error) {
+        console.error('Failed to fetch loyalty summary:', error);
+      } finally {
+        setIsLoadingLoyalty(false);
+      }
+    };
+
+    if (localStorage.getItem('token')) {
+      fetchLoyalty();
+    }
+  }, []);
 
   const [formData, setFormData] = useState({
     fullName: fullName,
@@ -54,7 +84,21 @@ export default function CustomerProfile() {
             </div>
             <div className="text-center sm:text-left text-white">
               <h1 className="text-2xl sm:text-3xl font-extrabold mb-1">{formData.fullName}</h1>
-              <p className="text-white/80 font-medium">{currentTier} • {currentPoints} điểm</p>
+              {isLoadingLoyalty ? (
+                <div className="flex items-center gap-2 justify-center sm:justify-start text-white/80">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="font-medium">Đang tải...</span>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-white/80 font-medium">{currentTier} • {currentPoints} điểm</p>
+                  <div className="flex items-center gap-4 text-sm text-white/60 justify-center sm:justify-start">
+                    <span>Đã chi tiêu: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalSpent)}</span>
+                    <span>•</span>
+                    <span>Số lần đến: {totalVisits}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -74,7 +118,7 @@ export default function CustomerProfile() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                   <Phone className="w-4 h-4 text-slate-400" />
@@ -90,34 +134,9 @@ export default function CustomerProfile() {
                 />
               </div>
 
-              <div className="space-y-2 sm:col-span-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
-                  required
-                />
-              </div>
 
-              <div className="space-y-2 sm:col-span-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-slate-400" />
-                  Địa chỉ
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
-                />
-              </div>
+
+
             </div>
 
             <div className="pt-4 border-t border-slate-100 flex justify-end">
