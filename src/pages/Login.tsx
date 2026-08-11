@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap, Loader2 } from 'lucide-react'
+import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap, Loader2, Eye, EyeOff } from 'lucide-react'
 import Logo from '../components/common/Logo'
 import { authService } from '../services/authService'
 import { toast } from 'sonner'
@@ -10,6 +10,7 @@ export default function Login() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -138,13 +139,20 @@ export default function Login() {
                       <Lock className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
                     </div>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Nhập mật khẩu"
-                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-12 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-white/40 hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                   </div>
                   <div className="flex justify-end pt-1">
                     <a href="#" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">

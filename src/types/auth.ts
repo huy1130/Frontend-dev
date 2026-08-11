@@ -7,6 +7,8 @@ export interface RegisterRequestDTO {
   fullName?: string;
   phoneNumber?: string;
   password?: string;
+  licensePlate?: string;
+  vehicleType?: string;
 }
 
 export interface AuthResponseDTO {
