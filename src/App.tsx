@@ -20,6 +20,7 @@ import CustomerProfile from './pages/customer/CustomerProfile'
 
 import ServiceManagement from './pages/dashboard/ServiceManagement'
 import PromotionManagement from './pages/dashboard/PromotionManagement'
+import RewardManagement from './pages/dashboard/RewardManagement'
 import TierManagement from './pages/dashboard/TierManagement'
 import { Toaster } from 'sonner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -101,6 +102,11 @@ export default function App() {
           <Route path="promotions" element={
             <ProtectedRoute allowedRoles={['admin', 'manager']}>
               <PromotionManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="rewards" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <RewardManagement />
             </ProtectedRoute>
           } />
           <Route path="tiers" element={

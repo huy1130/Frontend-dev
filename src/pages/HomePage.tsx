@@ -7,7 +7,6 @@ import Features from '../components/home/Features'
 import ComboPackages from '../components/home/ComboPackages'
 import PublicPromotions from '../components/home/PublicPromotions'
 import IndividualServices from '../components/home/IndividualServices'
-import Branches from '../components/home/Branches'
 import Tiers from '../components/home/Tiers'
 import CallToAction from '../components/home/CallToAction'
 
@@ -22,7 +21,6 @@ export default function HomePage() {
         <ComboPackages />
         <PublicPromotions />
         <IndividualServices />
-        <Branches />
         <Tiers />
         <CallToAction />
       </main>
