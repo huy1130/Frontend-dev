@@ -37,9 +37,9 @@ export default function Login() {
       if (response.role.toLowerCase() === 'customer') {
         navigate('/customer');
       } else if (response.role.toLowerCase() === 'staff') {
-        navigate('/dashboard/appointments');
+        navigate('/staff/appointments');
       } else {
-        navigate('/dashboard');
+        navigate('/admin');
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác';

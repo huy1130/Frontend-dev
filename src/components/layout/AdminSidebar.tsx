@@ -17,21 +17,20 @@ import {
   Clock
 } from 'lucide-react'
 
-const allMenuItems = [
-  { path: '/dashboard', name: 'Báo Cáo Thống Kê', icon: BarChart3 },
-  { path: '/dashboard/services', name: 'Gói Dịch Vụ', icon: Package },
-  { path: '/dashboard/timeslots', name: 'Khung Giờ', icon: Clock },
-  { path: '/dashboard/promotions', name: 'Khuyến Mãi', icon: Tag },
-  { path: '/dashboard/rewards', name: 'Quản Lý Phần Thưởng', icon: Gift },
-  { path: '/dashboard/tiers', name: 'Hạng Thành Viên', icon: Award },
-  { path: '/dashboard/appointments', name: 'Lịch Hẹn Khách', icon: CalendarDays },
-  { path: '/dashboard/payments', name: 'Quản Lý Thanh Toán', icon: CreditCard },
-  { path: '/dashboard/transactions', name: 'Lịch Sử Giao Dịch', icon: History },
-  { path: '/dashboard/requests', name: 'Tạo Yêu Cầu', icon: CalendarPlus }, // Dành cho Staff
-  { path: '/dashboard/employees', name: 'Quản Lý Nhân Viên', icon: Users },
+const menuItems = [
+  { path: '/admin', name: 'Báo Cáo Thống Kê', icon: BarChart3 },
+  { path: '/admin/services', name: 'Gói Dịch Vụ', icon: Package },
+  { path: '/admin/timeslots', name: 'Khung Giờ', icon: Clock },
+  { path: '/admin/promotions', name: 'Khuyến Mãi', icon: Tag },
+  { path: '/admin/rewards', name: 'Quản Lý Phần Thưởng', icon: Gift },
+  { path: '/admin/tiers', name: 'Hạng Thành Viên', icon: Award },
+  { path: '/admin/appointments', name: 'Lịch Hẹn Khách', icon: CalendarDays },
+  { path: '/admin/payments', name: 'Quản Lý Thanh Toán', icon: CreditCard },
+  { path: '/admin/transactions', name: 'Lịch Sử Giao Dịch', icon: History },
+  { path: '/admin/employees', name: 'Quản Lý Nhân Viên', icon: Users },
 ]
 
-export default function Sidebar() {
+export default function AdminSidebar() {
   const navigate = useNavigate()
 
   const userRole = localStorage.getItem('userRole') || 'Admin'
@@ -48,21 +47,6 @@ export default function Sidebar() {
     localStorage.removeItem('currentPoints')
     navigate('/login')
   }
-
-  // Filter menu items based on role
-  const staffAllowedPaths = [
-    '/dashboard/appointments',
-    '/dashboard/payments',
-    '/dashboard/transactions',
-    '/dashboard/requests'
-  ]
-
-  const menuItems = allMenuItems.filter(item => {
-    if (userRole.toLowerCase() === 'staff') {
-      return staffAllowedPaths.includes(item.path)
-    }
-    return true // Admin có thể thấy tất cả
-  })
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col font-sans relative z-20">
@@ -87,7 +71,7 @@ export default function Sidebar() {
       {/* Navigation Section */}
       <div className="flex-1 py-6 px-3.5 space-y-1.5 overflow-y-auto custom-scrollbar">
         <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">
-          Danh Mục {userRole.toLowerCase() === 'staff' ? 'Nhân Viên' : 'Quản Trị'}
+          Danh Mục Quản Trị
         </p>
 
         {menuItems.map((item) => {
@@ -96,7 +80,7 @@ export default function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.path === '/dashboard'}
+              end={item.path === '/admin'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-3 rounded-xl font-extrabold text-xs transition-all duration-200 ${isActive
                   ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-[1.02]'

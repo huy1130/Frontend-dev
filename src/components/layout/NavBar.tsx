@@ -172,12 +172,12 @@ export default function NavBar() {
               </>
             ) : userRole && ['admin', 'manager', 'staff'].includes(userRole.toLowerCase()) ? (
               <Link
-                to="/dashboard"
+                to={userRole.toLowerCase() === 'staff' ? '/staff/appointments' : '/admin'}
                 onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
                 className="px-6 py-2.5 rounded-xl bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-sm shadow-xl transition-all hover:scale-105 flex items-center gap-2 group border border-orange-100"
               >
                 <LayoutDashboard className="w-4 h-4 text-orange-600" />
-                <span>Vào trang Quản trị</span>
+                <span>Vào trang {userRole.toLowerCase() === 'staff' ? 'Nhân viên' : 'Quản trị'}</span>
                 <ChevronRight className="w-4 h-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
               </Link>
             ) : (
@@ -302,12 +302,12 @@ export default function NavBar() {
               </>
             ) : userRole && ['admin', 'manager', 'staff'].includes(userRole.toLowerCase()) ? (
               <Link
-                to="/dashboard"
+                to={userRole.toLowerCase() === 'staff' ? '/staff/appointments' : '/admin'}
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center py-3.5 bg-white text-orange-600 font-extrabold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2"
               >
                 <LayoutDashboard className="w-5 h-5 text-orange-600" />
-                <span>Vào trang Quản trị</span>
+                <span>Vào trang {userRole.toLowerCase() === 'staff' ? 'Nhân viên' : 'Quản trị'}</span>
               </Link>
             ) : (
               <Link

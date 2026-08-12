@@ -4,35 +4,36 @@ import HomePage from './pages/HomePage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
-import DashboardLayout from './components/layout/DashboardLayout'
-import Dashboard from './pages/dashboard/Dashboard'
-import Reports from './pages/dashboard/Reports'
-import Appointments from './pages/dashboard/Appointments'
-import Payments from './pages/dashboard/Payments'
-import Transactions from './pages/dashboard/Transactions'
-import Requests from './pages/dashboard/Requests'
-import Employees from './pages/dashboard/Employees'
+import AdminLayout from './components/layout/AdminLayout'
+import StaffLayout from './components/layout/StaffLayout'
+import Dashboard from './pages/admin/Dashboard'
+import Reports from './pages/admin/Reports'
+import AdminAppointments from './pages/admin/AdminAppointments'
+import AdminPayments from './pages/admin/Payments'
+import AdminTransactions from './pages/admin/Transactions'
+import Employees from './pages/admin/Employees'
+
+import StaffAppointments from './pages/staff/StaffAppointments'
+import StaffPayments from './pages/staff/Payments'
+import StaffTransactions from './pages/staff/Transactions'
+import Requests from './pages/staff/Requests'
+
 import CustomerPortal from './pages/customer/CustomerPortal'
 import CustomerBooking from './pages/customer/CustomerBooking'
 import CustomerHistory from './pages/customer/CustomerHistory'
 import CustomerCars from './pages/customer/CustomerCars'
 import CustomerProfile from './pages/customer/CustomerProfile'
 
-import ServiceManagement from './pages/dashboard/ServiceManagement'
-import PromotionManagement from './pages/dashboard/PromotionManagement'
-import RewardManagement from './pages/dashboard/RewardManagement'
-import TierManagement from './pages/dashboard/TierManagement'
-import TimeSlotManagement from './pages/dashboard/TimeSlotManagement'
+import ServiceManagement from './pages/admin/ServiceManagement'
+import PromotionManagement from './pages/admin/PromotionManagement'
+import RewardManagement from './pages/admin/RewardManagement'
+import TierManagement from './pages/admin/TierManagement'
+import TimeSlotManagement from './pages/admin/TimeSlotManagement'
 import { Toaster } from 'sonner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
-const DashboardIndex = () => {
-  const role = localStorage.getItem('userRole')?.toLowerCase()
-  if (role === 'staff') {
-    return <Navigate to="/dashboard/appointments" replace />
-  }
-  return <Dashboard />
-}
+const AdminIndex = () => <Dashboard />
+const StaffIndex = () => <Navigate to="/staff/appointments" replace />
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -92,56 +93,36 @@ export default function App() {
           </ProtectedRoute>
         } />
 
-        {/* Admin/Manager/Staff Dashboard Routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'staff']}>
-            <DashboardLayout />
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={['admin', 'manager']}>
+            <AdminLayout />
           </ProtectedRoute>
         }>
-          <Route index element={
-            <ProtectedRoute allowedRoles={['admin', 'manager', 'staff']}>
-              <DashboardIndex />
-            </ProtectedRoute>
-          } />
-          <Route path="services" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <ServiceManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="timeslots" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <TimeSlotManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="promotions" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <PromotionManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="rewards" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <RewardManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="tiers" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <TierManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="reports" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <Reports />
-            </ProtectedRoute>
-          } />
-          <Route path="appointments" element={<Appointments />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="transactions" element={<Transactions />} />
+          <Route index element={<AdminIndex />} />
+          <Route path="services" element={<ServiceManagement />} />
+          <Route path="timeslots" element={<TimeSlotManagement />} />
+          <Route path="promotions" element={<PromotionManagement />} />
+          <Route path="rewards" element={<RewardManagement />} />
+          <Route path="tiers" element={<TierManagement />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="appointments" element={<AdminAppointments />} />
+          <Route path="payments" element={<AdminPayments />} />
+          <Route path="transactions" element={<AdminTransactions />} />
+          <Route path="employees" element={<Employees />} />
+        </Route>
+
+        {/* Staff Routes */}
+        <Route path="/staff" element={
+          <ProtectedRoute allowedRoles={['staff']}>
+            <StaffLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<StaffIndex />} />
+          <Route path="appointments" element={<StaffAppointments />} />
+          <Route path="payments" element={<StaffPayments />} />
+          <Route path="transactions" element={<StaffTransactions />} />
           <Route path="requests" element={<Requests />} />
-          <Route path="employees" element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <Employees />
-            </ProtectedRoute>
-          } />
         </Route>
 
         <Route path="*" element={<HomePage />} />

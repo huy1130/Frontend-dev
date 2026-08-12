@@ -40,5 +40,19 @@ export const bookingService = {
   
   getBookingHistory: (phone: string): Promise<{ success: boolean; data: BookingResponseDTO[] }> => {
     return axiosClient.get(`/Booking/search?phone=${phone}`);
+  },
+  
+  // Admin Methods
+  getAdminBookings: (date?: string): Promise<{ success: boolean; data: { items: BookingResponseDTO[] } }> => {
+    const url = date ? `/Booking/admin?date=${date}` : `/Booking/admin`;
+    return axiosClient.get(url);
+  },
+  
+  updateBookingStatus: (bookingId: number, status: string): Promise<any> => {
+    return axiosClient.put(`/Booking/${bookingId}/status?status=${status}`);
+  },
+  
+  getBookingDetail: (bookingId: number): Promise<{ success: boolean; data: any }> => {
+    return axiosClient.get(`/Booking/${bookingId}`);
   }
 };

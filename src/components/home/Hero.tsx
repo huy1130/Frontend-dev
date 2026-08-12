@@ -60,10 +60,15 @@ export default function Hero() {
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-4 pt-4">
             <Link
-              to={userRole === 'customer' ? '/customer/booking' : '/login'}
+              to={
+                !userRole ? '/login' : 
+                userRole.toLowerCase() === 'customer' ? '/customer/booking' : 
+                userRole.toLowerCase() === 'staff' ? '/staff/appointments' : 
+                '/admin/appointments'
+              }
               className="px-6 py-2.5 bg-[#f97316] text-white font-semibold text-sm sm:text-base hover:bg-orange-600 transition-colors flex items-center gap-2 drop-shadow-lg rounded-sm"
             >
-              Đặt Hẹn Online
+              {(!userRole || userRole.toLowerCase() === 'customer') ? 'Đặt Hẹn Online' : 'Quản Lý Lịch Hẹn'}
               <Calendar className="w-4 h-4" />
             </Link>
 

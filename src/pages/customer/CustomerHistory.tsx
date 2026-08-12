@@ -268,8 +268,17 @@ export default function CustomerHistory() {
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng Thái</p>
-                  <p className={`text-sm font-bold ${selectedBooking.status === 'Completed' ? 'text-emerald-600' : selectedBooking.status === 'Pending' ? 'text-blue-600' : 'text-rose-600'}`}>
-                    {selectedBooking.status === 'Completed' ? 'Đã Hoàn Thành' : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý' : 'Đã Hủy'}
+                  <p className={`text-sm font-bold ${
+                    ['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600' 
+                    : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600' 
+                    : 'text-rose-600'
+                  }`}>
+                    {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành' 
+                    : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý' 
+                    : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
+                    : selectedBooking.status === 'Washing' ? 'Đang Rửa'
+                    : selectedBooking.status === 'NoShow' ? 'Không Đến'
+                    : 'Đã Hủy'}
                   </p>
                 </div>
                 <div>
