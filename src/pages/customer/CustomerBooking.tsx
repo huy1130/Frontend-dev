@@ -27,6 +27,7 @@ import { bookingService } from '../../services/bookingService'
 import { promotionService, PromotionDTO } from '../../services/promotionService'
 import { timeSlotService, AvailableSlotDto } from '../../services/timeSlotService'
 import { loyaltyService } from '../../services/loyaltyService'
+import { getLocalDateString } from '../../utils/date'
 import { toast } from 'sonner'
 
 interface ServiceItem {
@@ -55,7 +56,7 @@ export default function CustomerBooking() {
   // Step 1 State: Date & Time
   const [selectedCarId, setSelectedCarId] = useState<number>(0)
   const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
+    getLocalDateString(new Date())
   )
   const [selectedSlotId, setSelectedSlotId] = useState<number>(0)
 
@@ -416,8 +417,8 @@ export default function CustomerBooking() {
                   </label>
                   <input
                     type="date"
-                    min={new Date().toLocaleDateString('en-CA')}
-                    max={new Date(Date.now() + maxDays * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA')}
+                    min={getLocalDateString(new Date())}
+                    max={getLocalDateString(new Date(Date.now() + maxDays * 24 * 60 * 60 * 1000))}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     className="w-full sm:w-72 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:border-orange-500 font-bold text-sm"

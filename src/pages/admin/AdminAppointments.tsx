@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 
 import { bookingService } from '../../services/bookingService'
+import { getLocalDateString } from '../../utils/date'
 
 export default function AdminAppointments() {
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
@@ -47,7 +48,7 @@ export default function AdminAppointments() {
           setBookings(mapped)
         }
       } else {
-        const dateStr = selectedDate.toISOString().split('T')[0]
+        const dateStr = getLocalDateString(selectedDate)
 
         const response = await bookingService.getAdminBookings(dateStr)
         // Map Admin BookingDto to TodayBookingDto expected by the UI
@@ -181,7 +182,7 @@ export default function AdminAppointments() {
           <input
             type="date"
             className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-            value={selectedDate.toISOString().split('T')[0]}
+            value={getLocalDateString(selectedDate)}
             onChange={(e) => {
               setSearchPhone('')
               setSelectedDate(new Date(e.target.value))
