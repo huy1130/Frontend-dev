@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { 
-  Calendar as CalendarIcon, 
-  Clock, 
-  CheckCircle2, 
-  ArrowLeft, 
-  ArrowRight, 
-  Sparkles, 
-  MapPin, 
-  Tag, 
-  ShieldCheck, 
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  CheckCircle2,
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  MapPin,
+  Tag,
+  ShieldCheck,
   Car,
   Check,
   Percent,
@@ -123,6 +123,8 @@ export default function CustomerBooking() {
       setIsSlotsLoading(true)
       try {
         const slots = await timeSlotService.getAvailableSlots(selectedDate)
+        // Sort time slots chronologically
+        slots.sort((a, b) => a.startTime.localeCompare(b.startTime))
         setAvailableSlots(slots)
         setSelectedSlotId(0) // Reset slot when date changes
       } catch (error) {
@@ -142,17 +144,17 @@ export default function CustomerBooking() {
   // Calculate pricing
   const selectedService = availableServices.find((s) => s.serviceId === selectedServiceId)
   const subtotalPrice = selectedService ? selectedService.price : 0
-  
+
   const selectedPromo = availablePromos.find((p) => p.promotionId === appliedPromoId)
   let discountValue = 0
   if (selectedPromo && selectedPromo.promoType === 'Discount') {
     if (selectedPromo.discountType === 'Fixed' && selectedPromo.discountValue) {
-       discountValue = selectedPromo.discountValue
+      discountValue = selectedPromo.discountValue
     } else if (selectedPromo.discountType === 'Percent' && selectedPromo.discountValue) {
-       discountValue = subtotalPrice * selectedPromo.discountValue / 100
-       if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
-           discountValue = selectedPromo.maxDiscount
-       }
+      discountValue = subtotalPrice * selectedPromo.discountValue / 100
+      if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
+        discountValue = selectedPromo.maxDiscount
+      }
     }
   }
   const finalTotal = Math.max(0, subtotalPrice - discountValue)
@@ -185,10 +187,10 @@ export default function CustomerBooking() {
         bookingDate: selectedDate,
         promotionId: appliedPromoId ? appliedPromoId : null
       })
-      
+
       // API trả về trực tiếp cục BookingDto thay vì {success: true}
       if (res && res.bookingId) {
-        setBookingRef('BK-' + res.bookingId)
+        setBookingRef('Mã lịch hẹn - ' + res.bookingId)
         setIsSuccess(true)
         toast.success('Đặt lịch thành công!')
       }
@@ -202,7 +204,7 @@ export default function CustomerBooking() {
       <NavBar />
 
       <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
-        
+
 
 
         {/* Back Link */}
@@ -225,15 +227,14 @@ export default function CustomerBooking() {
 
             {/* Stepper Header */}
             <div className="flex items-center justify-center gap-2 sm:gap-3 pt-3 max-w-2xl mx-auto flex-wrap">
-              
+
               {/* Step 1 */}
-              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${
-                currentStep === 1 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs' 
-                  : currentStep > 1 
-                  ? 'bg-orange-50 text-orange-600 border-orange-200 text-xs font-semibold' 
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${currentStep === 1
+                ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs'
+                : currentStep > 1
+                  ? 'bg-orange-50 text-orange-600 border-orange-200 text-xs font-semibold'
                   : 'bg-white text-slate-500 border-slate-200 text-xs'
-              }`}>
+                }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</span>
                 <span>Thời Gian Đặt Lịch</span>
               </div>
@@ -241,13 +242,12 @@ export default function CustomerBooking() {
               <div className="hidden sm:block h-0.5 w-6 bg-slate-300" />
 
               {/* Step 2 */}
-              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${
-                currentStep === 2 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs' 
-                  : currentStep > 2 
-                  ? 'bg-orange-50 text-orange-600 border-orange-200 text-xs font-semibold' 
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${currentStep === 2
+                ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs'
+                : currentStep > 2
+                  ? 'bg-orange-50 text-orange-600 border-orange-200 text-xs font-semibold'
                   : 'bg-white text-slate-500 border-slate-200 text-xs'
-              }`}>
+                }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">2</span>
                 <span>Chọn Dịch Vụ</span>
               </div>
@@ -255,11 +255,10 @@ export default function CustomerBooking() {
               <div className="hidden sm:block h-0.5 w-6 bg-slate-300" />
 
               {/* Step 3 */}
-              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${
-                currentStep === 3 
-                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs' 
-                  : 'bg-white text-slate-500 border-slate-200 text-xs'
-              }`}>
+              <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border transition-all ${currentStep === 3
+                ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 font-extrabold text-xs'
+                : 'bg-white text-slate-500 border-slate-200 text-xs'
+                }`}>
                 <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px]">3</span>
                 <span>Xác Nhận & Ưu Đãi</span>
               </div>
@@ -274,7 +273,7 @@ export default function CustomerBooking() {
             <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
               <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
-            
+
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Đặt Lịch Thành Công!</h2>
               <p className="text-slate-600 text-xs sm:text-sm">
@@ -294,7 +293,7 @@ export default function CustomerBooking() {
                 <span className="font-bold text-slate-900">
                   {(() => {
                     const slot = availableSlots.find(s => s.slotId === selectedSlotId)
-                    return slot ? `${slot.startTime.substring(0,5)} - ${slot.endTime.substring(0,5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
+                    return slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
                   })()}
                 </span>
               </div>
@@ -309,14 +308,14 @@ export default function CustomerBooking() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <Link 
-                to="/customer/history" 
+              <Link
+                to="/customer/history"
                 className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 text-sm"
               >
                 <span>Xem Lịch Sử Đặt Lịch</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <button 
+              <button
                 onClick={() => navigate('/customer')}
                 className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors border border-slate-200 text-sm"
               >
@@ -327,11 +326,11 @@ export default function CustomerBooking() {
         ) : (
           /* STEP CONTENT CARD */
           <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-xl shadow-slate-200/50 min-h-[600px] flex flex-col">
-            
+
             {/* STEP 1: DATE & TIME */}
             {currentStep === 1 && (
               <div className="space-y-6">
-                
+
                 {/* Car Selection */}
                 <div>
                   <label className="block text-sm font-extrabold text-slate-900 mb-2.5 flex items-center gap-2">
@@ -345,16 +344,14 @@ export default function CustomerBooking() {
                       <div
                         key={car.vehicleId}
                         onClick={() => setSelectedCarId(car.vehicleId)}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
-                          selectedCarId === car.vehicleId
-                            ? 'bg-orange-50/80 border-orange-500 shadow-md'
-                            : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
-                        }`}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${selectedCarId === car.vehicleId
+                          ? 'bg-orange-50/80 border-orange-500 shadow-md'
+                          : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                          }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            selectedCarId === car.vehicleId ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-600'
-                          }`}>
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedCarId === car.vehicleId ? 'bg-orange-500 text-white' : 'bg-slate-200 text-slate-600'
+                            }`}>
                             <Car className="w-5 h-5" />
                           </div>
                           <div>
@@ -362,9 +359,8 @@ export default function CustomerBooking() {
                             <p className="text-xs text-slate-500">{car.vehicleType}</p>
                           </div>
                         </div>
-                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                          selectedCarId === car.vehicleId ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
-                        }`}>
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selectedCarId === car.vehicleId ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
+                          }`}>
                           {selectedCarId === car.vehicleId && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
@@ -400,11 +396,11 @@ export default function CustomerBooking() {
                     <Clock className="w-4 h-4 text-orange-600" />
                     <span>3. Chọn Khung Giờ Phù Hợp:</span>
                   </label>
-                  
+
                   {isSlotsLoading ? (
                     <div className="text-orange-600 font-bold text-sm py-4">Đang tải khung giờ trống...</div>
                   ) : availableSlots.length === 0 ? (
-                     <div className="text-slate-500 text-sm py-4 border border-dashed rounded-xl p-4 text-center bg-slate-50">Không có khung giờ nào trống trong ngày này. Vui lòng chọn ngày khác.</div>
+                    <div className="text-slate-500 text-sm py-4 border border-dashed rounded-xl p-4 text-center bg-slate-50">Không có khung giờ nào trống trong ngày này. Vui lòng chọn ngày khác.</div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {availableSlots.map((slot) => {
@@ -418,14 +414,14 @@ export default function CustomerBooking() {
                         const isToday = selectedDate === today
                         let isPast = false
                         if (isToday && slot.startTime) {
-                            const now = new Date()
-                            const currentHour = now.getHours()
-                            const currentMinute = now.getMinutes()
-                            
-                            const [startH, startM] = slot.startTime.split(':').map(Number)
-                            if (startH < currentHour || (startH === currentHour && startM <= currentMinute)) {
-                                isPast = true
-                            }
+                          const now = new Date()
+                          const currentHour = now.getHours()
+                          const currentMinute = now.getMinutes()
+
+                          const [startH, startM] = slot.startTime.split(':').map(Number)
+                          if (startH < currentHour || (startH === currentHour && startM <= currentMinute)) {
+                            isPast = true
+                          }
                         }
 
                         const canBook = isAvailable && !isPast
@@ -436,15 +432,14 @@ export default function CustomerBooking() {
                             type="button"
                             disabled={!canBook}
                             onClick={() => setSelectedSlotId(slot.slotId)}
-                            className={`py-3 px-2 rounded-xl border text-sm transition-all flex flex-col items-center justify-center gap-1 ${
-                              !canBook 
-                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
-                                : selectedSlotId === slot.slotId
+                            className={`py-3 px-2 rounded-xl border text-sm transition-all flex flex-col items-center justify-center gap-1 ${!canBook
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                              : selectedSlotId === slot.slotId
                                 ? 'bg-orange-500 text-white border-orange-500 shadow-md font-extrabold'
                                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-orange-50 hover:border-orange-200 font-bold'
-                            }`}
+                              }`}
                           >
-                            <span>{slot.startTime.substring(0,5)} - {slot.endTime.substring(0,5)}</span>
+                            <span>{slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}</span>
                             <span className={`text-[10px] ${!canBook ? 'text-slate-400' : selectedSlotId === slot.slotId ? 'text-orange-100' : 'text-slate-500'}`}>
                               {isPast ? 'Đã qua giờ' : (isAvailable ? `Còn ${remaining} chỗ` : 'Hết chỗ')}
                             </span>
@@ -486,16 +481,14 @@ export default function CustomerBooking() {
                       <div
                         key={svc.serviceId}
                         onClick={() => toggleService(svc.serviceId)}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${
-                          isSelected
-                            ? 'bg-orange-50/80 border-orange-500 shadow-sm'
-                            : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
-                        }`}
+                        className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${isSelected
+                          ? 'bg-orange-50/80 border-orange-500 shadow-sm'
+                          : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                          }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`w-5 h-5 rounded border mt-0.5 flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'
-                          }`}>
+                          <div className={`w-5 h-5 rounded border mt-0.5 flex items-center justify-center transition-colors ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'
+                            }`}>
                             {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                           </div>
                           <div>
@@ -539,12 +532,12 @@ export default function CustomerBooking() {
             {/* STEP 3: CONFIRM & PROMOTIONS */}
             {currentStep === 3 && (
               <div className="space-y-6">
-                
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  
+
                   {/* Left Column */}
                   <div className="lg:col-span-7 space-y-5">
-                    
+
                     {/* Booking Details Box */}
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5">
                       <h4 className="font-extrabold text-slate-900 text-sm border-b border-slate-200 pb-2 flex items-center gap-1.5">
@@ -557,7 +550,7 @@ export default function CustomerBooking() {
                         <p><span className="text-slate-500">Thời gian:</span> <strong className="text-slate-900">
                           {(() => {
                             const slot = availableSlots.find(s => s.slotId === selectedSlotId)
-                            return slot ? `${slot.startTime.substring(0,5)} - ${slot.endTime.substring(0,5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
+                            return slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
                           })()}
                         </strong></p>
                         <div>
@@ -598,13 +591,12 @@ export default function CustomerBooking() {
                               key={promo.promotionId}
                               disabled={!isApplicable}
                               onClick={() => setAppliedPromoId(isApplied ? 0 : promo.promotionId)}
-                              className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
-                                !isApplicable
-                                  ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
-                                  : isApplied
+                              className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${!isApplicable
+                                ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                                : isApplied
                                   ? 'bg-orange-50 border-orange-500 shadow-sm cursor-pointer'
                                   : 'bg-slate-50 border-slate-200 hover:border-slate-300 cursor-pointer'
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">
@@ -619,11 +611,10 @@ export default function CustomerBooking() {
                                 </div>
                               </div>
 
-                              <span className={`text-[11px] font-extrabold px-3 py-1.5 rounded-lg border shrink-0 ${
-                                isApplied 
-                                  ? 'bg-orange-500 text-white border-orange-500' 
-                                  : 'bg-white text-orange-600 border-orange-200'
-                              }`}>
+                              <span className={`text-[11px] font-extrabold px-3 py-1.5 rounded-lg border shrink-0 ${isApplied
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-orange-600 border-orange-200'
+                                }`}>
                                 {isApplied ? 'Đang chọn' : badgeText}
                               </span>
                             </button>

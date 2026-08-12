@@ -33,14 +33,12 @@ export default function CustomerHistory() {
       try {
         const token = localStorage.getItem('token')
         if (!token) return
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        const id = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || payload.nameid || payload.sub
-        const customerId = id ? parseInt(id, 10) : 0
+        const phoneNumber = localStorage.getItem('phoneNumber')
 
-        if (customerId) {
+        if (phoneNumber) {
           try {
             const [historyRes, publicPromosRes, eligiblePromosRes] = await Promise.all([
-              bookingService.getBookingHistory(customerId),
+              bookingService.getBookingHistory(phoneNumber),
               promotionService.getPublicPromotions().catch(() => []),
               promotionService.getEligiblePromotions().catch(() => [])
             ])

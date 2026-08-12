@@ -1,0 +1,39 @@
+import axiosClient from '../api/axiosClient'
+
+export interface TodayBookingDto {
+  bookingId: number
+  customerName: string
+  customerPhone: string
+  licensePlate: string
+  vehicleType: string
+  status: string
+  slotId: number
+  serviceId: number
+  bookingDate: string
+}
+
+export const staffService = {
+  // Get all bookings for today
+  getTodayBookings: async (): Promise<TodayBookingDto[]> => {
+    const response = await axiosClient.get('/Staff/today-bookings')
+    return response.data
+  },
+
+  // Confirm a booking
+  confirmBooking: async (bookingId: number): Promise<any> => {
+    const response = await axiosClient.post('/Staff/confirm', { bookingId })
+    return response
+  },
+
+  // Check-in a vehicle
+  checkInBooking: async (bookingId: number): Promise<any> => {
+    const response = await axiosClient.post('/Staff/check-in', { bookingId })
+    return response
+  },
+
+  // Check-out a vehicle
+  checkOutBooking: async (bookingId: number): Promise<any> => {
+    const response = await axiosClient.post('/Staff/check-out', { bookingId })
+    return response
+  },
+}

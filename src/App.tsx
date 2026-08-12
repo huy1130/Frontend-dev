@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -25,6 +25,14 @@ import TierManagement from './pages/dashboard/TierManagement'
 import TimeSlotManagement from './pages/dashboard/TimeSlotManagement'
 import { Toaster } from 'sonner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+
+const DashboardIndex = () => {
+  const role = localStorage.getItem('userRole')?.toLowerCase()
+  if (role === 'staff') {
+    return <Navigate to="/dashboard/appointments" replace />
+  }
+  return <Dashboard />
+}
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -91,8 +99,8 @@ export default function App() {
           </ProtectedRoute>
         }>
           <Route index element={
-            <ProtectedRoute allowedRoles={['admin', 'manager']}>
-              <Dashboard />
+            <ProtectedRoute allowedRoles={['admin', 'manager', 'staff']}>
+              <DashboardIndex />
             </ProtectedRoute>
           } />
           <Route path="services" element={

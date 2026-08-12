@@ -207,10 +207,8 @@ export default function Requests() {
                   onChange={(e) => setFormData({...formData, guestVehicleType: e.target.value})}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl text-slate-800 px-4 py-2.5 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all"
                 >
-                  <option value="Car">Ô tô (Car)</option>
+                  <option value="Car">Xe Ô tô (Sedan, SUV, Bán tải...)</option>
                   <option value="Bike">Xe máy (Bike)</option>
-                  <option value="Sedan">Sedan</option>
-                  <option value="SUV">SUV</option>
                 </select>
               </div>
             </div>
@@ -266,9 +264,15 @@ export default function Requests() {
                       slotTime.setHours(hours, minutes, 0, 0)
                       // Disable if the slot is in the past
                       const isPast = slotTime < now
+                      
+                      const isCar = formData.guestVehicleType === 'Car'
+                      const remaining = isCar ? s.remainingCarCapacity : s.remainingBikeCapacity
+                      const isAvailable = remaining > 0
+                      const canBook = isAvailable && !isPast
+
                       return (
-                        <option key={s.slotId} value={s.slotId} disabled={isPast}>
-                          {s.startTime.slice(0,5)} - {s.endTime.slice(0,5)} {isPast ? '(Đã qua)' : ''}
+                        <option key={s.slotId} value={s.slotId} disabled={!canBook}>
+                          {s.startTime.slice(0,5)} - {s.endTime.slice(0,5)} {isPast ? '(Đã qua)' : (isAvailable ? `(Còn ${remaining} chỗ)` : '(Hết chỗ)')}
                         </option>
                       )
                     })}

@@ -87,13 +87,36 @@ export default function PublicPromotions() {
               </div>
 
               {/* Title & Desc */}
-              <div className="space-y-2 mb-6">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
-                  {promo.promoName}
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
-                  {promo.description || 'Nhanh tay nhận ngay ưu đãi từ HybridWash.'}
-                </p>
+              <div className="space-y-3 mb-6">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors">
+                    {promo.promoName}
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                    {promo.description || 'Nhanh tay nhận ngay ưu đãi từ HybridWash.'}
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-dark-900/50 rounded-lg p-3 space-y-2 border border-slate-100 dark:border-white/5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 dark:text-slate-400">Ưu đãi:</span>
+                    <span className="font-semibold text-rose-600 dark:text-rose-400">
+                      {(promo.promoType === 'Percentage' || promo.discountType === 'Percent' || promo.discountType === 'Percentage') 
+                        ? `Giảm ${promo.discountValue || 0}% ${promo.maxDiscount ? `(Tối đa ${promo.maxDiscount.toLocaleString()}đ)` : ''}`
+                        : (promo.promoType === 'FixedAmount' || promo.discountType === 'Fixed' || promo.discountType === 'FixedAmount')
+                          ? `Giảm ${(promo.discountValue || 0).toLocaleString()}đ`
+                          : 'Ưu đãi đặc biệt'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500 dark:text-slate-400">Áp dụng cho:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {(!promo.targetTier || promo.targetTier === 'All' || promo.targetTier.toLowerCase() === 'all guest') 
+                        ? 'Mọi khách hàng' 
+                        : `Thành viên hạng ${promo.targetTier}`}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Code Box & Copy Trigger */}

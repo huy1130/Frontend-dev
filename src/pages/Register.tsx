@@ -171,11 +171,8 @@ export default function Register() {
                         required
                       >
                         <option value="" disabled className="bg-slate-900 text-white/50">Chọn loại xe</option>
-                        <option value="Sedan" className="bg-slate-900 text-white">Sedan (4 chỗ)</option>
-                        <option value="SUV" className="bg-slate-900 text-white">SUV (7 chỗ)</option>
-                        <option value="Bán tải" className="bg-slate-900 text-white">Bán tải (Pickup)</option>
-                        <option value="Xe máy" className="bg-slate-900 text-white">Xe máy</option>
-                        <option value="Khác" className="bg-slate-900 text-white">Khác</option>
+                        <option value="Car" className="bg-slate-900 text-white">Xe Ô tô (Sedan, SUV, Bán tải...)</option>
+                        <option value="Bike" className="bg-slate-900 text-white">Xe Máy</option>
                       </select>
                       {/* Dropdown Arrow Icon */}
                       <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">

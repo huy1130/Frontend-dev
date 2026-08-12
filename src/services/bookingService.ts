@@ -38,7 +38,7 @@ export const bookingService = {
     return axiosClient.post('/Booking', data);
   },
   
-  getBookingHistory: (customerId: number): Promise<{ success: boolean; data: BookingResponseDTO[] }> => {
-    return axiosClient.get(`/Booking/customer/${customerId}`);
+  getBookingHistory: (phone: string): Promise<{ success: boolean; data: BookingResponseDTO[] }> => {
+    return axiosClient.get(`/Booking/search?phone=${phone}`);
   }
 };
