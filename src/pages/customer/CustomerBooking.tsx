@@ -23,6 +23,7 @@ import { customerService, VehicleResponseDTO } from '../../services/customerServ
 import { serviceService, ServiceDto } from '../../services/serviceService'
 import { bookingService } from '../../services/bookingService'
 import { promotionService, PromotionDTO } from '../../services/promotionService'
+import { timeSlotService, AvailableSlotDto } from '../../services/timeSlotService'
 import { toast } from 'sonner'
 
 interface ServiceItem {
@@ -53,7 +54,10 @@ export default function CustomerBooking() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   )
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('09:00')
+  const [selectedSlotId, setSelectedSlotId] = useState<number>(0)
+
+  const [availableSlots, setAvailableSlots] = useState<AvailableSlotDto[]>([])
+  const [isSlotsLoading, setIsSlotsLoading] = useState(false)
 
   // Step 2 State: Selected Services
   const [selectedServiceId, setSelectedServiceId] = useState<number>(0)
@@ -103,14 +107,22 @@ export default function CustomerBooking() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentStep, isSuccess])
 
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', 
-    '13:30', '14:30', '15:30', '16:30', '17:30'
-  ]
-
-
-
-
+  React.useEffect(() => {
+    const fetchSlots = async () => {
+      setIsSlotsLoading(true)
+      try {
+        const slots = await timeSlotService.getAvailableSlots(selectedDate)
+        setAvailableSlots(slots)
+        setSelectedSlotId(0) // Reset slot when date changes
+      } catch (error) {
+        console.error("Lỗi lấy khung giờ:", error)
+        toast.error("Không thể tải danh sách khung giờ")
+      } finally {
+        setIsSlotsLoading(false)
+      }
+    }
+    fetchSlots()
+  }, [selectedDate])
 
   const toggleService = (id: number) => {
     setSelectedServiceId(id)
@@ -129,16 +141,15 @@ export default function CustomerBooking() {
   const finalTotal = Math.max(0, subtotalPrice - discountValue)
 
   const handleConfirmBooking = async () => {
-    if (!selectedCarId || !selectedServiceId) {
-      toast.error('Vui lòng chọn đầy đủ Xe và Dịch vụ.');
+    if (!selectedCarId || !selectedServiceId || !selectedSlotId) {
+      toast.error('Vui lòng chọn đầy đủ Xe, Khung giờ và Dịch vụ.');
       return;
     }
-    const slotIndex = timeSlots.indexOf(selectedTimeSlot) + 1;
     try {
       const res = await bookingService.createBooking({
         vehicleId: selectedCarId,
         serviceId: selectedServiceId,
-        slotId: slotIndex,
+        slotId: selectedSlotId,
         promotionId: appliedPromoId ? appliedPromoId : null
       })
       if (res.success) {
@@ -245,7 +256,12 @@ export default function CustomerBooking() {
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Thời gian:</span>
-                <span className="font-bold text-slate-900">{selectedTimeSlot} - {selectedDate}</span>
+                <span className="font-bold text-slate-900">
+                  {(() => {
+                    const slot = availableSlots.find(s => s.slotId === selectedSlotId)
+                    return slot ? `${slot.startTime.substring(0,5)} - ${slot.endTime.substring(0,5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
+                  })()}
+                </span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Dịch vụ đã chọn:</span>
@@ -351,22 +367,42 @@ export default function CustomerBooking() {
                     <Clock className="w-4 h-4 text-orange-600" />
                     <span>3. Chọn Khung Giờ Phù Hợp:</span>
                   </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2.5">
-                    {timeSlots.map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => setSelectedTimeSlot(slot)}
-                        className={`py-2.5 rounded-xl border text-xs font-extrabold transition-all ${
-                          selectedTimeSlot === slot
-                            ? 'bg-orange-500 text-white border-orange-500 shadow-md'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    ))}
-                  </div>
+                  
+                  {isSlotsLoading ? (
+                    <div className="text-orange-600 font-bold text-sm py-4">Đang tải khung giờ trống...</div>
+                  ) : availableSlots.length === 0 ? (
+                     <div className="text-slate-500 text-sm py-4 border border-dashed rounded-xl p-4 text-center bg-slate-50">Không có khung giờ nào trống trong ngày này. Vui lòng chọn ngày khác.</div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {availableSlots.map((slot) => {
+                        const selectedCar = myCars.find(c => c.vehicleId === selectedCarId)
+                        const isCar = selectedCar?.vehicleType.toLowerCase().includes('ô tô') || selectedCar?.vehicleType.toLowerCase().includes('car') || false
+                        const remaining = isCar ? slot.remainingCarCapacity : slot.remainingBikeCapacity
+                        const isAvailable = remaining > 0
+
+                        return (
+                          <button
+                            key={slot.slotId}
+                            type="button"
+                            disabled={!isAvailable}
+                            onClick={() => setSelectedSlotId(slot.slotId)}
+                            className={`py-3 px-2 rounded-xl border text-sm transition-all flex flex-col items-center justify-center gap-1 ${
+                              !isAvailable 
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                                : selectedSlotId === slot.slotId
+                                ? 'bg-orange-500 text-white border-orange-500 shadow-md font-extrabold'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-orange-50 hover:border-orange-200 font-bold'
+                            }`}
+                          >
+                            <span>{slot.startTime.substring(0,5)} - {slot.endTime.substring(0,5)}</span>
+                            <span className={`text-[10px] ${!isAvailable ? 'text-slate-400' : selectedSlotId === slot.slotId ? 'text-orange-100' : 'text-slate-500'}`}>
+                              {isAvailable ? `Còn ${remaining} chỗ` : 'Hết chỗ'}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Next Action */}
@@ -468,7 +504,12 @@ export default function CustomerBooking() {
 
                       <div className="text-xs space-y-1.5 text-slate-700">
                         <p><span className="text-slate-500">Xe của bạn:</span> <strong className="text-slate-900">{myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - {myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}</strong></p>
-                        <p><span className="text-slate-500">Thời gian:</span> <strong className="text-slate-900">{selectedTimeSlot} ngày {selectedDate}</strong></p>
+                        <p><span className="text-slate-500">Thời gian:</span> <strong className="text-slate-900">
+                          {(() => {
+                            const slot = availableSlots.find(s => s.slotId === selectedSlotId)
+                            return slot ? `${slot.startTime.substring(0,5)} - ${slot.endTime.substring(0,5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
+                          })()}
+                        </strong></p>
                         <div>
                           <span className="text-slate-500 block mb-0.5">Dịch vụ đã chọn:</span>
                           <ul className="pl-4 list-disc space-y-0.5 font-bold text-slate-900">

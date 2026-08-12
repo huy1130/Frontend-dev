@@ -127,19 +127,8 @@ export default function CustomerCars() {
                     <span className="text-[10px] text-slate-500 font-semibold block mb-0.5 uppercase">Loại Xe</span>
                     <span className="font-bold text-slate-800 text-sm">{car.vehicleType}</span>
                   </div>
-                  
-                  <div className="flex flex-col items-center justify-center pt-3 border-t border-slate-100">
-                    <span className="text-xs text-slate-500 font-bold mb-2">Mã QR Check-in (Đưa cho nhân viên)</span>
-                    {car.qrCode ? (
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${car.qrCode}`} 
-                        alt="QR Code" 
-                        className="w-24 h-24 rounded-lg border border-slate-200 p-1 bg-white shadow-sm" 
-                      />
-                    ) : (
-                      <span className="text-xs italic text-slate-400">Đang cập nhật mã QR...</span>
-                    )}
-                  </div>
+
+
                 </div>
               </div>
             ))}
