@@ -61,14 +61,20 @@ export default function ServiceManagement() {
     setIsModalOpen(true)
   }
 
-  const handleOpenEdit = (svc: ServiceDto) => {
-    setEditingServiceId(svc.serviceId)
-    setFormData({
-      serviceName: svc.serviceName,
-      description: svc.description || '',
-      price: svc.price
-    })
-    setIsModalOpen(true)
+  const handleOpenEdit = async (svc: ServiceDto) => {
+    try {
+      const detailedSvc = await serviceService.getAdminServiceById(svc.serviceId)
+      setEditingServiceId(detailedSvc.serviceId)
+      setFormData({
+        serviceName: detailedSvc.serviceName,
+        description: detailedSvc.description || '',
+        price: detailedSvc.price
+      })
+      setIsModalOpen(true)
+    } catch (error) {
+      console.error(error)
+      toast.error('Không thể lấy thông tin chi tiết dịch vụ')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

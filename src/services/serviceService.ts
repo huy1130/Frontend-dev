@@ -20,9 +20,17 @@ export const serviceService = {
     return axiosClient.get('/Services');
   },
   
+  getServiceById: (id: number): Promise<ServiceDto> => {
+    return axiosClient.get(`/Services/${id}`);
+  },
+  
   // Admin endpoints
   getAllAdminServices: (): Promise<ServiceDto[]> => {
     return axiosClient.get('/admin/services');
+  },
+
+  getAdminServiceById: (id: number): Promise<ServiceDto> => {
+    return axiosClient.get(`/admin/services/${id}`);
   },
 
   createService: (data: UpsertServiceDto): Promise<ServiceDto> => {

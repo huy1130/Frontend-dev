@@ -15,7 +15,9 @@ import {
   Percent,
   ChevronRight,
   ChevronLeft,
-  Plus
+  Plus,
+  Info,
+  XCircle
 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
@@ -62,6 +64,17 @@ export default function CustomerBooking() {
 
   // Step 2 State: Selected Services
   const [selectedServiceId, setSelectedServiceId] = useState<number>(0)
+  const [viewingService, setViewingService] = useState<ServiceDto | null>(null)
+
+  const handleViewServiceDetail = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation() // Prevent toggling the service selection
+    try {
+      const detailedSvc = await serviceService.getServiceById(id)
+      setViewingService(detailedSvc)
+    } catch (err) {
+      toast.error('Không thể lấy chi tiết dịch vụ')
+    }
+  }
 
   // Step 3 State: Selected Promotion & Booking Complete
   const [appliedPromoId, setAppliedPromoId] = useState<number>(0)
@@ -528,8 +541,14 @@ export default function CustomerBooking() {
                           </div>
                         </div>
 
-                        <div className="text-left md:text-right pl-8 md:pl-0">
+                        <div className="text-left md:text-right pl-8 md:pl-0 flex flex-col items-start md:items-end gap-1.5 mt-2 md:mt-0">
                           <p className="text-xl font-extrabold text-orange-600">{svc.price.toLocaleString('vi-VN')}đ</p>
+                          <button
+                            onClick={(e) => handleViewServiceDetail(e, svc.serviceId)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors"
+                          >
+                            <Info className="w-3.5 h-3.5" /> Xem chi tiết
+                          </button>
                         </div>
                       </div>
                     )
@@ -787,6 +806,41 @@ export default function CustomerBooking() {
               </div>
             )}
 
+          </div>
+        )}
+
+        {/* Service Detail Modal */}
+        {viewingService && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="font-extrabold text-lg text-slate-900">Chi Tiết Dịch Vụ</h3>
+                <button
+                  onClick={() => setViewingService(null)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <h4 className="font-bold text-slate-900 mb-1">{viewingService.serviceName}</h4>
+                  <p className="text-slate-600 text-sm leading-relaxed">{viewingService.description || 'Không có mô tả chi tiết cho dịch vụ này.'}</p>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-4 flex justify-between items-center border border-orange-100">
+                  <span className="font-bold text-orange-800 text-sm">Giá Dịch Vụ:</span>
+                  <span className="font-extrabold text-orange-600 text-lg">{viewingService.price.toLocaleString('vi-VN')}đ</span>
+                </div>
+              </div>
+              <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+                <button
+                  onClick={() => setViewingService(null)}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors text-sm"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
