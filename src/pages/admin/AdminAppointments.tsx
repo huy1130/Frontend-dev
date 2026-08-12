@@ -32,11 +32,11 @@ export default function AdminAppointments() {
               }
             })
           );
-  
+
           const mapped: TodayBookingDto[] = detailedBookings.map((b: any) => ({
             bookingId: b.bookingId,
             customerName: b.customerName || 'Khách vãng lai',
-            customerPhone: b.customerPhone, 
+            customerPhone: b.customerPhone,
             licensePlate: b.licensePlate || 'N/A',
             vehicleType: b.vehicleType || 'N/A',
             status: b.status,
@@ -48,7 +48,7 @@ export default function AdminAppointments() {
         }
       } else {
         const dateStr = selectedDate.toISOString().split('T')[0]
-        
+
         const response = await bookingService.getAdminBookings(dateStr)
         // Map Admin BookingDto to TodayBookingDto expected by the UI
         if (response.data && response.data.items) {
@@ -63,11 +63,11 @@ export default function AdminAppointments() {
               }
             })
           );
-  
+
           const mapped: TodayBookingDto[] = detailedBookings.map((b: any) => ({
             bookingId: b.bookingId,
             customerName: b.customerName || 'Khách vãng lai',
-            customerPhone: b.customerPhone, 
+            customerPhone: b.customerPhone,
             licensePlate: b.licensePlate || 'N/A',
             vehicleType: b.vehicleType || 'N/A',
             status: b.status,
@@ -155,31 +155,31 @@ export default function AdminAppointments() {
         </div>
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           <form onSubmit={handleSearch} className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="Nhập số ĐT khách..." 
+            <input
+              type="text"
+              placeholder="Nhập số ĐT khách..."
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
               className="px-4 py-2 w-40 md:w-48 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
             />
             {searchPhone && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleClearSearch}
                 className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition-colors text-sm"
               >
                 Xóa
               </button>
             )}
-            <button 
+            <button
               type="submit"
               className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
             >
               Tìm
             </button>
           </form>
-          <input 
-            type="date" 
+          <input
+            type="date"
             className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
             value={selectedDate.toISOString().split('T')[0]}
             onChange={(e) => {
@@ -187,7 +187,7 @@ export default function AdminAppointments() {
               setSelectedDate(new Date(e.target.value))
             }}
           />
-          <button 
+          <button
             onClick={() => {
               setSearchPhone('')
               fetchBookings()
@@ -198,7 +198,7 @@ export default function AdminAppointments() {
           </button>
         </div>
       </div>
-      
+
       {isLoading ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center">
           <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
@@ -218,7 +218,7 @@ export default function AdminAppointments() {
 
             return (
               <div key={booking.bookingId} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                
+
                 {/* Header Card */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-4">
@@ -227,7 +227,7 @@ export default function AdminAppointments() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        {booking.licensePlate} 
+                        {booking.licensePlate}
                         <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200 font-semibold uppercase">
                           {booking.vehicleType}
                         </span>
@@ -247,7 +247,7 @@ export default function AdminAppointments() {
                         {new Date(booking.bookingDate).toLocaleDateString('vi-VN')}
                       </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => handleViewDetail(booking.bookingId)}
                       className="px-3 py-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg flex items-center gap-1 transition-colors"
                     >
@@ -270,11 +270,11 @@ export default function AdminAppointments() {
                       <div className="relative flex justify-between">
                         {/* Connecting Line */}
                         <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -translate-y-1/2 rounded-full z-0"></div>
-                        <div 
+                        <div
                           className="absolute top-1/2 left-0 h-1 bg-orange-500 -translate-y-1/2 rounded-full z-0 transition-all duration-500"
                           style={{ width: currentStepIndex >= 0 ? `${(currentStepIndex / (steps.length - 1)) * 100}%` : '0%' }}
                         ></div>
-                        
+
                         {/* Steps */}
                         {steps.map((step, idx) => {
                           const isCompleted = idx < currentStepIndex
@@ -283,17 +283,15 @@ export default function AdminAppointments() {
 
                           return (
                             <div key={step.key} className="relative z-10 flex flex-col items-center gap-2">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                                isCompleted ? 'bg-orange-500 border-orange-500 text-white' : 
-                                isActive ? 'bg-white border-orange-500 text-orange-600 shadow-[0_0_0_4px_rgba(249,115,22,0.1)]' : 
-                                'bg-white border-slate-200 text-slate-400'
-                              }`}>
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${isCompleted ? 'bg-orange-500 border-orange-500 text-white' :
+                                  isActive ? 'bg-white border-orange-500 text-orange-600 shadow-[0_0_0_4px_rgba(249,115,22,0.1)]' :
+                                    'bg-white border-slate-200 text-slate-400'
+                                }`}>
                                 {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <span className="text-sm font-bold">{idx + 1}</span>}
                               </div>
-                              <span className={`text-xs font-bold whitespace-nowrap ${
-                                isActive ? 'text-orange-600' : 
-                                isCompleted ? 'text-slate-800' : 'text-slate-400'
-                              }`}>
+                              <span className={`text-xs font-bold whitespace-nowrap ${isActive ? 'text-orange-600' :
+                                  isCompleted ? 'text-slate-800' : 'text-slate-400'
+                                }`}>
                                 {step.label}
                               </span>
                             </div>
@@ -305,7 +303,7 @@ export default function AdminAppointments() {
                     {/* Action Buttons */}
                     <div className="flex justify-end min-w-[160px]">
                       {booking.status === 'Pending' && (
-                        <button 
+                        <button
                           onClick={() => handleAction(booking.bookingId, 'Confirmed', 'Đã xác nhận lịch hẹn!')}
                           className="w-full md:w-auto px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
                         >
@@ -313,7 +311,7 @@ export default function AdminAppointments() {
                         </button>
                       )}
                       {booking.status === 'Confirmed' && (
-                        <button 
+                        <button
                           onClick={() => handleAction(booking.bookingId, 'Washing', 'Đã Check-in và bắt đầu rửa!')}
                           className="w-full md:w-auto px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]"
                         >
@@ -321,7 +319,7 @@ export default function AdminAppointments() {
                         </button>
                       )}
                       {booking.status === 'Washing' && (
-                        <button 
+                        <button
                           onClick={() => handleAction(booking.bookingId, 'CheckedOut', 'Giao xe thành công!')}
                           className="w-full md:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)]"
                         >
@@ -352,7 +350,7 @@ export default function AdminAppointments() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto space-y-6">
               {/* Khách hàng */}
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -386,6 +384,17 @@ export default function AdminAppointments() {
                   <div className="col-span-2">
                     <span className="text-slate-500 block mb-1">Tên dịch vụ:</span>
                     <span className="font-semibold text-slate-800 text-base">{bookingDetail.serviceName}</span>
+                    {bookingDetail.addOns && bookingDetail.addOns.length > 0 && (
+                      <div className="mt-2 pl-3 border-l-2 border-emerald-500">
+                        <span className="text-xs text-slate-500 block mb-1">Dịch vụ tặng kèm</span>
+                        {bookingDetail.addOns.map((addon: any) => (
+                          <div key={addon.bookingAddOnId} className="font-semibold text-emerald-600 text-sm">
+                            + {addon.serviceName}
+                            {addon.finalPrice === 0 ? ' (Miễn phí)' : ` (${addon.finalPrice.toLocaleString('vi-VN')} đ)`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <span className="text-slate-500 block mb-1">Giá gốc:</span>
@@ -427,9 +436,9 @@ export default function AdminAppointments() {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-slate-100 flex justify-end">
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
               >

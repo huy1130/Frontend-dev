@@ -1,5 +1,16 @@
 import axiosClient from '../api/axiosClient';
 
+export interface BookingAddOnDTO {
+    bookingAddOnId: number;
+    serviceId: number;
+    serviceName: string;
+    promotionId?: number | null;
+    redemptionId?: number | null;
+    originalPrice: number;
+    finalPrice: number;
+    status: string;
+}
+
 export interface BookingRequestDTO {
     customerId?: number;
     vehicleId?: number;
@@ -11,6 +22,7 @@ export interface BookingRequestDTO {
     slotId: number;
     bookingDate: string;
     promotionId?: number | null;
+    redemptionId?: number | null;
 }
 
 export interface BookingResponseDTO {
@@ -29,6 +41,8 @@ export interface BookingResponseDTO {
     originalPrice?: number;
     finalPrice?: number;
     promotionId?: number | null;
+    redemptionId?: number | null;
+    addOns?: BookingAddOnDTO[];
     status: string;
     createdAt?: string;
 }

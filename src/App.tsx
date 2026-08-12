@@ -23,6 +23,7 @@ import CustomerBooking from './pages/customer/CustomerBooking'
 import CustomerHistory from './pages/customer/CustomerHistory'
 import CustomerCars from './pages/customer/CustomerCars'
 import CustomerProfile from './pages/customer/CustomerProfile'
+import CustomerRewards from './pages/customer/CustomerRewards'
 
 import ServiceManagement from './pages/admin/ServiceManagement'
 import PromotionManagement from './pages/admin/PromotionManagement'
@@ -90,6 +91,11 @@ export default function App() {
         <Route path="/customer/profile" element={
           <ProtectedRoute allowedRoles={['customer']}>
             <CustomerProfile />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer/rewards" element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerRewards />
           </ProtectedRoute>
         } />
 

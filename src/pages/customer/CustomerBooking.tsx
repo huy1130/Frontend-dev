@@ -65,6 +65,7 @@ export default function CustomerBooking() {
 
   // Step 3 State: Selected Promotion & Booking Complete
   const [appliedPromoId, setAppliedPromoId] = useState<number>(0)
+  const [appliedRedemptionId, setAppliedRedemptionId] = useState<number>(0)
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [bookingRef, setBookingRef] = useState<string>('')
 
@@ -72,6 +73,7 @@ export default function CustomerBooking() {
   const [myCars, setMyCars] = useState<VehicleResponseDTO[]>([])
   const [availableServices, setAvailableServices] = useState<ServiceDto[]>([])
   const [availablePromos, setAvailablePromos] = useState<PromotionDTO[]>([])
+  const [myRedemptions, setMyRedemptions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [maxDays, setMaxDays] = useState(7) // Mặc định Member là 7 ngày
 
@@ -96,13 +98,17 @@ export default function CustomerBooking() {
         if (promosRes.length > 0) {
           setAvailablePromos(promosRes)
         }
-        if (loyaltyRes && loyaltyRes.currentTier) {
-          switch (loyaltyRes.currentTier.toLowerCase()) {
-            case 'silver': setMaxDays(10); break;
-            case 'gold': setMaxDays(12); break;
-            case 'platinum': setMaxDays(14); break;
-            default: setMaxDays(7); break;
+        if (loyaltyRes) {
+          if (loyaltyRes.currentTier) {
+            switch (loyaltyRes.currentTier.toLowerCase()) {
+              case 'silver': setMaxDays(10); break;
+              case 'gold': setMaxDays(12); break;
+              case 'platinum': setMaxDays(14); break;
+              default: setMaxDays(7); break;
+            }
           }
+          const redemptionsRes = await loyaltyService.getMyRedemptions().catch(() => [])
+          setMyRedemptions(redemptionsRes.filter((r: any) => r.status === 'Issued'))
         }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error)
@@ -157,7 +163,14 @@ export default function CustomerBooking() {
       }
     }
   }
-  const finalTotal = Math.max(0, subtotalPrice - discountValue)
+
+  const selectedRedemption = myRedemptions.find((r) => r.redemptionId === appliedRedemptionId)
+  let redemptionDiscountValue = 0
+  if (selectedRedemption && selectedRedemption.rewardType === 'Discount' && selectedRedemption.discountValue) {
+    redemptionDiscountValue = selectedRedemption.discountValue
+  }
+
+  const finalTotal = Math.max(0, subtotalPrice - discountValue - redemptionDiscountValue)
 
   const handleConfirmBooking = async () => {
     if (!selectedCarId || !selectedServiceId || !selectedSlotId) {
@@ -185,7 +198,8 @@ export default function CustomerBooking() {
         serviceId: selectedServiceId,
         slotId: selectedSlotId,
         bookingDate: selectedDate,
-        promotionId: appliedPromoId ? appliedPromoId : null
+        promotionId: appliedPromoId ? appliedPromoId : null,
+        redemptionId: appliedRedemptionId ? appliedRedemptionId : null
       })
 
       // API trả về trực tiếp cục BookingDto thay vì {success: true}
@@ -299,7 +313,14 @@ export default function CustomerBooking() {
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Dịch vụ đã chọn:</span>
-                <span className="font-bold text-slate-900 text-right">{selectedService?.serviceName}</span>
+                <div className="text-right">
+                  <div className="font-bold text-slate-900">{selectedService?.serviceName}</div>
+                  {selectedRedemption && selectedRedemption.rewardType === 'AddOn' && (
+                    <div className="font-bold text-emerald-600 text-[11px] mt-0.5">
+                      + {selectedRedemption.rewardName} (Tặng kèm)
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between pt-1">
                 <span className="text-slate-500">Tổng thanh toán:</span>
@@ -453,8 +474,16 @@ export default function CustomerBooking() {
                 {/* Next Action */}
                 <div className="pt-5 border-t border-slate-200 flex justify-end">
                   <button
-                    onClick={() => setCurrentStep(2)}
-                    className="px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-orange-500/20 text-sm"
+                    onClick={() => {
+                      if (selectedSlotId === 0) {
+                        toast.error("Vui lòng chọn khung giờ để tiếp tục!")
+                        return
+                      }
+                      setCurrentStep(2)
+                    }}
+                    className={`px-6 py-3.5 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md text-sm ${
+                      selectedSlotId === 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
+                    }`}
                   >
                     <span>Tiếp Tục: Chọn Dịch Vụ</span>
                     <ArrowRight className="w-4 h-4" />
@@ -518,8 +547,16 @@ export default function CustomerBooking() {
                   </button>
 
                   <button
-                    onClick={() => setCurrentStep(3)}
-                    className="px-6 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-orange-500/20 text-sm"
+                    onClick={() => {
+                      if (selectedServiceId === 0) {
+                        toast.error("Vui lòng chọn dịch vụ để tiếp tục!")
+                        return
+                      }
+                      setCurrentStep(3)
+                    }}
+                    className={`px-6 py-3.5 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md text-sm ${
+                      selectedServiceId === 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
+                    }`}
                   >
                     <span>Tiếp Tục: Xác Nhận & Ưu Đãi</span>
                     <ArrowRight className="w-4 h-4" />
@@ -559,8 +596,62 @@ export default function CustomerBooking() {
                             {selectedService && (
                               <li>{selectedService.serviceName} ({selectedService.price.toLocaleString('vi-VN')}đ)</li>
                             )}
+                            {selectedRedemption && selectedRedemption.rewardType === 'AddOn' && (
+                              <li className="text-emerald-600">
+                                {selectedRedemption.rewardName} (Tặng kèm)
+                              </li>
+                            )}
                           </ul>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Customer Rewards / Redemptions Selector */}
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-sm mb-2.5 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-orange-600" />
+                        <span>Phần Thưởng Của Bạn:</span>
+                      </h4>
+                      <div className="space-y-2.5">
+                        {myRedemptions.length === 0 ? (
+                          <div className="text-center p-3 text-slate-500 text-sm">Bạn chưa có phần thưởng nào. Hãy Đổi Điểm để nhận thêm nhiều ưu đãi.</div>
+                        ) : myRedemptions.map((redemption) => {
+                          const isApplicable = true // Có thể check điều kiện nếu backend cần
+                          const isApplied = appliedRedemptionId === redemption.redemptionId
+
+                          return (
+                            <button
+                              key={redemption.redemptionId}
+                              disabled={!isApplicable}
+                              onClick={() => setAppliedRedemptionId(isApplied ? 0 : redemption.redemptionId)}
+                              className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
+                                isApplied
+                                  ? 'bg-orange-50 border-orange-500 shadow-sm cursor-pointer'
+                                  : 'bg-slate-50 border-slate-200 hover:border-slate-300 cursor-pointer'
+                                }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">
+                                  <Sparkles className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{redemption.rewardName}</h5>
+                                  <p className="text-[11px] text-slate-500">
+                                    {redemption.rewardType === 'FreeWash' ? 'Miễn phí dịch vụ chính' : 
+                                     redemption.rewardType === 'AddOn' ? 'Tặng kèm dịch vụ phụ' : 
+                                     'Giảm giá'}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className={`text-[11px] font-extrabold px-3 py-1.5 rounded-lg border shrink-0 ${isApplied
+                                ? 'bg-orange-500 text-white border-orange-500'
+                                : 'bg-white text-orange-600 border-orange-200'
+                                }`}>
+                                {isApplied ? 'Đang chọn' : 'Sử dụng'}
+                              </span>
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
 
@@ -640,8 +731,19 @@ export default function CustomerBooking() {
 
                         {selectedPromo && (
                           <div className="flex justify-between text-emerald-600 font-semibold">
-                            <span>Giảm giá ({selectedPromo.promoCode}):</span>
+                            <span>Khuyến mãi hệ thống:</span>
                             <span>-{discountValue.toLocaleString('vi-VN')}đ</span>
+                          </div>
+                        )}
+
+                        {selectedRedemption && (
+                          <div className="flex justify-between text-emerald-600 font-semibold">
+                            <span>Phần thưởng áp dụng:</span>
+                            <span>
+                              {selectedRedemption.rewardType === 'FreeWash' ? '(Miễn phí 100%)' :
+                               selectedRedemption.rewardType === 'AddOn' ? '(Tặng kèm)' :
+                               `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ`}
+                            </span>
                           </div>
                         )}
 

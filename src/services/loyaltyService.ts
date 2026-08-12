@@ -11,4 +11,18 @@ export const loyaltyService = {
       params: { page, pageSize }
     });
   },
+
+  getEligibleRewards: (): Promise<any[]> => {
+    return axiosClient.get('/loyalty/me/rewards');
+  },
+
+  redeemReward: (rewardId: number): Promise<any> => {
+    // Generate a unique request ID for idempotency
+    const requestId = crypto.randomUUID();
+    return axiosClient.post(`/loyalty/me/rewards/${rewardId}/redeem`, { requestId });
+  },
+
+  getMyRedemptions: (): Promise<any[]> => {
+    return axiosClient.get('/loyalty/me/redemptions');
+  },
 };

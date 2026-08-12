@@ -88,54 +88,82 @@ export default function CustomerPortal() {
         </div>
 
         {/* Feature Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           
           {/* Action Card: Booking */}
           <div 
             onClick={() => navigate('/customer/booking')}
-            className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-orange-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50"
+            className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50 flex items-center gap-5"
           >
-            <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-orange-100">
-              <CalendarDays className="w-6 h-6 text-orange-600" />
+            <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform border border-orange-100 shrink-0">
+              <CalendarDays className="w-7 h-7 text-orange-600" />
             </div>
-            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5">Đặt Lịch Hẹn Mới</h3>
-            <p className="text-slate-500 mb-5 text-xs sm:text-sm">Chọn dịch vụ rửa xe, thời gian slot và áp dụng mã giảm giá độc quyền.</p>
-            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-md shadow-orange-500/20 text-xs sm:text-sm">
-              <span>Đặt Ngay</span>
-              <ChevronRight className="w-4 h-4" />
-            </span>
+            <div className="flex-1">
+              <h3 className="text-lg font-extrabold text-slate-900 mb-1">Đặt Lịch Hẹn Mới</h3>
+              <p className="text-slate-500 text-xs sm:text-sm line-clamp-2">Chọn dịch vụ rửa xe, thời gian slot và áp dụng mã giảm giá.</p>
+            </div>
+            <div className="shrink-0 hidden sm:block">
+              <span className="inline-flex items-center justify-center w-10 h-10 bg-orange-50 group-hover:bg-orange-500 text-orange-600 group-hover:text-white rounded-xl transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </span>
+            </div>
           </div>
 
           {/* Action Card: History */}
           <div 
             onClick={() => navigate('/customer/history')}
-            className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-slate-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50"
+            className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-slate-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50 flex items-center gap-5"
           >
-            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-slate-200">
-              <History className="w-6 h-6 text-slate-700" />
+            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform border border-slate-200 shrink-0">
+              <History className="w-7 h-7 text-slate-700" />
             </div>
-            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5">Lịch Sử Dịch Vụ</h3>
-            <p className="text-slate-500 mb-5 text-xs sm:text-sm">Xem lại danh sách và trạng thái các lần rửa xe và bảo dưỡng trước đây.</p>
-            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl transition-colors border border-slate-200 text-xs sm:text-sm">
-              <span>Xem Lịch Sử</span>
-              <ChevronRight className="w-4 h-4" />
-            </span>
+            <div className="flex-1">
+              <h3 className="text-lg font-extrabold text-slate-900 mb-1">Lịch Sử Dịch Vụ</h3>
+              <p className="text-slate-500 text-xs sm:text-sm line-clamp-2">Xem lại các lần rửa xe và bảo dưỡng trước đây của bạn.</p>
+            </div>
+            <div className="shrink-0 hidden sm:block">
+              <span className="inline-flex items-center justify-center w-10 h-10 bg-slate-100 group-hover:bg-slate-700 text-slate-700 group-hover:text-white rounded-xl transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </span>
+            </div>
           </div>
 
           {/* Action Card: Cars */}
           <div 
             onClick={() => navigate('/customer/cars')}
-            className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-emerald-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50"
+            className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-emerald-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50 flex items-center gap-5"
           >
-            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform border border-emerald-100">
-              <Car className="w-6 h-6 text-emerald-600" />
+            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform border border-emerald-100 shrink-0">
+              <Car className="w-7 h-7 text-emerald-600" />
             </div>
-            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5">Quản Lý Xe</h3>
-            <p className="text-slate-500 mb-5 text-xs sm:text-sm">Thêm và quản lý danh sách xe của bạn để tiện lợi hơn khi đặt lịch.</p>
-            <span className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors shadow-md shadow-emerald-500/20 text-xs sm:text-sm">
-              <span>Quản Lý Xe</span>
-              <ChevronRight className="w-4 h-4" />
-            </span>
+            <div className="flex-1">
+              <h3 className="text-lg font-extrabold text-slate-900 mb-1">Quản Lý Xe</h3>
+              <p className="text-slate-500 text-xs sm:text-sm line-clamp-2">Thêm và quản lý danh sách xe để tiện lợi khi đặt lịch.</p>
+            </div>
+            <div className="shrink-0 hidden sm:block">
+              <span className="inline-flex items-center justify-center w-10 h-10 bg-emerald-50 group-hover:bg-emerald-500 text-emerald-600 group-hover:text-white rounded-xl transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </span>
+            </div>
+          </div>
+          
+          {/* Action Card: Rewards */}
+          <div 
+            onClick={() => navigate('/customer/rewards')}
+            className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-amber-400 transition-all cursor-pointer group shadow-md shadow-slate-200/50 flex items-center gap-5"
+          >
+            <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform border border-amber-100 shrink-0">
+              <Award className="w-7 h-7 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-extrabold text-slate-900 mb-1">Đổi Thưởng</h3>
+              <p className="text-slate-500 text-xs sm:text-sm line-clamp-2">Dùng điểm tích lũy để đổi dịch vụ miễn phí, voucher.</p>
+            </div>
+            <div className="shrink-0 hidden sm:block">
+              <span className="inline-flex items-center justify-center w-10 h-10 bg-amber-50 group-hover:bg-amber-500 text-amber-600 group-hover:text-white rounded-xl transition-colors">
+                <ChevronRight className="w-5 h-5" />
+              </span>
+            </div>
           </div>
           
         </div>
