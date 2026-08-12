@@ -10,12 +10,55 @@ export default function StaffAppointments() {
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null)
   const [bookingDetail, setBookingDetail] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [searchPhone, setSearchPhone] = useState('')
 
   const fetchBookings = async () => {
+    setIsLoading(true)
     try {
-      setIsLoading(true)
-      const data = await staffService.getTodayBookings()
-      setBookings(data)
+      if (searchPhone.trim()) {
+        const response = await bookingService.getBookingHistory(searchPhone.trim())
+        if (response.data) {
+          const detailedBookings = await Promise.all(
+            response.data.map(async (b: any) => {
+              try {
+                const detailResponse = await bookingService.getBookingDetail(b.bookingId);
+                return { ...b, customerPhone: detailResponse.data?.customerPhone || 'N/A' };
+              } catch (e) {
+                return { ...b, customerPhone: 'N/A' };
+              }
+            })
+          );
+  
+          const mapped: TodayBookingDto[] = detailedBookings.map((b: any) => ({
+            bookingId: b.bookingId,
+            customerName: b.customerName || 'Khách vãng lai',
+            customerPhone: b.customerPhone, 
+            licensePlate: b.licensePlate || 'N/A',
+            vehicleType: b.vehicleType || 'N/A',
+            status: b.status,
+            slotId: b.slotId,
+            serviceId: b.serviceId,
+            bookingDate: b.bookingDate || b.startTime
+          }))
+          setBookings(mapped)
+        }
+      } else {
+        const response = await staffService.getTodayBookings()
+        if (response) {
+          // Lấy thêm detail để có customerPhone
+          const detailedBookings = await Promise.all(
+            response.map(async (b) => {
+              try {
+                const detailResponse = await bookingService.getBookingDetail(b.bookingId);
+                return { ...b, customerPhone: detailResponse.data?.customerPhone || 'N/A' };
+              } catch (e) {
+                return { ...b, customerPhone: 'N/A' };
+              }
+            })
+          );
+          setBookings(detailedBookings)
+        }
+      }
     } catch (error) {
       toast.error('Lỗi khi tải danh sách lịch hẹn')
     } finally {
@@ -26,6 +69,21 @@ export default function StaffAppointments() {
   useEffect(() => {
     fetchBookings()
   }, [])
+
+  useEffect(() => {
+    if (!searchPhone) {
+      fetchBookings()
+    }
+  }, [searchPhone])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    fetchBookings()
+  }
+
+  const handleClearSearch = () => {
+    setSearchPhone('')
+  }
 
   const handleStatusUpdate = async (bookingId: number, currentStatus: string) => {
     try {
@@ -82,13 +140,41 @@ export default function StaffAppointments() {
             <p className="text-sm font-medium text-slate-500">Xử lý tiến trình dịch vụ cho các xe được phân công</p>
           </div>
         </div>
-        
-        <button 
-          onClick={() => fetchBookings()}
-          className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-all shadow-sm"
-        >
-          Làm mới
-        </button>
+        <div className="flex gap-3 w-full md:w-auto">
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="Nhập số ĐT khách..." 
+              value={searchPhone}
+              onChange={(e) => setSearchPhone(e.target.value)}
+              className="px-4 py-2 w-40 md:w-48 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+            />
+            {searchPhone && (
+              <button 
+                type="button" 
+                onClick={handleClearSearch}
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition-colors text-sm"
+              >
+                Xóa
+              </button>
+            )}
+            <button 
+              type="submit"
+              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
+            >
+              Tìm
+            </button>
+          </form>
+          <button 
+            onClick={() => {
+              setSearchPhone('')
+              fetchBookings()
+            }}
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all text-sm"
+          >
+            Làm mới
+          </button>
+        </div>
       </div>
       
       {isLoading ? (
