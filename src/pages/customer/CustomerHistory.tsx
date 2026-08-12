@@ -171,10 +171,16 @@ export default function CustomerHistory() {
                 className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-300 transition-all shadow-md shadow-slate-200/40 space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <span className="text-xs font-mono font-extrabold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
                       Mã lịch hẹn -{item.bookingId}
                     </span>
+                    {item.redemptionId && (
+                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                        <Tag className="w-3 h-3" />
+                        Đổi thưởng
+                      </span>
+                    )}
                     <div className="flex items-center gap-1.5 text-slate-600 text-xs font-semibold">
                       <CalendarIcon className="w-3.5 h-3.5 text-orange-600" />
                       <span>{item.bookingDate ? new Date(item.bookingDate).toLocaleDateString('vi-VN') : ''} • {item.startTime?.substring(0, 5)}</span>
@@ -229,6 +235,12 @@ export default function CustomerHistory() {
                         <p className="text-[11px] text-slate-500 font-medium mb-0.5">Dịch vụ đã đăng ký:</p>
                         <ul className="list-disc pl-4 space-y-0.5 text-xs sm:text-sm font-bold text-slate-900">
                           <li>{item.serviceName}</li>
+                          {item.addOns && item.addOns.length > 0 && item.addOns.map(addon => (
+                            <li key={addon.bookingAddOnId} className="text-orange-600 flex items-center gap-1">
+                              <span>+ {addon.serviceName}</span>
+                              {addon.finalPrice === 0 && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded-sm">Miễn phí</span>}
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     </div>
@@ -321,8 +333,27 @@ export default function CustomerHistory() {
               </div>
 
               <div className="pt-4 border-t border-slate-100">
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Dịch Vụ</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Dịch Vụ & Tặng Kèm</p>
                 <p className="text-sm font-bold text-slate-900">{selectedBooking.serviceName}</p>
+                {selectedBooking.addOns && selectedBooking.addOns.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {selectedBooking.addOns.map(addon => (
+                      <div key={addon.bookingAddOnId} className="flex justify-between items-center bg-orange-50/50 p-2 rounded-lg border border-orange-100">
+                        <span className="text-xs font-semibold text-orange-700 flex items-center gap-1.5">
+                          <PlusCircle className="w-3 h-3" />
+                          {addon.serviceName}
+                        </span>
+                        <div className="text-right">
+                          {addon.finalPrice === 0 ? (
+                            <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Miễn phí</span>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-700">{addon.finalPrice.toLocaleString('vi-VN')}đ</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex justify-between items-start">

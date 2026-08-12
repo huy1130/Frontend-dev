@@ -347,7 +347,12 @@ export default function RewardManagement() {
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all"
                     >
                       <option value="">-- Chọn dịch vụ --</option>
-                      {services.map(s => (
+                      {services.filter(s => {
+                        const isWash = s.serviceName.toLowerCase().includes('rửa xe');
+                        if (formData.rewardType === 'FreeWash') return isWash;
+                        if (formData.rewardType === 'AddOn') return !isWash;
+                        return true;
+                      }).map(s => (
                         <option key={s.serviceId} value={s.serviceId}>{s.serviceName}</option>
                       ))}
                     </select>

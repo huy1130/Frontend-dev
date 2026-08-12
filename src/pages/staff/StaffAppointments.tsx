@@ -364,6 +364,17 @@ export default function StaffAppointments() {
                   <div className="col-span-2">
                     <span className="text-slate-500 block mb-1">Tên dịch vụ:</span>
                     <span className="font-semibold text-slate-800 text-base">{bookingDetail.serviceName}</span>
+                    {bookingDetail.addOns && bookingDetail.addOns.length > 0 && (
+                      <div className="mt-2 pl-3 border-l-2 border-emerald-500">
+                        <span className="text-xs text-slate-500 block mb-1">Dịch vụ tặng kèm / Add-on:</span>
+                        {bookingDetail.addOns.map((addon: any) => (
+                          <div key={addon.bookingAddOnId} className="font-semibold text-emerald-600 text-sm">
+                            + {addon.serviceName} 
+                            {addon.finalPrice === 0 ? ' (Miễn phí)' : ` (${addon.finalPrice.toLocaleString('vi-VN')} đ)`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <span className="text-slate-500 block mb-1">Giá gốc:</span>
