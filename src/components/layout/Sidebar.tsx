@@ -1,11 +1,11 @@
 import React from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  CalendarDays, 
-  CreditCard, 
-  History, 
+import {
+  LayoutDashboard,
+  BarChart3,
+  CalendarDays,
+  CreditCard,
+  History,
   Users,
   LogOut,
   Package,
@@ -13,16 +13,17 @@ import {
   Award,
   CalendarPlus,
   ShieldCheck,
-  Gift
+  Gift,
+  Clock
 } from 'lucide-react'
 
 const allMenuItems = [
-  { path: '/dashboard', name: 'Tổng Quan', icon: LayoutDashboard, exact: true },
+  { path: '/dashboard', name: 'Báo Cáo Thống Kê', icon: BarChart3 },
   { path: '/dashboard/services', name: 'Gói Dịch Vụ', icon: Package },
+  { path: '/dashboard/timeslots', name: 'Khung Giờ', icon: Clock },
   { path: '/dashboard/promotions', name: 'Khuyến Mãi', icon: Tag },
   { path: '/dashboard/rewards', name: 'Quản Lý Phần Thưởng', icon: Gift },
   { path: '/dashboard/tiers', name: 'Hạng Thành Viên', icon: Award },
-  { path: '/dashboard/reports', name: 'Báo Cáo Thống Kê', icon: BarChart3 },
   { path: '/dashboard/appointments', name: 'Lịch Hẹn Khách', icon: CalendarDays },
   { path: '/dashboard/payments', name: 'Quản Lý Thanh Toán', icon: CreditCard },
   { path: '/dashboard/transactions', name: 'Lịch Sử Giao Dịch', icon: History },
@@ -32,12 +33,12 @@ const allMenuItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate()
-  
+
   const userRole = localStorage.getItem('userRole') || 'Admin'
   const fullName = localStorage.getItem('fullName') || 'Admin User'
   const phoneNumber = localStorage.getItem('phoneNumber') || 'admin@hybridwash.vn'
   const initial = fullName.charAt(0).toUpperCase()
-  
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
@@ -65,7 +66,7 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 min-h-screen bg-white border-r border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col font-sans relative z-20">
-      
+
       {/* Logo Header */}
       <Link to="/" className="h-20 px-6 flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-orange-50/50 to-white hover:bg-orange-50 transition-colors group cursor-pointer block no-underline">
         <div className="flex items-center gap-3 h-full">
@@ -95,12 +96,11 @@ export default function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.exact}
+              end={item.path === '/dashboard'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-3 rounded-xl font-extrabold text-xs transition-all duration-200 ${
-                  isActive
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-[1.02]'
-                    : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50/80 font-bold'
+                `flex items-center gap-3 px-3.5 py-3 rounded-xl font-extrabold text-xs transition-all duration-200 ${isActive
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-[1.02]'
+                  : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50/80 font-bold'
                 }`
               }
             >
@@ -127,7 +127,7 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={handleLogout}
             title="Đăng xuất"
             className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"

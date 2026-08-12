@@ -22,6 +22,7 @@ import ServiceManagement from './pages/dashboard/ServiceManagement'
 import PromotionManagement from './pages/dashboard/PromotionManagement'
 import RewardManagement from './pages/dashboard/RewardManagement'
 import TierManagement from './pages/dashboard/TierManagement'
+import TimeSlotManagement from './pages/dashboard/TimeSlotManagement'
 import { Toaster } from 'sonner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
@@ -97,6 +98,11 @@ export default function App() {
           <Route path="services" element={
             <ProtectedRoute allowedRoles={['admin', 'manager']}>
               <ServiceManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="timeslots" element={
+            <ProtectedRoute allowedRoles={['admin', 'manager']}>
+              <TimeSlotManagement />
             </ProtectedRoute>
           } />
           <Route path="promotions" element={
