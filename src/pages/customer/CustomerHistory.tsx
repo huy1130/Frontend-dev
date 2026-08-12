@@ -188,7 +188,19 @@ export default function CustomerHistory() {
                         <span>Chờ Xử Lý</span>
                       </span>
                     )}
-                    {item.status === 'Completed' && (
+                    {item.status === 'Confirmed' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Đã Xác Nhận</span>
+                      </span>
+                    )}
+                    {item.status === 'Washing' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-bold">
+                        <History className="w-3.5 h-3.5 text-orange-600" />
+                        <span>Đang Rửa</span>
+                      </span>
+                    )}
+                    {(item.status === 'Completed' || item.status === 'CheckedOut') && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         <span>Đã Hoàn Thành</span>
@@ -198,6 +210,12 @@ export default function CustomerHistory() {
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold">
                         <XCircle className="w-3.5 h-3.5 text-rose-600" />
                         <span>Đã Hủy</span>
+                      </span>
+                    )}
+                    {item.status === 'NoShow' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
+                        <AlertCircle className="w-3.5 h-3.5 text-slate-600" />
+                        <span>Không Đến</span>
                       </span>
                     )}
                   </div>
