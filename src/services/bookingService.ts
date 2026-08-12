@@ -2,7 +2,11 @@ import axiosClient from '../api/axiosClient';
 
 export interface BookingRequestDTO {
     customerId?: number;
-    vehicleId: number;
+    vehicleId?: number;
+    guestName?: string;
+    guestPhone?: string;
+    guestLicensePlate?: string;
+    guestVehicleType?: string;
     serviceId: number;
     slotId: number;
     bookingDate: string;

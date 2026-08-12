@@ -446,6 +446,7 @@ export default function PromotionManagement() {
                     onChange={(e) => setFormData({ ...formData, targetTier: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                   >
+                    <option value="All">Tất cả khách hàng (bao gồm vãng lai)</option>
                     <option value="Member">Member</option>
                     <option value="Silver">Silver</option>
                     <option value="Gold">Gold</option>
