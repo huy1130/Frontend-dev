@@ -24,6 +24,7 @@ import { serviceService, ServiceDto } from '../../services/serviceService'
 import { bookingService } from '../../services/bookingService'
 import { promotionService, PromotionDTO } from '../../services/promotionService'
 import { timeSlotService, AvailableSlotDto } from '../../services/timeSlotService'
+import { loyaltyService } from '../../services/loyaltyService'
 import { toast } from 'sonner'
 
 interface ServiceItem {
@@ -72,15 +73,17 @@ export default function CustomerBooking() {
   const [availableServices, setAvailableServices] = useState<ServiceDto[]>([])
   const [availablePromos, setAvailablePromos] = useState<PromotionDTO[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [maxDays, setMaxDays] = useState(7) // Mặc định Member là 7 ngày
 
   React.useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const [carsRes, servicesRes, promosRes] = await Promise.all([
+        const [carsRes, servicesRes, promosRes, loyaltyRes] = await Promise.all([
           customerService.getMyVehicles(),
           serviceService.getActiveServices(),
-          promotionService.getEligiblePromotions()
+          promotionService.getEligiblePromotions(),
+          loyaltyService.getSummary().catch(() => null) // Bỏ qua lỗi nếu không gọi được loyalty
         ])
         if (carsRes.success) {
           setMyCars(carsRes.data)
@@ -92,6 +95,14 @@ export default function CustomerBooking() {
         }
         if (promosRes.length > 0) {
           setAvailablePromos(promosRes)
+        }
+        if (loyaltyRes && loyaltyRes.currentTier) {
+          switch (loyaltyRes.currentTier.toLowerCase()) {
+            case 'silver': setMaxDays(10); break;
+            case 'gold': setMaxDays(12); break;
+            case 'platinum': setMaxDays(14); break;
+            default: setMaxDays(7); break;
+          }
         }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error)
@@ -134,9 +145,15 @@ export default function CustomerBooking() {
   
   const selectedPromo = availablePromos.find((p) => p.promotionId === appliedPromoId)
   let discountValue = 0
-  if (selectedPromo) {
-    // Note: Temporary logic as Promotion entity doesn't have exact amount yet
-    discountValue = subtotalPrice * 0.1 // Apply fixed 10% for any valid promotion as a placeholder
+  if (selectedPromo && selectedPromo.promoType === 'Discount') {
+    if (selectedPromo.discountType === 'Fixed' && selectedPromo.discountValue) {
+       discountValue = selectedPromo.discountValue
+    } else if (selectedPromo.discountType === 'Percent' && selectedPromo.discountValue) {
+       discountValue = subtotalPrice * selectedPromo.discountValue / 100
+       if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
+           discountValue = selectedPromo.maxDiscount
+       }
+    }
   }
   const finalTotal = Math.max(0, subtotalPrice - discountValue)
 
@@ -145,14 +162,32 @@ export default function CustomerBooking() {
       toast.error('Vui lòng chọn đầy đủ Xe, Khung giờ và Dịch vụ.');
       return;
     }
+
+    // Trích xuất CustomerId từ JWT Token đang lưu
+    const getCustomerIdFromToken = (): number | undefined => {
+      const token = localStorage.getItem('token')
+      if (!token) return undefined
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const id = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || payload.nameid || payload.sub
+        return id ? parseInt(id, 10) : undefined
+      } catch {
+        return undefined
+      }
+    }
+
     try {
       const res = await bookingService.createBooking({
+        customerId: getCustomerIdFromToken(),
         vehicleId: selectedCarId,
         serviceId: selectedServiceId,
         slotId: selectedSlotId,
+        bookingDate: selectedDate,
         promotionId: appliedPromoId ? appliedPromoId : null
       })
-      if (res.success) {
+      
+      // API trả về trực tiếp cục BookingDto thay vì {success: true}
+      if (res && res.bookingId) {
         setBookingRef('BK-' + res.bookingId)
         setIsSuccess(true)
         toast.success('Đặt lịch thành công!')
@@ -282,13 +317,10 @@ export default function CustomerBooking() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <button 
-                onClick={() => {
-                  setIsSuccess(false)
-                  setCurrentStep(1)
-                }}
+                onClick={() => navigate('/customer')}
                 className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors border border-slate-200 text-sm"
               >
-                Đặt Thêm Lịch Mới
+                Về Trang Chủ
               </button>
             </div>
           </div>
@@ -354,7 +386,8 @@ export default function CustomerBooking() {
                   </label>
                   <input
                     type="date"
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toLocaleDateString('en-CA')}
+                    max={new Date(Date.now() + maxDays * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA')}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     className="w-full sm:w-72 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:border-orange-500 font-bold text-sm"
@@ -380,14 +413,31 @@ export default function CustomerBooking() {
                         const remaining = isCar ? slot.remainingCarCapacity : slot.remainingBikeCapacity
                         const isAvailable = remaining > 0
 
+                        // Check if the slot has passed today
+                        const today = new Date().toLocaleDateString('en-CA')
+                        const isToday = selectedDate === today
+                        let isPast = false
+                        if (isToday && slot.startTime) {
+                            const now = new Date()
+                            const currentHour = now.getHours()
+                            const currentMinute = now.getMinutes()
+                            
+                            const [startH, startM] = slot.startTime.split(':').map(Number)
+                            if (startH < currentHour || (startH === currentHour && startM <= currentMinute)) {
+                                isPast = true
+                            }
+                        }
+
+                        const canBook = isAvailable && !isPast
+
                         return (
                           <button
                             key={slot.slotId}
                             type="button"
-                            disabled={!isAvailable}
+                            disabled={!canBook}
                             onClick={() => setSelectedSlotId(slot.slotId)}
                             className={`py-3 px-2 rounded-xl border text-sm transition-all flex flex-col items-center justify-center gap-1 ${
-                              !isAvailable 
+                              !canBook 
                                 ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
                                 : selectedSlotId === slot.slotId
                                 ? 'bg-orange-500 text-white border-orange-500 shadow-md font-extrabold'
@@ -395,8 +445,8 @@ export default function CustomerBooking() {
                             }`}
                           >
                             <span>{slot.startTime.substring(0,5)} - {slot.endTime.substring(0,5)}</span>
-                            <span className={`text-[10px] ${!isAvailable ? 'text-slate-400' : selectedSlotId === slot.slotId ? 'text-orange-100' : 'text-slate-500'}`}>
-                              {isAvailable ? `Còn ${remaining} chỗ` : 'Hết chỗ'}
+                            <span className={`text-[10px] ${!canBook ? 'text-slate-400' : selectedSlotId === slot.slotId ? 'text-orange-100' : 'text-slate-500'}`}>
+                              {isPast ? 'Đã qua giờ' : (isAvailable ? `Còn ${remaining} chỗ` : 'Hết chỗ')}
                             </span>
                           </button>
                         )
@@ -532,15 +582,28 @@ export default function CustomerBooking() {
                         {availablePromos.length === 0 ? (
                           <div className="text-center p-3 text-slate-500 text-sm">Hiện không có mã khuyến mãi nào khả dụng.</div>
                         ) : availablePromos.map((promo) => {
-                          const isApplied = appliedPromoId === promo.promotionId
+                          const isApplicable = !promo.serviceId || promo.serviceId === selectedServiceId
+                          const isApplied = appliedPromoId === promo.promotionId && isApplicable
+
+                          let badgeText = ''
+                          if (promo.promoType === 'Discount') {
+                            if (promo.discountType === 'Fixed') badgeText = `Giảm ${promo.discountValue?.toLocaleString('vi-VN')}đ`
+                            if (promo.discountType === 'Percent') badgeText = `Giảm ${promo.discountValue}%`
+                          } else {
+                            badgeText = 'Quà Tặng'
+                          }
+
                           return (
-                            <div
+                            <button
                               key={promo.promotionId}
+                              disabled={!isApplicable}
                               onClick={() => setAppliedPromoId(isApplied ? 0 : promo.promotionId)}
-                              className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-3 ${
-                                isApplied
-                                  ? 'bg-orange-50 border-orange-500 shadow-sm'
-                                  : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                              className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
+                                !isApplicable
+                                  ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                                  : isApplied
+                                  ? 'bg-orange-50 border-orange-500 shadow-sm cursor-pointer'
+                                  : 'bg-slate-50 border-slate-200 hover:border-slate-300 cursor-pointer'
                               }`}
                             >
                               <div className="flex items-center gap-2.5">
@@ -549,18 +612,21 @@ export default function CustomerBooking() {
                                 </div>
                                 <div>
                                   <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.promoName}</h5>
-                                  <p className="text-[11px] text-slate-500">Mã: <span className="text-orange-600 font-bold">{promo.promoCode}</span> • Hạn: {promo.validTo ? new Date(promo.validTo).toLocaleDateString('vi-VN') : 'Không giới hạn'}</p>
+                                  <p className="text-[11px] text-slate-500">
+                                    {!isApplicable && <span className="text-red-500 font-bold mr-1">(Không áp dụng cho dịch vụ này)</span>}
+                                    Hạn: {promo.validTo ? new Date(promo.validTo).toLocaleDateString('vi-VN') : 'Không giới hạn'}
+                                  </p>
                                 </div>
                               </div>
 
                               <span className={`text-[11px] font-extrabold px-3 py-1.5 rounded-lg border shrink-0 ${
                                 isApplied 
                                   ? 'bg-orange-500 text-white border-orange-500' 
-                                  : 'bg-white text-slate-700 border-slate-300'
+                                  : 'bg-white text-orange-600 border-orange-200'
                               }`}>
-                                {isApplied ? 'Đã áp dụng' : 'Áp dụng'}
+                                {isApplied ? 'Đang chọn' : badgeText}
                               </span>
-                            </div>
+                            </button>
                           )
                         })}
                       </div>

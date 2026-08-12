@@ -11,8 +11,9 @@ import {
   AlertTriangle,
   Ban
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { promotionService, PromotionDTO, UpsertPromotionDTO } from '../../services/promotionService';
+import { serviceService, ServiceDto } from '../../services/serviceService';
+import { toast } from 'sonner';
 
 export default function PromotionManagement() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,11 +29,17 @@ export default function PromotionManagement() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [deactivatingId, setDeactivatingId] = useState<number | null>(null);
   
+  const [services, setServices] = useState<ServiceDto[]>([]);
+
   const initialFormState: UpsertPromotionDTO = {
     promoCode: '',
     promoName: '',
     description: '',
     promoType: 'Discount',
+    discountType: 'Fixed',
+    discountValue: 0,
+    maxDiscount: undefined,
+    serviceId: undefined,
     targetTier: 'Member',
     isActive: true,
   };
@@ -40,7 +47,17 @@ export default function PromotionManagement() {
 
   useEffect(() => {
     fetchPromotions();
+    fetchServices();
   }, []);
+
+  const fetchServices = async () => {
+    try {
+      const data = await serviceService.getActiveServices();
+      setServices(data);
+    } catch (err) {
+      console.error('Lỗi lấy danh sách dịch vụ:', err);
+    }
+  };
 
   const fetchPromotions = async () => {
     try {
@@ -70,6 +87,10 @@ export default function PromotionManagement() {
       promoName: promo.promoName,
       description: promo.description || '',
       promoType: promo.promoType,
+      discountType: promo.discountType || 'Fixed',
+      discountValue: promo.discountValue || 0,
+      maxDiscount: promo.maxDiscount || undefined,
+      serviceId: promo.serviceId || undefined,
       targetTier: promo.targetTier,
       validFrom: promo.validFrom?.split('T')[0],
       validTo: promo.validTo?.split('T')[0],
@@ -83,11 +104,21 @@ export default function PromotionManagement() {
     setIsSubmitting(true);
 
     try {
+      // Clean up payload based on promoType
+      const payload: UpsertPromotionDTO = { ...formData };
+      if (payload.promoType !== 'Discount') {
+        payload.discountType = undefined;
+        payload.discountValue = undefined;
+        payload.maxDiscount = undefined;
+      } else if (payload.discountType === 'Fixed') {
+        payload.maxDiscount = undefined;
+      }
+
       if (editingId) {
-        await promotionService.updateAdmin(editingId, formData);
+        await promotionService.updateAdmin(editingId, payload);
         toast.success('Cập nhật khuyến mãi thành công!');
       } else {
-        await promotionService.createAdmin(formData);
+        await promotionService.createAdmin(payload);
         toast.success('Tạo khuyến mãi thành công!');
       }
       setIsModalOpen(false);
@@ -111,6 +142,10 @@ export default function PromotionManagement() {
         promoName: promo.promoName,
         description: promo.description || '',
         promoType: promo.promoType,
+        discountType: promo.discountType,
+        discountValue: promo.discountValue,
+        maxDiscount: promo.maxDiscount,
+        serviceId: promo.serviceId,
         targetTier: promo.targetTier,
         validFrom: promo.validFrom?.split('T')[0],
         validTo: promo.validTo?.split('T')[0],
@@ -346,18 +381,77 @@ export default function PromotionManagement() {
                 />
               </div>
               
-              <div>
-                <label className="block text-slate-700 mb-1.5 font-bold text-xs">Hạng áp dụng tối thiểu <span className="text-rose-500">*</span></label>
-                <select
-                  value={formData.targetTier}
-                  onChange={(e) => setFormData({ ...formData, targetTier: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                >
-                  <option value="Member">Member</option>
-                  <option value="Silver">Silver</option>
-                  <option value="Gold">Gold</option>
-                  <option value="Platinum">Platinum</option>
-                </select>
+              {/* Conditional Fields based on PromoType */}
+              {formData.promoType === 'Discount' && (
+                <div className="grid grid-cols-2 gap-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                  <div>
+                    <label className="block text-slate-700 mb-1.5 font-bold text-xs">Loại Giảm Giá <span className="text-rose-500">*</span></label>
+                    <select
+                      value={formData.discountType || 'Fixed'}
+                      onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    >
+                      <option value="Fixed">Trừ tiền cố định (đ)</option>
+                      <option value="Percent">Theo phần trăm (%)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-700 mb-1.5 font-bold text-xs">Mức Giảm Giá <span className="text-rose-500">*</span></label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      placeholder={formData.discountType === 'Percent' ? 'VD: 10' : 'VD: 50000'}
+                      value={formData.discountValue || ''}
+                      onChange={(e) => setFormData({ ...formData, discountValue: e.target.value ? Number(e.target.value) : undefined })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    />
+                  </div>
+                  {formData.discountType === 'Percent' && (
+                    <div className="col-span-2">
+                      <label className="block text-slate-700 mb-1.5 font-bold text-xs">Giảm tối đa (đ) (Tùy chọn)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="VD: 100000"
+                        value={formData.maxDiscount || ''}
+                        onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value ? Number(e.target.value) : undefined })}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 mb-1.5 font-bold text-xs">Dịch vụ áp dụng {formData.promoType !== 'Discount' && <span className="text-rose-500">*</span>}</label>
+                  <select
+                    required={formData.promoType !== 'Discount'}
+                    disabled={formData.promoType === 'Discount'}
+                    value={formData.serviceId || ''}
+                    onChange={(e) => setFormData({ ...formData, serviceId: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all disabled:opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">{formData.promoType === 'Discount' ? '-- Tất cả dịch vụ --' : '-- Chọn 1 dịch vụ bắt buộc --'}</option>
+                    {services.map(svc => (
+                      <option key={svc.serviceId} value={svc.serviceId}>{svc.serviceName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-700 mb-1.5 font-bold text-xs">Hạng áp dụng tối thiểu <span className="text-rose-500">*</span></label>
+                  <select
+                    value={formData.targetTier}
+                    onChange={(e) => setFormData({ ...formData, targetTier: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                  >
+                    <option value="Member">Member</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Platinum">Platinum</option>
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

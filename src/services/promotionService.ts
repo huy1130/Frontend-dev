@@ -6,6 +6,10 @@ export interface PromotionDTO {
   promoName: string;
   description?: string;
   promoType: string;
+  discountType?: string;
+  discountValue?: number;
+  maxDiscount?: number;
+  serviceId?: number;
   targetTier: string;
   validFrom?: string;
   validTo?: string;
@@ -18,6 +22,10 @@ export interface UpsertPromotionDTO {
   promoName: string;
   description?: string;
   promoType: string;
+  discountType?: string;
+  discountValue?: number;
+  maxDiscount?: number;
+  serviceId?: number;
   targetTier: string;
   validFrom?: string;
   validTo?: string;
