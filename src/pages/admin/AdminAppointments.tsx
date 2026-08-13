@@ -45,7 +45,7 @@ export default function AdminAppointments() {
             serviceId: b.serviceId,
             bookingDate: b.bookingDate || b.startTime
           }))
-          setBookings(mapped)
+          setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
         }
       } else {
         const dateStr = getLocalDateString(selectedDate)
@@ -76,7 +76,7 @@ export default function AdminAppointments() {
             serviceId: b.serviceId,
             bookingDate: b.bookingDate || b.startTime
           }))
-          setBookings(mapped)
+          setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
         }
       }
     } catch (error) {
@@ -119,9 +119,11 @@ export default function AdminAppointments() {
 
   // Helper cho Stepper
   const steps = [
-    { key: 'Pending', label: 'Chờ xác nhận' },
     { key: 'Confirmed', label: 'Đã xác nhận' },
+    { key: 'Checkin', label: 'Đã nhận xe' },
     { key: 'Washing', label: 'Đang rửa' },
+    { key: 'Washed', label: 'Đã rửa xong' },
+    { key: 'Payment', label: 'Thanh toán' },
     { key: 'CheckedOut', label: 'Hoàn thành' }
   ]
 
@@ -139,7 +141,11 @@ export default function AdminAppointments() {
   }
 
   const getStepIndex = (status: string) => {
-    return steps.findIndex(s => s.key === status)
+    if (status === 'Pending') return -1;
+    if (status === 'Confirmed') return 1; // Đã nhận xe là Active, Đã xác nhận sẽ có dấu tick
+    if (status === 'Washing') return 2; // Đang rửa là Active
+    if (status === 'CheckedOut') return 5; // Hoàn thành
+    return -1;
   }
 
   return (
@@ -224,7 +230,7 @@ export default function AdminAppointments() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
-                      <CarFront className="w-6 h-6 text-slate-600" />
+                      <span className="text-lg font-bold text-slate-700">{booking.bookingId}</span>
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
