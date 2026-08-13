@@ -95,12 +95,15 @@ export default function CustomerBooking() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const [carsRes, servicesRes, promosRes, loyaltyRes] = await Promise.all([
+        const [carsRes, servicesRes, promosRes, myRedemptionsRes, rewardsRes, loyaltyRes] = await Promise.all([
           customerService.getMyVehicles(),
           serviceService.getActiveServices(),
-          promotionService.getEligiblePromotions(),
-          loyaltyService.getSummary().catch(() => null) // Bỏ qua lỗi nếu không gọi được loyalty
+          promotionService.getEligiblePromotions().catch(() => []),
+          loyaltyService.getMyRedemptions().catch(() => []),
+          loyaltyService.getEligibleRewards().catch(() => []),
+          loyaltyService.getSummary().catch(() => null)
         ])
+        
         if (carsRes.success) {
           setMyCars(carsRes.data)
           if (carsRes.data.length > 0) setSelectedCarId(carsRes.data[0].vehicleId)
@@ -121,8 +124,17 @@ export default function CustomerBooking() {
               default: setMaxDays(7); break;
             }
           }
-          const redemptionsRes = await loyaltyService.getMyRedemptions().catch(() => [])
-          setMyRedemptions(redemptionsRes.filter((r: any) => r.status === 'Issued'))
+          const filteredRedemptions = myRedemptionsRes.filter((r: any) => r.status === 'Issued')
+          const rewardsList = Array.isArray(rewardsRes) ? rewardsRes : []
+          const enhancedRedemptions = filteredRedemptions.map((r: any) => {
+            const rewardDetails = rewardsList.find((reward: any) => reward.rewardId === r.rewardId)
+            return {
+              ...r,
+              discountValue: rewardDetails?.discountValue,
+              serviceId: rewardDetails?.serviceId
+            }
+          })
+          setMyRedemptions(enhancedRedemptions)
         }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error)
@@ -167,21 +179,29 @@ export default function CustomerBooking() {
 
   const selectedPromo = availablePromos.find((p) => p.promotionId === appliedPromoId)
   let discountValue = 0
-  if (selectedPromo && selectedPromo.promoType === 'Discount') {
-    if (selectedPromo.discountType === 'Fixed' && selectedPromo.discountValue) {
-      discountValue = selectedPromo.discountValue
-    } else if (selectedPromo.discountType === 'Percent' && selectedPromo.discountValue) {
-      discountValue = subtotalPrice * selectedPromo.discountValue / 100
-      if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
-        discountValue = selectedPromo.maxDiscount
+  if (selectedPromo) {
+    if (selectedPromo.promoType === 'Discount') {
+      if (selectedPromo.discountType === 'Fixed' && selectedPromo.discountValue) {
+        discountValue = selectedPromo.discountValue
+      } else if (selectedPromo.discountType === 'Percent' && selectedPromo.discountValue) {
+        discountValue = subtotalPrice * selectedPromo.discountValue / 100
+        if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
+          discountValue = selectedPromo.maxDiscount
+        }
       }
+    } else if ((selectedPromo.promoType === 'FreeWash' || selectedPromo.promoType === 'AddOn') && selectedPromo.serviceId === selectedServiceId) {
+      discountValue = subtotalPrice
     }
   }
 
   const selectedRedemption = myRedemptions.find((r) => r.redemptionId === appliedRedemptionId)
   let redemptionDiscountValue = 0
-  if (selectedRedemption && selectedRedemption.rewardType === 'Discount' && selectedRedemption.discountValue) {
-    redemptionDiscountValue = selectedRedemption.discountValue
+  if (selectedRedemption) {
+    if (selectedRedemption.rewardType === 'Discount' && selectedRedemption.discountValue) {
+      redemptionDiscountValue = selectedRedemption.discountValue
+    } else if ((selectedRedemption.rewardType === 'FreeWash' || selectedRedemption.rewardType === 'AddOn') && selectedRedemption.serviceId === selectedServiceId) {
+      redemptionDiscountValue = subtotalPrice
+    }
   }
 
   const finalTotal = Math.max(0, subtotalPrice - discountValue - redemptionDiscountValue)
@@ -775,7 +795,8 @@ export default function CustomerBooking() {
                           <div className="flex justify-between text-emerald-600 font-semibold">
                             <span>Phần thưởng áp dụng:</span>
                             <span>
-                              {selectedRedemption.rewardType === 'FreeWash' ? '(Miễn phí 100%)' :
+                              {(selectedRedemption.rewardType === 'FreeWash' || selectedRedemption.rewardType === 'AddOn') && selectedRedemption.serviceId === selectedServiceId ? `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ (Miễn phí)` :
+                               selectedRedemption.rewardType === 'FreeWash' ? '(Miễn phí 100%)' :
                                selectedRedemption.rewardType === 'AddOn' ? '(Tặng kèm)' :
                                `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ`}
                             </span>

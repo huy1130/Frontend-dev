@@ -19,6 +19,7 @@ import Footer from '../../components/layout/Footer'
 
 import { bookingService, BookingResponseDTO } from '../../services/bookingService'
 import { promotionService } from '../../services/promotionService'
+import { loyaltyService } from '../../services/loyaltyService'
 import { toast } from 'sonner'
 
 export default function CustomerHistory() {
@@ -27,6 +28,7 @@ export default function CustomerHistory() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState<BookingResponseDTO | null>(null)
   const [promotionsMap, setPromotionsMap] = useState<Record<number, string>>({})
+  const [redemptionsMap, setRedemptionsMap] = useState<Record<number, string>>({})
 
   React.useEffect(() => {
     const fetchHistory = async () => {
@@ -37,10 +39,11 @@ export default function CustomerHistory() {
 
         if (phoneNumber) {
           try {
-            const [historyRes, publicPromosRes, eligiblePromosRes] = await Promise.all([
+            const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes] = await Promise.all([
               bookingService.getBookingHistory(phoneNumber),
               promotionService.getPublicPromotions().catch(() => []),
-              promotionService.getEligiblePromotions().catch(() => [])
+              promotionService.getEligiblePromotions().catch(() => []),
+              loyaltyService.getMyRedemptions().catch(() => [])
             ])
 
             if (historyRes && historyRes.data) {
@@ -56,6 +59,12 @@ export default function CustomerHistory() {
               eligiblePromosRes.forEach(p => promoMap[p.promotionId] = p.promoName)
             }
             setPromotionsMap(promoMap)
+
+            const redemptionMap: Record<number, string> = {}
+            if (Array.isArray(redemptionsRes)) {
+              redemptionsRes.forEach((r: any) => redemptionMap[r.redemptionId] = r.rewardName)
+            }
+            setRedemptionsMap(redemptionMap)
           } catch (error) {
             console.error('Error fetching data:', error)
             toast.error('Có lỗi xảy ra khi lấy dữ liệu.')
@@ -366,16 +375,18 @@ export default function CustomerHistory() {
               <div className="pt-4 border-t border-slate-100 flex justify-between items-start">
                 <p className="text-sm font-bold text-slate-600 pt-1">Tổng Tiền</p>
                 <div className="text-right">
-                  {selectedBooking.originalPrice && selectedBooking.finalPrice && selectedBooking.originalPrice > selectedBooking.finalPrice ? (
+                  {selectedBooking.originalPrice != null && selectedBooking.finalPrice != null && selectedBooking.originalPrice > selectedBooking.finalPrice ? (
                     <div className="flex flex-col items-end">
                       <p className="text-xs text-slate-400 line-through mb-0.5">{selectedBooking.originalPrice.toLocaleString('vi-VN')}đ</p>
                       <p className="text-xl font-extrabold text-orange-600">{selectedBooking.finalPrice.toLocaleString('vi-VN')}đ</p>
                       <div className="mt-1.5 flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-md border border-emerald-100">
                         <Tag className="w-3.5 h-3.5" />
                         <span className="text-[11px] font-bold">
-                          {selectedBooking.promotionId && promotionsMap[selectedBooking.promotionId]
-                            ? promotionsMap[selectedBooking.promotionId]
-                            : ((selectedBooking as any).promotionName ? (selectedBooking as any).promotionName : 'Khuyến mãi áp dụng')} 
+                          {selectedBooking.redemptionId && redemptionsMap[selectedBooking.redemptionId]
+                            ? redemptionsMap[selectedBooking.redemptionId]
+                            : selectedBooking.promotionId && promotionsMap[selectedBooking.promotionId]
+                              ? promotionsMap[selectedBooking.promotionId]
+                              : ((selectedBooking as any).promotionName ? (selectedBooking as any).promotionName : 'Ưu đãi áp dụng')} 
                           (-{(selectedBooking.originalPrice - selectedBooking.finalPrice).toLocaleString('vi-VN')}đ)
                         </span>
                       </div>
