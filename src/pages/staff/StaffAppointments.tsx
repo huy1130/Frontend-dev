@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X } from 'lucide-react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
@@ -11,12 +11,21 @@ export default function StaffAppointments() {
   const [bookingDetail, setBookingDetail] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchPhone, setSearchPhone] = useState('')
+  const [searchType, setSearchType] = useState<'phone' | 'plate'>('phone')
+  const [isScannerOpen, setIsScannerOpen] = useState(false)
 
   const fetchBookings = async () => {
     setIsLoading(true)
     try {
       if (searchPhone.trim()) {
-        const response = await bookingService.getBookingHistory(searchPhone.trim())
+        const queryStr = searchPhone.trim()
+        let response
+        if (searchType === 'phone') {
+          response = await bookingService.getBookingHistory(queryStr)
+        } else {
+          response = await bookingService.getBookingByLicensePlate(queryStr)
+        }
+
         if (response.data) {
           const detailedBookings = await Promise.all(
             response.data.map(async (b: any) => {
@@ -40,15 +49,15 @@ export default function StaffAppointments() {
             serviceId: b.serviceId,
             bookingDate: b.bookingDate || b.startTime
           }))
-          setBookings(mapped)
+          setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
         }
       } else {
         const response = await staffService.getTodayBookings()
         if (response && Array.isArray(response)) {
-          setBookings(response)
+          setBookings([...response].sort((a, b) => b.bookingId - a.bookingId))
         } else if (response && (response as any).data && Array.isArray((response as any).data)) {
           // Fallback in case the interceptor doesn't unwrap the nested data
-          setBookings((response as any).data)
+          setBookings([...(response as any).data].sort((a: any, b: any) => b.bookingId - a.bookingId))
         }
       }
     } catch (error) {
@@ -77,6 +86,56 @@ export default function StaffAppointments() {
     setSearchPhone('')
   }
 
+  const handleScanSuccess = async (qrCode: string) => {
+    setIsScannerOpen(false)
+    setIsLoading(true)
+    try {
+      const res = await bookingService.getBookingByQrCode(qrCode)
+      if (res.success && res.data) {
+        setBookingDetail(res.data)
+        setSelectedBookingId(res.data.bookingId)
+        setIsModalOpen(true)
+        toast.success('Quét mã thành công!')
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.Message || 'Mã QR không hợp lệ hoặc lỗi kết nối')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Effect to initialize QR Scanner when modal opens
+  useEffect(() => {
+    if (isScannerOpen) {
+      let scanner: any = null;
+      // dynamic import to avoid SSR issues if any, and only load when needed
+      import('html5-qrcode').then(({ Html5QrcodeScanner }) => {
+        scanner = new Html5QrcodeScanner(
+          "qr-reader",
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          /* verbose= */ false
+        )
+        scanner.render(
+          (decodedText: string) => {
+            if (scanner) {
+              scanner.clear()
+            }
+            handleScanSuccess(decodedText)
+          },
+          (error: any) => {
+            // ignore continuous scanning errors
+          }
+        )
+      })
+
+      return () => {
+        if (scanner) {
+          scanner.clear().catch((e: any) => console.error(e))
+        }
+      }
+    }
+  }, [isScannerOpen])
+
   const handleStatusUpdate = async (bookingId: number, currentStatus: string) => {
     try {
       if (currentStatus === 'Pending') {
@@ -97,9 +156,11 @@ export default function StaffAppointments() {
 
   // Helper cho Stepper
   const steps = [
-    { key: 'Pending', label: 'Chờ xác nhận' },
     { key: 'Confirmed', label: 'Đã xác nhận' },
+    { key: 'Checkin', label: 'Đã nhận xe' },
     { key: 'Washing', label: 'Đang rửa' },
+    { key: 'Washed', label: 'Đã rửa xong' },
+    { key: 'Payment', label: 'Thanh toán' },
     { key: 'CheckedOut', label: 'Hoàn thành' }
   ]
 
@@ -117,7 +178,11 @@ export default function StaffAppointments() {
   }
 
   const getStepIndex = (status: string) => {
-    return steps.findIndex(s => s.key === status)
+    if (status === 'Pending') return -1;
+    if (status === 'Confirmed') return 1; // Đã nhận xe là Active, Đã xác nhận sẽ có dấu tick
+    if (status === 'Washing') return 2; // Đang rửa là Active
+    if (status === 'CheckedOut') return 5; // Hoàn thành
+    return -1;
   }
 
   return (
@@ -133,36 +198,51 @@ export default function StaffAppointments() {
           </div>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <form onSubmit={handleSearch} className="flex gap-2">
+          <form onSubmit={handleSearch} className="flex gap-2 bg-white rounded-xl shadow-sm border border-slate-200 p-1">
+            <select
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value as 'phone' | 'plate')}
+              className="bg-transparent text-sm font-medium text-slate-600 outline-none px-2 cursor-pointer border-r border-slate-200"
+            >
+              <option value="phone">SĐT</option>
+              <option value="plate">Biển số</option>
+            </select>
             <input 
               type="text" 
-              placeholder="Nhập số ĐT khách..." 
+              placeholder={searchType === 'phone' ? "Nhập số điện thoại..." : "Nhập biển số xe..."}
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
-              className="px-4 py-2 w-40 md:w-48 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+              className="px-2 py-1.5 w-32 md:w-40 text-sm font-medium text-slate-700 outline-none bg-transparent"
             />
+            <button 
+              type="submit"
+              className="px-3 py-1.5 bg-orange-100 hover:bg-orange-200 text-orange-600 rounded-lg transition-colors flex items-center justify-center"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             {searchPhone && (
               <button 
                 type="button" 
                 onClick={handleClearSearch}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition-colors text-sm"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-medium transition-colors text-sm"
               >
                 Xóa
               </button>
             )}
-            <button 
-              type="submit"
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
-            >
-              Tìm
-            </button>
           </form>
+          <button 
+            onClick={() => setIsScannerOpen(true)}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-slate-900/20"
+          >
+            <QrCode className="w-5 h-5" />
+            <span className="hidden sm:inline">Quét QR</span>
+          </button>
           <button 
             onClick={() => {
               setSearchPhone('')
               fetchBookings()
             }}
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all text-sm"
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 font-medium transition-all text-sm h-full"
           >
             Làm mới
           </button>
@@ -193,7 +273,7 @@ export default function StaffAppointments() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
-                      <CarFront className="w-6 h-6 text-slate-600" />
+                      <span className="text-lg font-bold text-slate-700">{booking.bookingId}</span>
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -423,6 +503,28 @@ export default function StaffAppointments() {
               >
                 Đóng
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isScannerOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-orange-600" />
+                Quét Mã Khách Hàng
+              </h3>
+              <button
+                onClick={() => setIsScannerOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-4 bg-slate-900 relative">
+              <div id="qr-reader" className="w-full rounded-lg overflow-hidden border-2 border-slate-700 bg-black"></div>
             </div>
           </div>
         </div>

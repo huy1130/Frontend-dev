@@ -43,6 +43,7 @@ export interface BookingResponseDTO {
     promotionId?: number | null;
     redemptionId?: number | null;
     addOns?: BookingAddOnDTO[];
+    qrCode?: string;
     status: string;
     createdAt?: string;
 }
@@ -54,6 +55,14 @@ export const bookingService = {
   
   getBookingHistory: (phone: string): Promise<{ success: boolean; data: BookingResponseDTO[] }> => {
     return axiosClient.get(`/Booking/search?phone=${phone}`);
+  },
+
+  getBookingByLicensePlate: (licensePlate: string): Promise<{ success: boolean; data: BookingResponseDTO[] }> => {
+    return axiosClient.get(`/Booking/search-by-plate?licensePlate=${licensePlate}`);
+  },
+  
+  getBookingByQrCode: (qrCode: string): Promise<{ success: boolean; data: any }> => {
+    return axiosClient.get(`/Booking/checkin/${qrCode}`);
   },
   
   // Admin Methods

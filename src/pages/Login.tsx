@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap, Loader2, Eye, EyeOff } from 'lucide-react'
 import Logo from '../components/common/Logo'
@@ -13,6 +13,21 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const role = localStorage.getItem('userRole')
+    if (token && role) {
+      if (role === 'customer') {
+        navigate('/customer', { replace: true })
+      } else if (role === 'staff') {
+        navigate('/staff/appointments', { replace: true })
+      } else {
+        navigate('/admin', { replace: true })
+      }
+    }
+  }, [navigate])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -36,11 +51,11 @@ export default function Login() {
       toast.success('Đăng nhập thành công!');
       
       if (response.role.toLowerCase() === 'customer') {
-        navigate('/customer');
+        navigate('/customer', { replace: true });
       } else if (response.role.toLowerCase() === 'staff') {
-        navigate('/staff/appointments');
+        navigate('/staff/appointments', { replace: true });
       } else {
-        navigate('/admin');
+        navigate('/admin', { replace: true });
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác';

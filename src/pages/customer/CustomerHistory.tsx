@@ -12,8 +12,10 @@ import {
   ChevronLeft,
   AlertCircle,
   Car,
-  Tag
+  Tag,
+  QrCode
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 
@@ -300,6 +302,27 @@ export default function CustomerHistory() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto space-y-4">
+              
+              {selectedBooking.qrCode && (
+                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-dashed border-orange-200 mb-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <QrCode className="w-4 h-4 text-orange-600" />
+                    Mã QR Check-in
+                  </p>
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
+                    <QRCodeSVG 
+                      value={selectedBooking.qrCode} 
+                      size={140}
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2 text-center">
+                    Đưa mã này cho nhân viên để check-in nhanh
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mã Đặt Lịch</p>
