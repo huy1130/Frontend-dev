@@ -32,6 +32,13 @@ export default function CustomerHistory() {
   const [promotionsMap, setPromotionsMap] = useState<Record<number, string>>({})
   const [redemptionsMap, setRedemptionsMap] = useState<Record<number, string>>({})
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const ITEMS_PER_PAGE = 5
+
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [filterStatus])
+
   React.useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -86,6 +93,9 @@ export default function CustomerHistory() {
     if (filterStatus === 'all') return true
     return item.status === filterStatus
   })
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE)
+  const currentData = filteredData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
@@ -176,11 +186,12 @@ export default function CustomerHistory() {
               <p className="text-slate-500 font-medium text-sm">Chưa có lịch sử dịch vụ nào thuộc danh mục này.</p>
             </div>
           ) : (
-            filteredData.map((item) => (
-              <div
-                key={item.bookingId}
-                className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-300 transition-all shadow-md shadow-slate-200/40 space-y-3"
-              >
+            <>
+              {currentData.map((item) => (
+                <div
+                  key={item.bookingId}
+                  className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-300 transition-all shadow-md shadow-slate-200/40 space-y-3"
+                >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div className="flex flex-wrap items-center gap-2.5">
                     <span className="text-xs font-mono font-extrabold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
@@ -279,7 +290,43 @@ export default function CustomerHistory() {
                 </div>
 
               </div>
-            ))
+              ))}
+              
+              {/* Pagination UI */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <div className="flex gap-1 flex-wrap justify-center max-w-[250px] sm:max-w-none">
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
+                          currentPage === i + 1 
+                            ? 'bg-orange-500 text-white shadow-sm' 
+                            : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 

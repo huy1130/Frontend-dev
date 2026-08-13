@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Award, ChevronLeft, Gift, AlertCircle, Loader2, Tag, CheckCircle2, History, ArrowDownCircle, ArrowUpCircle, Clock } from 'lucide-react'
+import { Award, ChevronLeft, ChevronRight, Gift, AlertCircle, Loader2, Tag, CheckCircle2, History, ArrowDownCircle, ArrowUpCircle, Clock } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { loyaltyService } from '../../services/loyaltyService'
@@ -48,7 +48,7 @@ export default function CustomerRewards() {
   const fetchTransactions = async (page: number) => {
     setIsTransactionsLoading(true)
     try {
-      const res = await loyaltyService.getTransactions(page)
+      const res = await loyaltyService.getTransactions(page, 10)
       setTransactions(res.items || [])
       setCurrentPage(res.page)
       setTotalPages(res.totalPages)
@@ -317,23 +317,35 @@ export default function CustomerRewards() {
                     
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
-                      <div className="flex justify-center items-center gap-4 mt-6">
-                        <button
-                          disabled={currentPage === 1}
+                      <div className="flex items-center justify-center gap-2 mt-8">
+                        <button 
                           onClick={() => fetchTransactions(currentPage - 1)}
-                          className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          disabled={currentPage === 1}
+                          className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-colors"
                         >
-                          Trang trước
+                          <ChevronLeft className="w-5 h-5" />
                         </button>
-                        <span className="text-sm font-bold text-slate-700">
-                          {currentPage} / {totalPages}
-                        </span>
-                        <button
-                          disabled={currentPage === totalPages}
+                        <div className="flex gap-1 flex-wrap justify-center max-w-[250px] sm:max-w-none">
+                          {Array.from({ length: totalPages }).map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => fetchTransactions(i + 1)}
+                              className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
+                                currentPage === i + 1 
+                                  ? 'bg-orange-500 text-white shadow-sm' 
+                                  : 'text-slate-600 hover:bg-slate-100'
+                              }`}
+                            >
+                              {i + 1}
+                            </button>
+                          ))}
+                        </div>
+                        <button 
                           onClick={() => fetchTransactions(currentPage + 1)}
-                          className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          disabled={currentPage === totalPages}
+                          className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-colors"
                         >
-                          Trang sau
+                          <ChevronRight className="w-5 h-5" />
                         </button>
                       </div>
                     )}
