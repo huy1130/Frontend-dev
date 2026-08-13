@@ -635,7 +635,17 @@ export default function CustomerBooking() {
                       <div className="space-y-2.5">
                         {myRedemptions.length === 0 ? (
                           <div className="text-center p-3 text-slate-500 text-sm">Bạn chưa có phần thưởng nào. Hãy Đổi Điểm để nhận thêm nhiều ưu đãi.</div>
-                        ) : myRedemptions.map((redemption) => {
+                        ) : Object.values(
+                          myRedemptions.reduce((acc: any, curr: any) => {
+                            const key = `${curr.rewardName}-${curr.status}`
+                            if (!acc[key]) {
+                              acc[key] = { ...curr, count: 1 }
+                            } else {
+                              acc[key].count += 1
+                            }
+                            return acc
+                          }, {})
+                        ).map((redemption: any) => {
                           const isApplicable = true // Có thể check điều kiện nếu backend cần
                           const isApplied = appliedRedemptionId === redemption.redemptionId
 
@@ -644,12 +654,17 @@ export default function CustomerBooking() {
                               key={redemption.redemptionId}
                               disabled={!isApplicable}
                               onClick={() => setAppliedRedemptionId(isApplied ? 0 : redemption.redemptionId)}
-                              className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
+                              className={`relative w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
                                 isApplied
                                   ? 'bg-orange-50 border-orange-500 shadow-sm cursor-pointer'
                                   : 'bg-slate-50 border-slate-200 hover:border-slate-300 cursor-pointer'
                                 }`}
                             >
+                              {redemption.count > 1 && (
+                                <div className="absolute -top-2 -left-2 sm:-right-2 sm:left-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md border-2 border-white z-10">
+                                  x{redemption.count}
+                                </div>
+                              )}
                               <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold shrink-0">
                                   <Sparkles className="w-4 h-4" />

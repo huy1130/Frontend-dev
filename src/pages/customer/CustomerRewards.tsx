@@ -201,10 +201,25 @@ export default function CustomerRewards() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {myRedemptions.map((redemption: any) => {
+                    {Object.values(
+                      myRedemptions.reduce((acc: any, curr: any) => {
+                        const key = `${curr.rewardName}-${curr.status}`
+                        if (!acc[key]) {
+                          acc[key] = { ...curr, count: 1 }
+                        } else {
+                          acc[key].count += 1
+                        }
+                        return acc
+                      }, {})
+                    ).map((redemption: any) => {
                       const isUsed = redemption.status !== 'Issued'
                       return (
-                        <div key={redemption.redemptionId} className={`border rounded-xl p-4 flex gap-4 items-center ${isUsed ? 'bg-slate-50 border-slate-200' : 'bg-white border-orange-200 shadow-sm'}`}>
+                        <div key={redemption.redemptionId} className={`relative border rounded-xl p-4 flex gap-4 items-center ${isUsed ? 'bg-slate-50 border-slate-200' : 'bg-white border-orange-200 shadow-sm'}`}>
+                          {redemption.count > 1 && (
+                            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-black px-2 py-0.5 rounded-full shadow-md border-2 border-white z-10">
+                              x{redemption.count}
+                            </div>
+                          )}
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isUsed ? 'bg-slate-200 text-slate-400' : 'bg-orange-100 text-orange-600'}`}>
                             {isUsed ? <CheckCircle2 className="w-6 h-6" /> : <Tag className="w-6 h-6" />}
                           </div>
