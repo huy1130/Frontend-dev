@@ -10,6 +10,8 @@ export interface TodayBookingDto {
   slotId: number
   serviceId: number
   bookingDate: string
+  startTime?: string
+  endTime?: string
 }
 
 export const staffService = {
@@ -26,8 +28,12 @@ export const staffService = {
   },
 
   // Check-in a vehicle
-  checkInBooking: async (bookingId: number): Promise<any> => {
-    const response = await axiosClient.post('/Staff/check-in', { bookingId })
+  checkInBooking: async (data: FormData): Promise<any> => {
+    const response = await axiosClient.post('/Staff/check-in', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response
   },
 

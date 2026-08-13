@@ -5,6 +5,7 @@ export interface LoginRequestDTO {
 
 export interface RegisterRequestDTO {
   fullName?: string;
+  email?: string;
   phoneNumber?: string;
   password?: string;
   licensePlate?: string;
@@ -18,11 +19,11 @@ export interface AuthResponseDTO {
 }
 
 export interface ForgotPasswordRequestDTO {
-  phoneNumber: string;
+  email: string;
 }
 
 export interface ResetPasswordRequestDTO {
-  phoneNumber: string;
+  email: string;
   otp: string;
   newPassword: string;
 }

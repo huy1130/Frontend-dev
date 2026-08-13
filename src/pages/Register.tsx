@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone, Loader2, Car, Eye, EyeOff } from 'lucide-react'
+import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Phone, Loader2, Car, Eye, EyeOff, Mail } from 'lucide-react'
 import Logo from '../components/common/Logo'
 import { authService } from '../services/authService'
 import { toast } from 'sonner'
@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom'
 export default function Register() {
   const navigate = useNavigate()
   const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [licensePlate, setLicensePlate] = useState('')
@@ -26,6 +27,12 @@ export default function Register() {
       toast.error('Số điện thoại phải bao gồm chính xác 10 chữ số.')
       return
     }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Vui lòng nhập địa chỉ email hợp lệ.')
+      return
+    }
     if (!passwordRegex.test(password)) {
       toast.error('Mật khẩu bắt buộc phải có ít nhất 1 ký tự đặc biệt, 1 chữ in hoa và 1 chữ số.')
       return
@@ -36,6 +43,7 @@ export default function Register() {
     try {
       const response = await authService.register({
         fullName: name,
+        email: email,
         phoneNumber: phone,
         password: password,
         licensePlate,
@@ -106,6 +114,24 @@ export default function Register() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Nhập họ và tên của bạn"
+                      className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Email Input */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-white/80">Email</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                      <Mail className="w-5 h-5 text-white/40 group-focus-within:text-orange-500 transition-colors" />
+                    </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Nhập địa chỉ email của bạn"
                       className="w-full bg-black/40 border border-white/10 text-white rounded-xl pl-12 pr-4 py-3.5 outline-none focus:border-orange-500/50 focus:bg-black/60 transition-all font-medium placeholder:text-white/30"
                       required
                     />
