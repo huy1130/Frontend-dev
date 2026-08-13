@@ -384,7 +384,14 @@ export default function AdminAppointments() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="col-span-2">
                     <span className="text-slate-500 block mb-1">Tên dịch vụ:</span>
-                    <span className="font-semibold text-slate-800 text-base">{bookingDetail.serviceName}</span>
+                    <div className="flex justify-between items-start">
+                      <span className="font-semibold text-slate-800 text-base">{bookingDetail.serviceName}</span>
+                      {bookingDetail.originalPrice != null && (
+                        <span className="font-semibold text-slate-700 text-base">
+                          {bookingDetail.originalPrice.toLocaleString('vi-VN')}đ
+                        </span>
+                      )}
+                    </div>
                     {bookingDetail.addOns && bookingDetail.addOns.length > 0 && (
                       <div className="mt-2 pl-3 border-l-2 border-emerald-500">
                         <span className="text-xs text-slate-500 block mb-1">Dịch vụ tặng kèm</span>

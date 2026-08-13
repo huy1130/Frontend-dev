@@ -334,7 +334,14 @@ export default function CustomerHistory() {
 
               <div className="pt-4 border-t border-slate-100">
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Dịch Vụ & Tặng Kèm</p>
-                <p className="text-sm font-bold text-slate-900">{selectedBooking.serviceName}</p>
+                <div className="flex justify-between items-start">
+                  <p className="text-sm font-bold text-slate-900">{selectedBooking.serviceName}</p>
+                  {selectedBooking.originalPrice != null && (
+                    <p className="text-sm font-bold text-slate-700">
+                      {selectedBooking.originalPrice.toLocaleString('vi-VN')}đ
+                    </p>
+                  )}
+                </div>
                 {selectedBooking.addOns && selectedBooking.addOns.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {selectedBooking.addOns.map(addon => (

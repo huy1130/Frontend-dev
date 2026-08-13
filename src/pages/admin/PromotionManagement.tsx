@@ -363,8 +363,8 @@ export default function PromotionManagement() {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                   >
                     <option value="Discount">Giảm Giá (Discount)</option>
-                    <option value="Percentage">Phần Trăm (%)</option>
                     <option value="FreeWash">Rửa Xe Miễn Phí (FreeWash)</option>
+                    <option value="AddOn">Tặng Kèm Dịch Vụ (AddOn)</option>
                   </select>
                 </div>
               </div>
@@ -434,7 +434,11 @@ export default function PromotionManagement() {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all disabled:opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   >
                     <option value="">{formData.promoType === 'Discount' ? '-- Tất cả dịch vụ --' : '-- Chọn 1 dịch vụ bắt buộc --'}</option>
-                    {services.map(svc => (
+                    {services.filter(s => {
+                      if (formData.promoType === 'FreeWash') return s.serviceName.toLowerCase().includes('rửa xe');
+                      if (formData.promoType === 'AddOn') return !s.serviceName.toLowerCase().includes('rửa xe');
+                      return true;
+                    }).map(svc => (
                       <option key={svc.serviceId} value={svc.serviceId}>{svc.serviceName}</option>
                     ))}
                   </select>
