@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Award, ChevronLeft, Gift, AlertCircle, Loader2, Tag, CheckCircle2 } from 'lucide-react'
+import { Award, ChevronLeft, Gift, AlertCircle, Loader2, Tag, CheckCircle2, History, ArrowDownCircle, ArrowUpCircle, Clock } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { loyaltyService } from '../../services/loyaltyService'
+import { PointTransactionDTO } from '../../types/loyalty'
 import { toast } from 'sonner'
 
 export default function CustomerRewards() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'exchange' | 'my_rewards'>('exchange')
+  const [activeTab, setActiveTab] = useState<'exchange' | 'my_rewards' | 'transactions'>('exchange')
   const [currentPoints, setCurrentPoints] = useState<number>(0)
   
   const [eligibleRewards, setEligibleRewards] = useState<any[]>([])
   const [myRedemptions, setMyRedemptions] = useState<any[]>([])
+  const [transactions, setTransactions] = useState<PointTransactionDTO[]>([])
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [totalPages, setTotalPages] = useState<number>(1)
+  const [isTransactionsLoading, setIsTransactionsLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isRedeeming, setIsRedeeming] = useState<number | null>(null)
   const [confirmModal, setConfirmModal] = useState<{rewardId: number, pointCost: number, rewardName: string} | null>(null)
@@ -26,15 +31,32 @@ export default function CustomerRewards() {
       if (activeTab === 'exchange') {
         const rewards = await loyaltyService.getEligibleRewards()
         setEligibleRewards(rewards)
-      } else {
+      } else if (activeTab === 'my_rewards') {
         const redemptions = await loyaltyService.getMyRedemptions()
         setMyRedemptions(redemptions)
+      } else if (activeTab === 'transactions') {
+        await fetchTransactions(1)
       }
     } catch (error) {
       console.error('Error fetching rewards:', error)
       toast.error('Có lỗi xảy ra khi tải dữ liệu phần thưởng.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchTransactions = async (page: number) => {
+    setIsTransactionsLoading(true)
+    try {
+      const res = await loyaltyService.getTransactions(page)
+      setTransactions(res.items || [])
+      setCurrentPage(res.page)
+      setTotalPages(res.totalPages)
+    } catch (error) {
+      console.error('Error fetching transactions:', error)
+      toast.error('Lỗi khi lấy lịch sử giao dịch.')
+    } finally {
+      setIsTransactionsLoading(false)
     }
   }
 
@@ -112,6 +134,12 @@ export default function CustomerRewards() {
             className={`pb-3 text-sm font-bold transition-colors border-b-2 ${activeTab === 'my_rewards' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
           >
             Quà Của Tôi
+          </button>
+          <button
+            onClick={() => setActiveTab('transactions')}
+            className={`pb-3 text-sm font-bold transition-colors border-b-2 flex items-center gap-1.5 ${activeTab === 'transactions' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+          >
+            Lịch Sử Giao Dịch
           </button>
         </div>
 
@@ -203,6 +231,98 @@ export default function CustomerRewards() {
                       Dùng Quà Đặt Lịch Ngay
                     </button>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Transactions Tab */}
+            {activeTab === 'transactions' && (
+              <div className="space-y-4">
+                {isTransactionsLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                  </div>
+                ) : transactions.length === 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm">
+                    <History className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500 font-medium">Chưa có giao dịch điểm nào.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                      <div className="divide-y divide-slate-100">
+                        {transactions.map((tx) => {
+                          const isEarn = tx.transactionType === 'Earn'
+                          const isRedeem = tx.transactionType === 'Redeem'
+                          const isExpire = tx.transactionType === 'Expire'
+                          
+                          let icon = <Clock className="w-5 h-5 text-slate-400" />
+                          let typeLabel = tx.transactionType
+                          let pointColor = 'text-slate-600'
+                          let pointPrefix = ''
+                          
+                          if (isEarn) {
+                            icon = <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
+                            typeLabel = 'Cộng điểm (Hoàn tất dịch vụ)'
+                            pointColor = 'text-emerald-600'
+                            pointPrefix = '+'
+                          } else if (isRedeem) {
+                            icon = <ArrowDownCircle className="w-5 h-5 text-orange-500" />
+                            typeLabel = 'Đổi quà'
+                            pointColor = 'text-orange-600'
+                            pointPrefix = '-'
+                          } else if (isExpire) {
+                            icon = <AlertCircle className="w-5 h-5 text-red-500" />
+                            typeLabel = 'Điểm hết hạn'
+                            pointColor = 'text-red-600'
+                            pointPrefix = '-'
+                          }
+
+                          return (
+                            <div key={tx.transactionId} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                  {icon}
+                                </div>
+                                <div>
+                                  <h4 className="font-extrabold text-sm text-slate-900">{typeLabel}</h4>
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    {new Date(tx.createdAt).toLocaleString('vi-VN')}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className={`font-extrabold text-base ${pointColor}`}>
+                                {pointPrefix}{Math.abs(tx.points)} điểm
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center items-center gap-4 mt-6">
+                        <button
+                          disabled={currentPage === 1}
+                          onClick={() => fetchTransactions(currentPage - 1)}
+                          className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Trang trước
+                        </button>
+                        <span className="text-sm font-bold text-slate-700">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <button
+                          disabled={currentPage === totalPages}
+                          onClick={() => fetchTransactions(currentPage + 1)}
+                          className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Trang sau
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

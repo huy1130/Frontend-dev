@@ -6,17 +6,18 @@ export interface LoyaltySummaryDTO {
 }
 
 export interface PointTransactionDTO {
-  id: number;
-  customerId: number;
+  transactionId: number;
+  bookingId?: number | null;
   points: number;
   transactionType: string;
-  description: string;
+  expireDate?: string | null;
   createdAt: string;
 }
 
 export interface PointTransactionPageDTO {
-  transactions: PointTransactionDTO[];
-  totalRecords: number;
+  items: PointTransactionDTO[];
+  totalCount: number;
   totalPages: number;
-  currentPage: number;
+  page: number;
+  pageSize: number;
 }
