@@ -16,3 +16,13 @@ export interface AuthResponseDTO {
   fullName: string;
   role: string;
 }
+
+export interface ForgotPasswordRequestDTO {
+  phoneNumber: string;
+}
+
+export interface ResetPasswordRequestDTO {
+  phoneNumber: string;
+  otp: string;
+  newPassword: string;
+}

@@ -4,6 +4,7 @@ import { User, Lock, ArrowLeft, ArrowRight, ShieldCheck, Zap, Loader2, Eye, EyeO
 import Logo from '../components/common/Logo'
 import { authService } from '../services/authService'
 import { toast } from 'sonner'
+import ForgotPasswordModal from '../components/auth/ForgotPasswordModal'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -11,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -132,9 +133,13 @@ export default function Login() {
                     </button>
                   </div>
                   <div className="flex justify-end pt-1">
-                    <a href="#" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                    <button 
+                      type="button"
+                      onClick={() => setIsForgotModalOpen(true)}
+                      className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors"
+                    >
                       Quên mật khẩu?
-                    </a>
+                    </button>
                   </div>
                 </div>
 
@@ -178,6 +183,12 @@ export default function Login() {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal 
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
+      />
     </div>
   )
 }

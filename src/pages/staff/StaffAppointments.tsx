@@ -44,19 +44,11 @@ export default function StaffAppointments() {
         }
       } else {
         const response = await staffService.getTodayBookings()
-        if (response) {
-          // Lấy thêm detail để có customerPhone
-          const detailedBookings = await Promise.all(
-            response.map(async (b) => {
-              try {
-                const detailResponse = await bookingService.getBookingDetail(b.bookingId);
-                return { ...b, customerPhone: detailResponse.data?.customerPhone || 'N/A' };
-              } catch (e) {
-                return { ...b, customerPhone: 'N/A' };
-              }
-            })
-          );
-          setBookings(detailedBookings)
+        if (response && Array.isArray(response)) {
+          setBookings(response)
+        } else if (response && (response as any).data && Array.isArray((response as any).data)) {
+          // Fallback in case the interceptor doesn't unwrap the nested data
+          setBookings((response as any).data)
         }
       }
     } catch (error) {
