@@ -486,6 +486,14 @@ export default function AdminAppointments() {
                     <span className="text-slate-500 block mb-1">Biển số xe:</span>
                     <span className="font-semibold text-slate-800">{bookingDetail.licensePlate} ({bookingDetail.vehicleType || 'N/A'})</span>
                   </div>
+                  <div>
+                    <span className="text-slate-500 block mb-1">Loại khách hàng:</span>
+                    {bookingDetail.customerId ? (
+                      <span className="font-semibold text-blue-600">Khách hệ thống</span>
+                    ) : (
+                      <span className="font-semibold text-purple-600">Khách vãng lai</span>
+                    )}
+                  </div>
                   {bookingDetail.customerTier && (
                     <div>
                       <span className="text-slate-500 block mb-1">Hạng thành viên:</span>
@@ -521,12 +529,12 @@ export default function AdminAppointments() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <span className="text-slate-500 block mb-1">Giá gốc:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500">Giá gốc:</span>
                     <span className="font-semibold text-slate-600 line-through">{(bookingDetail.originalPrice || 0).toLocaleString('vi-VN')} đ</span>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block mb-1">Thành tiền:</span>
+                  <div className="flex items-center justify-end gap-1.5 text-right">
+                    <span className="text-slate-500">Thành tiền:</span>
                     <span className="font-bold text-emerald-600 text-base">{(bookingDetail.finalPrice || 0).toLocaleString('vi-VN')} đ</span>
                   </div>
                   {bookingDetail.promoCode && (
