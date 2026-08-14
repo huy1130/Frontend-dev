@@ -82,6 +82,7 @@ export default function CustomerBooking() {
   const [appliedRedemptionId, setAppliedRedemptionId] = useState<number>(0)
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [bookingRef, setBookingRef] = useState<string>('')
+  const [createdBooking, setCreatedBooking] = useState<any>(null)
 
   // API Data
   const [myCars, setMyCars] = useState<VehicleResponseDTO[]>([])
@@ -212,6 +213,11 @@ export default function CustomerBooking() {
       return;
     }
 
+    if (appliedPromoId && appliedRedemptionId) {
+      toast.error('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
+      return;
+    }
+
     // Trích xuất CustomerId từ JWT Token đang lưu
     const getCustomerIdFromToken = (): number | undefined => {
       const token = localStorage.getItem('token')
@@ -239,6 +245,7 @@ export default function CustomerBooking() {
       // API trả về trực tiếp cục BookingDto thay vì {success: true}
       if (res && res.bookingId) {
         setBookingRef('Mã lịch hẹn - ' + res.bookingId)
+        setCreatedBooking(res)
         setIsSuccess(true)
         toast.success('Đặt lịch thành công!')
       }
@@ -251,7 +258,7 @@ export default function CustomerBooking() {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
       <NavBar />
 
-      <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
+      <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-6xl w-full mx-auto space-y-6">
 
 
 
@@ -334,12 +341,15 @@ export default function CustomerBooking() {
 
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Xe của bạn:</span>
-                <span className="font-bold text-slate-900">{myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - {myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}</span>
+                <span className="font-bold text-slate-900">{createdBooking?.licensePlate ? `${createdBooking.licensePlate} - ${createdBooking.vehicleType || ''}` : `${myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - ${myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}`}</span>
               </div>
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Thời gian:</span>
                 <span className="font-bold text-slate-900">
                   {(() => {
+                    if (createdBooking?.startTime && createdBooking?.endTime) {
+                      return `${createdBooking.startTime.substring(0, 5)} - ${createdBooking.endTime.substring(0, 5)} ngày ${new Date(createdBooking.bookingDate).toLocaleDateString('vi-VN')}`
+                    }
                     const slot = availableSlots.find(s => s.slotId === selectedSlotId)
                     return slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
                   })()}
@@ -348,7 +358,7 @@ export default function CustomerBooking() {
               <div className="flex justify-between border-b border-slate-200 pb-2.5">
                 <span className="text-slate-500">Dịch vụ đã chọn:</span>
                 <div className="text-right">
-                  <div className="font-bold text-slate-900">{selectedService?.serviceName}</div>
+                  <div className="font-bold text-slate-900">{createdBooking?.serviceName || selectedService?.serviceName}</div>
                   {selectedRedemption && selectedRedemption.rewardType === 'AddOn' && (
                     <div className="font-bold text-emerald-600 text-[11px] mt-0.5">
                       + {selectedRedemption.rewardName} (Tặng kèm)
@@ -356,9 +366,9 @@ export default function CustomerBooking() {
                   )}
                 </div>
               </div>
-              <div className="flex justify-between pt-1">
-                <span className="text-slate-500">Tổng thanh toán:</span>
-                <span className="font-extrabold text-orange-600 text-xl">{finalTotal.toLocaleString('vi-VN')}đ</span>
+              <div className="flex justify-between pt-1 items-center">
+                <span className="text-slate-600 font-semibold">Tổng thanh toán:</span>
+                <span className="font-extrabold text-orange-600 text-xl sm:text-2xl">{((createdBooking?.finalPrice ?? finalTotal) || 0).toLocaleString('vi-VN')}đ</span>
               </div>
             </div>
 
@@ -673,7 +683,17 @@ export default function CustomerBooking() {
                             <button
                               key={redemption.redemptionId}
                               disabled={!isApplicable}
-                              onClick={() => setAppliedRedemptionId(isApplied ? 0 : redemption.redemptionId)}
+                              onClick={() => {
+                                if (isApplied) {
+                                  setAppliedRedemptionId(0);
+                                } else {
+                                  if (appliedPromoId) {
+                                    toast.info('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
+                                    setAppliedPromoId(0);
+                                  }
+                                  setAppliedRedemptionId(redemption.redemptionId);
+                                }
+                              }}
                               className={`relative w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
                                 isApplied
                                   ? 'bg-orange-50 border-orange-500 shadow-sm cursor-pointer'
@@ -736,7 +756,17 @@ export default function CustomerBooking() {
                             <button
                               key={promo.promotionId}
                               disabled={!isApplicable}
-                              onClick={() => setAppliedPromoId(isApplied ? 0 : promo.promotionId)}
+                              onClick={() => {
+                                if (isApplied) {
+                                  setAppliedPromoId(0);
+                                } else {
+                                  if (appliedRedemptionId) {
+                                    toast.info('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
+                                    setAppliedRedemptionId(0);
+                                  }
+                                  setAppliedPromoId(promo.promotionId);
+                                }
+                              }}
                               className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${!isApplicable
                                 ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
                                 : isApplied
@@ -778,26 +808,26 @@ export default function CustomerBooking() {
                         Chi Tiết Thanh Toán
                       </h4>
 
-                      <div className="space-y-2.5 text-xs sm:text-sm">
-                        <div className="flex justify-between text-slate-600">
-                          <span>Tạm tính (1 dịch vụ):</span>
-                          <span className="font-bold text-slate-900">{subtotalPrice.toLocaleString('vi-VN')}đ</span>
+                      <div className="space-y-3 text-xs sm:text-sm">
+                        <div className="flex justify-between items-center text-slate-600 gap-2">
+                          <span className="shrink-0">Tạm tính (1 dịch vụ):</span>
+                          <span className="font-bold text-slate-900 whitespace-nowrap">{subtotalPrice.toLocaleString('vi-VN')}đ</span>
                         </div>
 
                         {selectedPromo && (
-                          <div className="flex justify-between text-emerald-600 font-semibold">
-                            <span>Khuyến mãi hệ thống:</span>
-                            <span>-{discountValue.toLocaleString('vi-VN')}đ</span>
+                          <div className="flex justify-between items-center text-emerald-600 font-semibold gap-2">
+                            <span className="shrink-0">Khuyến mãi hệ thống:</span>
+                            <span className="whitespace-nowrap font-bold">-{discountValue.toLocaleString('vi-VN')}đ</span>
                           </div>
                         )}
 
                         {selectedRedemption && (
-                          <div className="flex justify-between text-emerald-600 font-semibold">
-                            <span>Phần thưởng áp dụng:</span>
-                            <span>
+                          <div className="flex justify-between items-center text-emerald-600 font-semibold gap-2">
+                            <span className="shrink-0">Phần thưởng áp dụng:</span>
+                            <span className="whitespace-nowrap font-bold text-right">
                               {(selectedRedemption.rewardType === 'FreeWash' || selectedRedemption.rewardType === 'AddOn') && selectedRedemption.serviceId === selectedServiceId ? `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ (Miễn phí)` :
-                               selectedRedemption.rewardType === 'FreeWash' ? '(Miễn phí 100%)' :
-                               selectedRedemption.rewardType === 'AddOn' ? '(Tặng kèm)' :
+                               selectedRedemption.rewardType === 'FreeWash' ? 'Miễn phí 100%' :
+                               selectedRedemption.rewardType === 'AddOn' ? 'Tặng kèm' :
                                `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ`}
                             </span>
                           </div>
@@ -806,7 +836,7 @@ export default function CustomerBooking() {
                         <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                           <div>
                             <span className="text-[11px] text-slate-500 block font-medium">Tổng tiền thanh toán</span>
-                            <span className="text-2xl font-extrabold text-orange-600">
+                            <span className="text-2xl font-extrabold text-orange-600 whitespace-nowrap">
                               {finalTotal.toLocaleString('vi-VN')}đ
                             </span>
                           </div>
