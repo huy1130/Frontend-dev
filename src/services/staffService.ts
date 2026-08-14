@@ -9,6 +9,7 @@ export interface TodayBookingDto {
   status: string
   slotId: number
   serviceId: number
+  serviceName?: string
   bookingDate: string
   startTime?: string
   endTime?: string

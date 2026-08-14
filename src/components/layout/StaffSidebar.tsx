@@ -27,12 +27,19 @@ const menuItems = [
 export default function StaffSidebar() {
   const navigate = useNavigate()
 
-  const userRole = localStorage.getItem('userRole') || 'Staff'
-  const fullName = localStorage.getItem('fullName') || 'Admin User'
-  const phoneNumber = localStorage.getItem('phoneNumber') || 'admin@hybridwash.vn'
+  const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || 'Staff'
+  const fullName = sessionStorage.getItem('fullName') || localStorage.getItem('fullName') || 'Staff User'
+  const phoneNumber = sessionStorage.getItem('phoneNumber') || localStorage.getItem('phoneNumber') || 'staff@hybridwash.vn'
   const initial = fullName.charAt(0).toUpperCase()
 
   const handleLogout = () => {
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('userRole')
+    sessionStorage.removeItem('fullName')
+    sessionStorage.removeItem('phoneNumber')
+    sessionStorage.removeItem('currentTier')
+    sessionStorage.removeItem('currentPoints')
+
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
     localStorage.removeItem('fullName')

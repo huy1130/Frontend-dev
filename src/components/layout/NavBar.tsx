@@ -6,13 +6,20 @@ export default function NavBar() {
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
-  const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem('userRole'))
+  const [userRole, setUserRole] = useState<string | null>(() => sessionStorage.getItem('userRole') || localStorage.getItem('userRole'))
 
   useEffect(() => {
-    setUserRole(localStorage.getItem('userRole'))
+    setUserRole(sessionStorage.getItem('userRole') || localStorage.getItem('userRole'))
   }, [])
 
   const handleLogout = () => {
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('userRole')
+    sessionStorage.removeItem('fullName')
+    sessionStorage.removeItem('phoneNumber')
+    sessionStorage.removeItem('currentTier')
+    sessionStorage.removeItem('currentPoints')
+
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
     localStorage.removeItem('fullName')

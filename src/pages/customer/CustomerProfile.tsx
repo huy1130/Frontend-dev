@@ -8,10 +8,10 @@ import { loyaltyService } from '../../services/loyaltyService'
 export default function CustomerProfile() {
   const navigate = useNavigate()
 
-  const fullName = localStorage.getItem('fullName') || '';
-  const phone = localStorage.getItem('phoneNumber') || '';
-  const [currentTier, setCurrentTier] = useState<string | null>(localStorage.getItem('currentTier'));
-  const [currentPoints, setCurrentPoints] = useState<string | null>(localStorage.getItem('currentPoints'));
+  const fullName = sessionStorage.getItem('fullName') || localStorage.getItem('fullName') || '';
+  const phone = sessionStorage.getItem('phoneNumber') || localStorage.getItem('phoneNumber') || '';
+  const [currentTier, setCurrentTier] = useState<string | null>(sessionStorage.getItem('currentTier') || localStorage.getItem('currentTier'));
+  const [currentPoints, setCurrentPoints] = useState<string | null>(sessionStorage.getItem('currentPoints') || localStorage.getItem('currentPoints'));
   const [totalSpent, setTotalSpent] = useState<number>(0);
   const [totalVisits, setTotalVisits] = useState<number>(0);
   const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
@@ -28,6 +28,8 @@ export default function CustomerProfile() {
         setTotalSpent(data.totalSpent);
         setTotalVisits(data.totalVisits);
 
+        sessionStorage.setItem('currentTier', data.currentTier);
+        sessionStorage.setItem('currentPoints', pointsStr);
         localStorage.setItem('currentTier', data.currentTier);
         localStorage.setItem('currentPoints', pointsStr);
       } catch (error) {
@@ -37,7 +39,7 @@ export default function CustomerProfile() {
       }
     };
 
-    if (localStorage.getItem('token')) {
+    if (sessionStorage.getItem('token') || localStorage.getItem('token')) {
       fetchLoyalty();
     }
   }, []);

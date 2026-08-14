@@ -66,6 +66,11 @@ export interface BookingResponseDTO {
     createdAt?: string;
 }
 
+export interface PlateRecognitionResultDTO {
+    detectedPlate?: string | null;
+    bookings?: BookingResponseDTO[];
+}
+
 export const bookingService = {
   createBooking: (data: BookingRequestDTO): Promise<any> => {
     return axiosClient.post('/Booking', data);
@@ -81,6 +86,16 @@ export const bookingService = {
   
   getBookingByQrCode: (qrCode: string): Promise<{ success: boolean; data: any }> => {
     return axiosClient.get(`/Booking/checkin/${qrCode}`);
+  },
+
+  scanPlate: (file: File): Promise<{ success: boolean; data?: PlateRecognitionResultDTO; message?: string }> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return axiosClient.post('/Booking/scan-plate', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   },
   
   // Admin Methods

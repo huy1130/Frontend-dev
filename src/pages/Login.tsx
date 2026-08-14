@@ -40,11 +40,18 @@ export default function Login() {
         password 
       });
       
+      sessionStorage.setItem('token', response.token);
+      sessionStorage.setItem('userRole', response.role.toLowerCase());
+      sessionStorage.setItem('fullName', response.fullName);
+      sessionStorage.setItem('phoneNumber', phone);
+
       localStorage.setItem('token', response.token);
       localStorage.setItem('userRole', response.role.toLowerCase());
       localStorage.setItem('fullName', response.fullName);
       localStorage.setItem('phoneNumber', phone);
       // Xóa cache cũ nếu có để tránh lỗi hiển thị
+      sessionStorage.removeItem('currentTier');
+      sessionStorage.removeItem('currentPoints');
       localStorage.removeItem('currentTier');
       localStorage.removeItem('currentPoints');
       

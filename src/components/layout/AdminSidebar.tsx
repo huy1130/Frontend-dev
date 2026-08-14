@@ -33,12 +33,19 @@ const menuItems = [
 export default function AdminSidebar() {
   const navigate = useNavigate()
 
-  const userRole = localStorage.getItem('userRole') || 'Admin'
-  const fullName = localStorage.getItem('fullName') || 'Admin User'
-  const phoneNumber = localStorage.getItem('phoneNumber') || 'admin@hybridwash.vn'
+  const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || 'Admin'
+  const fullName = sessionStorage.getItem('fullName') || localStorage.getItem('fullName') || 'Admin User'
+  const phoneNumber = sessionStorage.getItem('phoneNumber') || localStorage.getItem('phoneNumber') || 'admin@hybridwash.vn'
   const initial = fullName.charAt(0).toUpperCase()
 
   const handleLogout = () => {
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('userRole')
+    sessionStorage.removeItem('fullName')
+    sessionStorage.removeItem('phoneNumber')
+    sessionStorage.removeItem('currentTier')
+    sessionStorage.removeItem('currentPoints')
+
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
     localStorage.removeItem('fullName')

@@ -42,9 +42,9 @@ export default function CustomerHistory() {
   React.useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const token = localStorage.getItem('token')
+        const token = sessionStorage.getItem('token') || localStorage.getItem('token')
         if (!token) return
-        const phoneNumber = localStorage.getItem('phoneNumber')
+        const phoneNumber = sessionStorage.getItem('phoneNumber') || localStorage.getItem('phoneNumber')
 
         if (phoneNumber) {
           try {

@@ -23,8 +23,8 @@ function GoBack() {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const token = localStorage.getItem('token');
-  const userRole = localStorage.getItem('userRole');
+  const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+  const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole');
   const location = useLocation();
 
   if (!token || !userRole) {

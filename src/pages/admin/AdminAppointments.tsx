@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Check, AlertCircle } from 'lucide-react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Check, AlertCircle, Camera, Sparkles, Scan, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { staffService, TodayBookingDto } from '../../services/staffService'
-
 import { bookingService } from '../../services/bookingService'
 import { getLocalDateString } from '../../utils/date'
+import { broadcastPlateScan } from '../../utils/plateNotification'
 
 export default function AdminAppointments() {
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
@@ -25,6 +25,13 @@ export default function AdminAppointments() {
   const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({})
+
+  // AI Plate OCR States
+  const [isPlateOcrModalOpen, setIsPlateOcrModalOpen] = useState(false)
+  const [ocrScanning, setOcrScanning] = useState(false)
+  const [ocrDetectedPlate, setOcrDetectedPlate] = useState<string | null>(null)
+  const [ocrImagePreview, setOcrImagePreview] = useState<string | null>(null)
+  const [ocrHasBooking, setOcrHasBooking] = useState(false)
 
   const fetchBookings = async () => {
     setIsLoading(true)
@@ -52,6 +59,7 @@ export default function AdminAppointments() {
             status: b.status,
             slotId: b.slotId,
             serviceId: b.serviceId,
+            serviceName: b.serviceName,
             bookingDate: b.bookingDate,
             startTime: b.startTime,
             endTime: b.endTime
@@ -60,13 +68,16 @@ export default function AdminAppointments() {
         }
       } else {
         const dateStr = getLocalDateString(selectedDate)
-
         const response = await bookingService.getAdminBookings(dateStr)
-        // Map Admin BookingDto to TodayBookingDto expected by the UI
-        if (response.data && response.data.items) {
-          // Lấy thêm detail để có customerPhone
+
+        const rawData: any = response?.data || response;
+        const items = Array.isArray(rawData)
+          ? rawData
+          : rawData?.items || rawData?.Items || rawData?.data || [];
+
+        if (Array.isArray(items)) {
           const detailedBookings = await Promise.all(
-            response.data.items.map(async (b: any) => {
+            items.map(async (b: any) => {
               try {
                 const detailResponse = await bookingService.getBookingDetail(b.bookingId);
                 return { ...b, customerPhone: detailResponse.data?.customerPhone || 'N/A' };
@@ -85,6 +96,7 @@ export default function AdminAppointments() {
             status: b.status,
             slotId: b.slotId,
             serviceId: b.serviceId,
+            serviceName: b.serviceName,
             bookingDate: b.bookingDate,
             startTime: b.startTime,
             endTime: b.endTime
@@ -227,6 +239,124 @@ export default function AdminAppointments() {
     { key: 'CheckedOut', label: 'Hoàn thành' }
   ]
 
+  // AI License Plate OCR Upload & Scan Handler
+  const handleScanPlateFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setOcrImagePreview(URL.createObjectURL(file))
+    setOcrScanning(true)
+    setOcrDetectedPlate(null)
+    setOcrHasBooking(false)
+
+    try {
+      const res = await bookingService.scanPlate(file)
+      const data = res.data || (res as any)
+      const detected = data?.detectedPlate
+
+      if (detected) {
+        setOcrDetectedPlate(detected)
+
+        let foundBookings = data?.bookings || []
+
+        // If BE scanPlate didn't return bookings, fallback to search by plate API or filter local list
+        if (foundBookings.length === 0) {
+          try {
+            const plateSearchRes = await bookingService.getBookingByLicensePlate(detected)
+            if (plateSearchRes.data && plateSearchRes.data.length > 0) {
+              foundBookings = plateSearchRes.data
+            }
+          } catch (e) {
+            console.warn('Fallback plate search failed', e)
+          }
+        }
+
+        // Second fallback: filter local bookings by normalized plate (case-insensitive)
+        if (foundBookings.length === 0 && bookings.length > 0) {
+          const cleanDetected = detected.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+          const matchedLocal = bookings.filter(b => (b.licensePlate || '').replace(/[^A-Z0-9]/gi, '').toUpperCase() === cleanDetected)
+          if (matchedLocal.length > 0) {
+            foundBookings = matchedLocal
+          }
+        }
+
+        // Third fallback: query today's bookings API with normalized plate comparison
+        if (foundBookings.length === 0) {
+          try {
+            const todayRes = await staffService.getTodayBookings()
+            const rawList = Array.isArray(todayRes) ? todayRes : (todayRes as any)?.data || []
+            const cleanDetected = detected.replace(/[^A-Z0-9]/gi, '').toUpperCase()
+            const matched = rawList.filter((b: any) => 
+              (b.licensePlate || '').replace(/[^A-Z0-9]/gi, '').toUpperCase() === cleanDetected
+            )
+            if (matched.length > 0) {
+              foundBookings = matched
+            }
+          } catch (e) {
+            console.warn('Fallback today bookings search failed', e)
+          }
+        }
+
+        if (foundBookings.length > 0) {
+          setOcrHasBooking(true)
+          const firstBooking = foundBookings[0]
+
+          let realServiceName = firstBooking.serviceName || ''
+          let realCustomerName = firstBooking.customerName || 'Khách hàng'
+
+          try {
+            const detailRes = await bookingService.getBookingDetail(firstBooking.bookingId)
+            const detailObj = detailRes?.data || detailRes
+            if (detailObj) {
+              if (detailObj.serviceName) realServiceName = detailObj.serviceName
+              if (detailObj.customerName) realCustomerName = detailObj.customerName
+            }
+          } catch (e) {
+            console.warn('Could not fetch booking detail for serviceName', e)
+          }
+
+          // Broadcast real-time notification to Staff with Plate + Booking ID + Real Service Name!
+          broadcastPlateScan({
+            plateNumber: firstBooking.licensePlate || detected,
+            bookingId: firstBooking.bookingId,
+            customerName: realCustomerName,
+            serviceName: realServiceName || undefined,
+          })
+
+          const mapped: TodayBookingDto[] = foundBookings.map((b: any) => ({
+            bookingId: b.bookingId,
+            customerName: b.customerName || 'Khách vãng lai',
+            customerPhone: b.customerPhone || 'N/A',
+            licensePlate: b.licensePlate || detected,
+            vehicleType: b.vehicleType || 'N/A',
+            status: b.status,
+            slotId: b.slotId,
+            serviceId: b.serviceId,
+            serviceName: b.serviceName || realServiceName,
+            bookingDate: b.bookingDate,
+            startTime: b.startTime,
+            endTime: b.endTime
+          }))
+          setBookings(mapped)
+          toast.success(`🎉 Nhận diện thành công biển số ${firstBooking.licensePlate || detected}! Mã đơn #${firstBooking.bookingId}. Đã phát thông báo tới Staff.`)
+        } else {
+          setOcrHasBooking(false)
+          // If no booking found in DB, still broadcast plate scan event to Staff
+          broadcastPlateScan({
+            plateNumber: detected,
+          })
+          toast.success(`Đã nhận diện thành công biển số: ${detected}! Đã phát thông báo tới Staff.`)
+        }
+      } else {
+        toast.error('Không thể nhận diện biển số xe từ hình ảnh này, vui lòng chọn ảnh rõ ràng hơn!')
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi quét biển số xe')
+    } finally {
+      setOcrScanning(false)
+    }
+  }
+
   const handleViewDetail = async (bookingId: number) => {
     try {
       const res = await bookingService.getBookingDetail(bookingId);
@@ -254,43 +384,64 @@ export default function AdminAppointments() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-orange-500/10 rounded-xl">
-            <CalendarDays className="w-6 h-6 text-orange-400" />
+    <div className="space-y-5 max-w-6xl mx-auto">
+      {/* Header Card với các Nút Quét Scanner Nổi bật */}
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3.5 bg-gradient-to-br from-orange-500/10 to-amber-500/10 border border-orange-200/50 rounded-2xl">
+            <CalendarDays className="w-7 h-7 text-orange-500" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Lịch Hẹn Khách Hàng</h2>
-            <p className="text-slate-500 text-sm mt-1">Các lịch hẹn cần xử lý</p>
+            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Lịch Hẹn Khách Hàng</h2>
+            <p className="text-slate-500 text-xs font-medium mt-0.5">Quản lý và xử lý lịch hẹn rửa xe trong ngày</p>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Nhập số ĐT khách..."
-              value={searchPhone}
-              onChange={(e) => setSearchPhone(e.target.value)}
-              className={`px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-300 ${searchPhone ? 'w-56 md:w-64' : 'w-40 md:w-48'}`}
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors text-sm"
-            >
-              Tìm
-            </button>
-          </form>
+
+        {/* Cụm Nút Thao Tác Quét AI & QR */}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button
+            onClick={() => setIsPlateOcrModalOpen(true)}
+            className="flex-1 md:flex-none px-5 py-2.5 bg-gradient-to-r from-cyan-500 via-teal-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-2xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/35 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer border border-cyan-400/30"
+          >
+            <Camera className="w-4 h-4 text-cyan-100 animate-pulse" />
+            <span>Quét Biển Số AI</span>
+          </button>
+
           <button
             onClick={() => setIsScannerOpen(true)}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-slate-900/20"
+            className="flex-1 md:flex-none px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 hover:shadow-slate-900/30 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer border border-slate-700/50"
           >
-            <QrCode className="w-5 h-5" />
-            <span className="hidden sm:inline">Quét QR</span>
+            <QrCode className="w-4 h-4 text-slate-300" />
+            <span>Quét Mã QR</span>
           </button>
+        </div>
+      </div>
+
+      {/* Thanh Tìm Kiếm & Lọc Ngày Riêng Biệt Thoáng Đẹp */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
+        <form onSubmit={handleSearch} className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Nhập số điện thoại tìm kiếm..."
+              value={searchPhone}
+              onChange={(e) => setSearchPhone(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all bg-slate-50/50 focus:bg-white"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold transition-all text-sm shadow-md shadow-orange-500/20 cursor-pointer shrink-0"
+          >
+            Tìm kiếm
+          </button>
+        </form>
+
+        <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
           <input
             type="date"
-            className="px-4 py-2 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+            className="px-3.5 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 bg-slate-50/50 focus:bg-white cursor-pointer"
             value={getLocalDateString(selectedDate)}
             onChange={(e) => {
               setSearchPhone('')
@@ -302,7 +453,7 @@ export default function AdminAppointments() {
               setSearchPhone('')
               fetchBookings()
             }}
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-all text-sm"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all text-sm cursor-pointer shrink-0 border border-slate-200/60"
           >
             Làm mới
           </button>
@@ -787,6 +938,91 @@ export default function AdminAppointments() {
                 className="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl border border-white/10 shadow-2xl"
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* AI License Plate OCR Scanner Modal */}
+      {isPlateOcrModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-fade-up">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-cyan-50 border border-cyan-100 rounded-2xl text-cyan-600">
+                  <Camera className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-900">Quét Biển Số Xe</h3>
+                  <p className="text-xs text-slate-500 font-medium">Bóc tách tự động biển số xe từ hình ảnh</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPlateOcrModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Image Preview & Upload Box */}
+              <div className="border-2 border-dashed border-cyan-200 bg-cyan-50/30 rounded-2xl p-6 text-center space-y-3 relative overflow-hidden">
+                {ocrImagePreview ? (
+                  <div className="relative inline-block max-h-48 rounded-xl overflow-hidden shadow-md">
+                    <img src={ocrImagePreview} alt="Biển số xe" className="max-h-48 object-cover rounded-xl" />
+                    {ocrScanning && (
+                      <div className="absolute inset-0 bg-cyan-900/40 backdrop-blur-xs flex flex-col items-center justify-center text-white space-y-2">
+                        <Scan className="w-8 h-8 animate-pulse text-cyan-300" />
+                        <span className="text-xs font-bold animate-pulse">AI đang bóc tách biển số...</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2 py-4">
+                    <Camera className="w-12 h-12 text-cyan-500 mx-auto opacity-70" />
+                    <p className="text-xs text-slate-600 font-semibold">Tải lên hoặc chụp ảnh biển số xe đằng trước / đằng sau</p>
+                    <p className="text-[11px] text-slate-400">Hệ thống hỗ trợ các định dạng PNG, JPG, JPEG (Tối đa 5MB)</p>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleScanPlateFile}
+                  disabled={ocrScanning}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full disabled:cursor-not-allowed"
+                />
+              </div>
+
+              {/* Detected Plate Output */}
+              {ocrDetectedPlate && (
+                <div className="bg-slate-900 text-white p-4 rounded-2xl border border-cyan-500/40 flex items-center justify-between shadow-lg">
+                  <div>
+                    <span className="text-[11px] text-slate-400 uppercase font-bold block">Biển số AI nhận diện:</span>
+                    <span className="text-2xl font-black text-amber-400 font-mono tracking-widest">{ocrDetectedPlate}</span>
+                  </div>
+                  {ocrHasBooking ? (
+                    <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Đã tìm thấy lịch hẹn
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-amber-400" /> Chưa có lịch hẹn
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsPlateOcrModalOpen(false)}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors font-bold text-xs cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

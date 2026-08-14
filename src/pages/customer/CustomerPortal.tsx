@@ -7,9 +7,9 @@ import { loyaltyService } from '../../services/loyaltyService'
 
 export default function CustomerPortal() {
   const navigate = useNavigate()
-  const fullName = localStorage.getItem('fullName') || 'Khách hàng';
-  const [currentTier, setCurrentTier] = useState<string | null>(localStorage.getItem('currentTier'));
-  const [currentPoints, setCurrentPoints] = useState<string | null>(localStorage.getItem('currentPoints'));
+  const fullName = sessionStorage.getItem('fullName') || localStorage.getItem('fullName') || 'Khách hàng';
+  const [currentTier, setCurrentTier] = useState<string | null>(sessionStorage.getItem('currentTier') || localStorage.getItem('currentTier'));
+  const [currentPoints, setCurrentPoints] = useState<string | null>(sessionStorage.getItem('currentPoints') || localStorage.getItem('currentPoints'));
   const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
 
   useEffect(() => {
@@ -22,6 +22,8 @@ export default function CustomerPortal() {
         setCurrentTier(data.currentTier);
         setCurrentPoints(pointsStr);
         
+        sessionStorage.setItem('currentTier', data.currentTier);
+        sessionStorage.setItem('currentPoints', pointsStr);
         localStorage.setItem('currentTier', data.currentTier);
         localStorage.setItem('currentPoints', pointsStr);
       } catch (error) {
@@ -32,7 +34,7 @@ export default function CustomerPortal() {
     };
 
     // If token exists, we can fetch
-    if (localStorage.getItem('token')) {
+    if (sessionStorage.getItem('token') || localStorage.getItem('token')) {
       fetchLoyalty();
     }
   }, []);
