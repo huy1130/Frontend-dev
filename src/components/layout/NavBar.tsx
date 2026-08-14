@@ -53,15 +53,6 @@ export default function NavBar() {
               Quy trình
             </a>
             <a
-              href="/#combos"
-              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors flex items-center gap-1 drop-shadow-sm"
-            >
-              Gói Combo
-              <span className="bg-white/25 text-white border border-white/40 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                Hot
-              </span>
-            </a>
-            <a
               href="/#promotions"
               className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >
@@ -222,13 +213,6 @@ export default function NavBar() {
               className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
             >
               Quy trình chăm sóc xe
-            </a>
-            <a
-              href="/#combos"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-lg font-semibold text-white hover:bg-white/10 px-3 py-2 rounded-lg"
-            >
-              Gói Combo rửa xe
             </a>
             <a
               href="/#promotions"

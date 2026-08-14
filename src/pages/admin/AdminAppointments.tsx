@@ -370,7 +370,7 @@ export default function AdminAppointments() {
                   <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 ml-[52px] md:ml-0">
                     <button
                       onClick={() => handleViewDetail(booking.bookingId)}
-                      className="flex-1 md:flex-none px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-50 hover:bg-orange-100 text-orange-600 font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
                     >
                       <Eye className="w-4 h-4" /> Chi tiết
                     </button>
@@ -378,7 +378,7 @@ export default function AdminAppointments() {
                     {booking.status === 'Pending' && (
                       <button
                         onClick={() => handleAction(booking.bookingId, 'Confirmed', 'Đã xác nhận lịch hẹn!')}
-                        className="flex-1 md:flex-none px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20"
+                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Xác nhận
                       </button>
@@ -389,7 +389,7 @@ export default function AdminAppointments() {
                           setCheckInBookingId(booking.bookingId)
                           setIsCheckInModalOpen(true)
                         }}
-                        className="flex-1 md:flex-none px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/20"
+                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/20 whitespace-nowrap"
                       >
                         <PlayCircle className="w-4 h-4" /> Check-in Xe
                       </button>
@@ -397,13 +397,13 @@ export default function AdminAppointments() {
                     {booking.status === 'Washing' && (
                       <button
                         onClick={() => handleAction(booking.bookingId, 'CheckedOut', 'Giao xe thành công!')}
-                        className="flex-1 md:flex-none px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
+                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap"
                       >
                         <LogOut className="w-4 h-4" /> Bàn Giao Xe
                       </button>
                     )}
                     {booking.status === 'CheckedOut' && (
-                      <div className="flex-1 md:flex-none px-4 py-2 bg-slate-50 border border-slate-200 text-slate-500 font-bold text-sm rounded-lg flex items-center justify-center gap-1.5">
+                      <div className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-slate-50 border border-slate-200 text-slate-500 font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap">
                         <CheckCircle2 className="w-4 h-4" /> Đã xong
                       </div>
                     )}

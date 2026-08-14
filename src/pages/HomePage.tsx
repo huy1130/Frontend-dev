@@ -4,7 +4,6 @@ import Footer from '../components/layout/Footer'
 import Hero from '../components/home/Hero'
 import HowItWorks from '../components/home/HowItWorks'
 import Features from '../components/home/Features'
-import ComboPackages from '../components/home/ComboPackages'
 import PublicPromotions from '../components/home/PublicPromotions'
 import IndividualServices from '../components/home/IndividualServices'
 import Tiers from '../components/home/Tiers'
@@ -18,7 +17,6 @@ export default function HomePage() {
         <Hero />
         <HowItWorks />
         <Features />
-        <ComboPackages />
         <PublicPromotions />
         <IndividualServices />
         <Tiers />
