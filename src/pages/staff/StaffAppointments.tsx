@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check } from 'lucide-react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
@@ -19,6 +19,8 @@ export default function StaffAppointments() {
   const [searchPhone, setSearchPhone] = useState('')
   const [searchType, setSearchType] = useState<'phone' | 'plate'>('phone')
   const [isScannerOpen, setIsScannerOpen] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({})
 
   const fetchBookings = async () => {
     setIsLoading(true)
@@ -576,26 +578,41 @@ export default function StaffAppointments() {
                     </div>
                   )}
 
-                  {(bookingDetail.incidentImage1 || bookingDetail.incidentImage2) && (
+                  {(bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
                     <div>
                       <span className="text-slate-500 block mb-2 text-sm">Ảnh chụp thực trạng: (Bấm vào để xem lớn)</span>
                       <div className="grid grid-cols-2 gap-3">
-                        {bookingDetail.incidentImage1 && (
-                          <a href={bookingDetail.incidentImage1} target="_blank" rel="noopener noreferrer" className="block group relative overflow-hidden rounded-lg border border-slate-200 aspect-video bg-slate-100">
-                            <img src={bookingDetail.incidentImage1} alt="Tình trạng xe 1" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Eye className="w-6 h-6 text-white" />
-                            </div>
-                          </a>
-                        )}
-                        {bookingDetail.incidentImage2 && (
-                          <a href={bookingDetail.incidentImage2} target="_blank" rel="noopener noreferrer" className="block group relative overflow-hidden rounded-lg border border-slate-200 aspect-video bg-slate-100">
-                            <img src={bookingDetail.incidentImage2} alt="Tình trạng xe 2" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Eye className="w-6 h-6 text-white" />
-                            </div>
-                          </a>
-                        )}
+                        {(bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0
+                          ? bookingDetail.incidentImageUrls
+                          : [bookingDetail.incidentImage1, bookingDetail.incidentImage2].filter(Boolean)
+                        ).map((imgUrl: string, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setPreviewImage(imgUrl)}
+                            className="block group relative overflow-hidden rounded-lg border border-slate-200 aspect-video bg-slate-100 text-left w-full cursor-pointer focus:outline-none"
+                          >
+                            {failedImages[imgUrl] ? (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-500 p-2 text-center border border-dashed border-slate-300 rounded-lg">
+                                <AlertCircle className="w-5 h-5 text-amber-500 mb-1" />
+                                <span className="text-[11px] font-bold text-slate-600">Ảnh AWS S3 không tải được</span>
+                                <span className="text-[9px] text-slate-400 truncate max-w-full px-1">Bấm để xem URL chi tiết</span>
+                              </div>
+                            ) : (
+                              <>
+                                <img
+                                  src={imgUrl}
+                                  alt={`Tình trạng xe ${idx + 1}`}
+                                  onError={() => setFailedImages((prev) => ({ ...prev, [imgUrl]: true }))}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye className="w-6 h-6 text-white" />
+                                </div>
+                              </>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -711,6 +728,48 @@ export default function StaffAppointments() {
                 )}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal Image Preview */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md transition-all animate-fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all"
+              title="Đóng xem ảnh"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {failedImages[previewImage] ? (
+              <div className="bg-white p-6 rounded-2xl max-w-md text-center space-y-3 shadow-2xl">
+                <AlertCircle className="w-12 h-12 text-amber-500 mx-auto" />
+                <h4 className="font-bold text-slate-800 text-base">Không Thể Tải Ảnh Từ AWS S3</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Đường dẫn ảnh dưới đây không thể hiển thị trên trình duyệt (Do AWS S3 Bucket chưa bật <strong>Public Access</strong> hoặc chưa điền <strong>AWS AccessKey</strong> ở Backend).
+                </p>
+                <div className="bg-slate-100 p-3 rounded-xl text-[11px] font-mono text-slate-700 break-all text-left max-h-32 overflow-y-auto border border-slate-200">
+                  {previewImage}
+                </div>
+              </div>
+            ) : (
+              <img
+                src={previewImage}
+                alt="Xem ảnh lớn"
+                onError={() => setFailedImages((prev) => ({ ...prev, [previewImage]: true }))}
+                className="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl border border-white/10 shadow-2xl"
+              />
+            )}
           </div>
         </div>
       )}
