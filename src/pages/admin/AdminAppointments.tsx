@@ -535,6 +535,14 @@ export default function AdminAppointments() {
                       <span className="font-semibold px-2 py-1 bg-rose-100 text-rose-600 rounded-md">{bookingDetail.promoCode}</span>
                     </div>
                   )}
+                  {bookingDetail.rewardName && (
+                    <div className="col-span-2">
+                      <span className="text-slate-500 block mb-1">Phần thưởng áp dụng:</span>
+                      <span className="font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-amber-200">
+                        🎁 {bookingDetail.rewardName}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

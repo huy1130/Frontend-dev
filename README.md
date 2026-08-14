@@ -17,6 +17,9 @@ Hệ thống đặt lịch rửa xe, chăm sóc xe detailing & tích điểm th�
   - **Lucide React**: Bộ icon vector phong phú & hiện đại
   - **Framer Motion v12**: Thư viện xử lý hiệu ứng chuyển động & animation mượt mà
   - **Sonner**: Thư viện thông báo Toast chuyên nghiệp
+- **QR Code Libraries**:
+  - **`qrcode.react`**: Render mã QR SVG hiển thị cho Khách hàng
+  - **`html5-qrcode`**: Đọc & Quét mã QR qua Camera cho Staff / Admin
 
 ---
 
@@ -37,7 +40,31 @@ npm run build
 
 ---
 
-## 📌 2. Tổng Hợp Các Lệnh Git Thường Dùng (Common Git Commands)
+## 📱 2. Cơ Chế Tạo, Hiển Thị & Quét Mã QR (QR Code Feature)
+
+### 🔹 Thư viện sử dụng
+- **`qrcode.react`** (Web Frontend): Tạo và hiển thị mã QR dưới dạng đồ họa SVG từ chuỗi định danh trên giao diện Khách hàng.
+- **`html5-qrcode`** (Web Frontend): Quét và giải mã hình ảnh QR từ Camera thiết bị trên trình duyệt cho Staff / Admin Panel.
+- **`react-native-qrcode-svg`** (Mobile App): Render hiển thị mã QR trên ứng dụng di động React Native.
+
+---
+
+### 🔹 Quy trình hoạt động của Chức năng QR
+
+1. **Sinh chuỗi mã định danh duy nhất (Backend - C#)**:
+   - Khi đơn đặt lịch tạo thành công, Backend tự động sinh một chuỗi **GUID (32 ký tự hex)** ngẫu nhiên và lưu vào CSDL SQL Server (`Bookings.QrCode` có đánh Index `IX_Bookings_QrCode`).
+2. **Hiển thị mã QR (Khách hàng)**:
+   - Frontend nhận chuỗi GUID từ API và truyền vào `<QRCodeSVG value={booking.qrCode} size={150} />`.
+   - Thư viện tự động chuyển đổi chuỗi văn bản thành hình ma trận mã vạch 2D SVG hiển thị trong phần Chi tiết Lịch sử đặt lịch.
+3. **Quét & Giải mã QR (Staff / Admin)**:
+   - Nhân viên bấm nút "Quét QR", thư viện `html5-qrcode` mở Camera thiết bị và quét 10 khung hình/giây (`fps: 10`).
+   - Khi quét trúng mã QR, thư viện giải mã hình ảnh ngược lại thành chuỗi GUID text nguyên bản.
+   - Callback `onScanSuccess` gửi chuỗi GUID lên API `GET /api/Booking/checkin/{qrCode}`.
+   - Backend tìm kiếm đúng Booking và trả về toàn bộ thông tin chi tiết. Modal Chi tiết lịch hẹn tự động hiển thị để nhân viên bấm xác nhận Check-in.
+
+---
+
+## 📌 3. Tổng Hợp Các Lệnh Git Thường Dùng (Common Git Commands)
 
 ### 🔹 Luồng làm việc hằng ngày (Basic Daily Workflow)
 
