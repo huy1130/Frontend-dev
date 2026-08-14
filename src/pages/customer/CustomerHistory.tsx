@@ -192,110 +192,123 @@ export default function CustomerHistory() {
                   key={item.bookingId}
                   className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-300 transition-all shadow-md shadow-slate-200/40 space-y-3"
                 >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-xs font-mono font-extrabold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
-                      Mã lịch hẹn -{item.bookingId}
-                    </span>
-                    {item.redemptionId && (
-                      <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        Đổi thưởng
-                      </span>
-                    )}
-                    <div className="flex items-center gap-1.5 text-slate-600 text-xs font-semibold">
-                      <CalendarIcon className="w-3.5 h-3.5 text-orange-600" />
-                      <span>{item.bookingDate ? new Date(item.bookingDate).toLocaleDateString('vi-VN') : ''} • {item.startTime?.substring(0, 5)}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xs font-mono font-extrabold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
+                          Mã lịch hẹn -{item.bookingId}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-slate-600 text-xs font-semibold">
+                          <CalendarIcon className="w-3.5 h-3.5 text-orange-600" />
+                          <span>{item.bookingDate ? new Date(item.bookingDate).toLocaleDateString('vi-VN') : ''} • {item.startTime?.substring(0, 5)}</span>
+                        </div>
+                      </div>
+
+                      {(item.appliedReward || item.redemptionId || item.promotionId || item.promoCode || (item as any).promotionName) && (
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                          {(item.appliedReward || item.redemptionId) && (
+                            <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                              <Tag className="w-3 h-3 text-amber-600" />
+                              🎁 {item.appliedReward?.serviceName || item.appliedReward?.rewardName || (item.redemptionId ? redemptionsMap[item.redemptionId] : null) || 'Đổi thưởng'}
+                            </span>
+                          )}
+                          {(item.promotionId || item.promoCode || (item as any).promotionName) && (
+                            <span className="text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 flex items-center gap-1">
+                              <Tag className="w-3 h-3 text-rose-600" />
+                              🏷️ {item.promoCode || (item.promotionId ? promotionsMap[item.promotionId] : null) || (item as any).promotionName || 'Khuyến mãi'}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      {item.status === 'Pending' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-bold">
+                          <Clock className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Chờ Xử Lý</span>
+                        </span>
+                      )}
+                      {item.status === 'Confirmed' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Đã Xác Nhận</span>
+                        </span>
+                      )}
+                      {item.status === 'Washing' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-bold">
+                          <History className="w-3.5 h-3.5 text-orange-600" />
+                          <span>Đang Rửa</span>
+                        </span>
+                      )}
+                      {(item.status === 'Completed' || item.status === 'CheckedOut') && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Đã Hoàn Thành</span>
+                        </span>
+                      )}
+                      {item.status === 'Cancelled' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold">
+                          <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Đã Hủy</span>
+                        </span>
+                      )}
+                      {item.status === 'NoShow' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
+                          <AlertCircle className="w-3.5 h-3.5 text-slate-600" />
+                          <span>Không Đến</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    {item.status === 'Pending' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-bold">
-                        <Clock className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Chờ Xử Lý</span>
-                      </span>
-                    )}
-                    {item.status === 'Confirmed' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>Đã Xác Nhận</span>
-                      </span>
-                    )}
-                    {item.status === 'Washing' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-bold">
-                        <History className="w-3.5 h-3.5 text-orange-600" />
-                        <span>Đang Rửa</span>
-                      </span>
-                    )}
-                    {(item.status === 'Completed' || item.status === 'CheckedOut') && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Đã Hoàn Thành</span>
-                      </span>
-                    )}
-                    {item.status === 'Cancelled' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold">
-                        <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Đã Hủy</span>
-                      </span>
-                    )}
-                    {item.status === 'NoShow' && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
-                        <AlertCircle className="w-3.5 h-3.5 text-slate-600" />
-                        <span>Không Đến</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <div className="md:col-span-8 space-y-2">
+                      <div className="flex items-start gap-2.5">
+                        <Car className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-[11px] text-slate-500 font-medium mb-0.5">Dịch vụ đã đăng ký:</p>
+                          <ul className="list-disc pl-4 space-y-0.5 text-xs sm:text-sm font-bold text-slate-900">
+                            <li>{item.serviceName}</li>
+                            {item.addOns && item.addOns.length > 0 && item.addOns.map(addon => (
+                              <li key={addon.bookingAddOnId} className="text-orange-600 flex items-center gap-1">
+                                <span>+ {addon.serviceName}</span>
+                                {addon.finalPrice === 0 && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded-sm">Miễn phí</span>}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                  <div className="md:col-span-8 space-y-2">
-                    <div className="flex items-start gap-2.5">
-                      <Car className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-[11px] text-slate-500 font-medium mb-0.5">Dịch vụ đã đăng ký:</p>
-                        <ul className="list-disc pl-4 space-y-0.5 text-xs sm:text-sm font-bold text-slate-900">
-                          <li>{item.serviceName}</li>
-                          {item.addOns && item.addOns.length > 0 && item.addOns.map(addon => (
-                            <li key={addon.bookingAddOnId} className="text-orange-600 flex items-center gap-1">
-                              <span>+ {addon.serviceName}</span>
-                              {addon.finalPrice === 0 && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded-sm">Miễn phí</span>}
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 pt-1">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{item.licensePlate} - {item.vehicleType}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-xs text-slate-600 pt-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{item.licensePlate} - {item.vehicleType}</span>
+                    <div className="md:col-span-4 text-left md:text-right border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
+                      <span className="text-[11px] text-slate-500 block mb-0.5 font-medium">Tổng tiền thanh toán</span>
+                      <span className="text-xl font-extrabold text-orange-600">
+                        {item.finalPrice?.toLocaleString('vi-VN')}đ
+                      </span>
+                      <div className="mt-2.5 flex md:justify-end">
+                        <button
+                          onClick={() => setSelectedBooking(item)}
+                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors border border-slate-200"
+                        >
+                          Xem Chi Tiết
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="md:col-span-4 text-left md:text-right border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
-                    <span className="text-[11px] text-slate-500 block mb-0.5 font-medium">Tổng tiền thanh toán</span>
-                    <span className="text-xl font-extrabold text-orange-600">
-                      {item.finalPrice?.toLocaleString('vi-VN')}đ
-                    </span>
-                    <div className="mt-2.5 flex md:justify-end">
-                      <button
-                        onClick={() => setSelectedBooking(item)}
-                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors border border-slate-200"
-                      >
-                        Xem Chi Tiết
-                      </button>
-                    </div>
-                  </div>
                 </div>
-
-              </div>
               ))}
-              
+
               {/* Pagination UI */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
-                  <button 
+                  <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-colors"
@@ -307,17 +320,16 @@ export default function CustomerHistory() {
                       <button
                         key={i}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
-                          currentPage === i + 1 
-                            ? 'bg-orange-500 text-white shadow-sm' 
-                            : 'text-slate-600 hover:bg-slate-100'
-                        }`}
+                        className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${currentPage === i + 1
+                          ? 'bg-orange-500 text-white shadow-sm'
+                          : 'text-slate-600 hover:bg-slate-100'
+                          }`}
                       >
                         {i + 1}
                       </button>
                     ))}
                   </div>
-                  <button 
+                  <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-colors"
@@ -349,7 +361,7 @@ export default function CustomerHistory() {
               </button>
             </div>
             <div className="p-6 overflow-y-auto space-y-4">
-              
+
               {selectedBooking.qrCode && (
                 <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-dashed border-orange-200 mb-2">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -357,8 +369,8 @@ export default function CustomerHistory() {
                     Mã QR Check-in
                   </p>
                   <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
-                    <QRCodeSVG 
-                      value={selectedBooking.qrCode} 
+                    <QRCodeSVG
+                      value={selectedBooking.qrCode}
                       size={140}
                       level="H"
                       includeMargin={true}
@@ -377,17 +389,16 @@ export default function CustomerHistory() {
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng Thái</p>
-                  <p className={`text-sm font-bold ${
-                    ['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600' 
-                    : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600' 
-                    : 'text-rose-600'
-                  }`}>
-                    {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành' 
-                    : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý' 
-                    : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
-                    : selectedBooking.status === 'Washing' ? 'Đang Rửa'
-                    : selectedBooking.status === 'NoShow' ? 'Không Đến'
-                    : 'Đã Hủy'}
+                  <p className={`text-sm font-bold ${['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600'
+                    : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600'
+                      : 'text-rose-600'
+                    }`}>
+                    {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành'
+                      : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý'
+                        : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
+                          : selectedBooking.status === 'Washing' ? 'Đang Rửa'
+                            : selectedBooking.status === 'NoShow' ? 'Không Đến'
+                              : 'Đã Hủy'}
                   </p>
                 </div>
                 <div>
@@ -442,29 +453,32 @@ export default function CustomerHistory() {
                 )}
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex justify-between items-start">
-                <p className="text-sm font-bold text-slate-600 pt-1">Tổng Tiền</p>
-                <div className="text-right">
-                  {selectedBooking.originalPrice != null && selectedBooking.finalPrice != null && selectedBooking.originalPrice > selectedBooking.finalPrice ? (
-                    <div className="flex flex-col items-end">
-                      <p className="text-xs text-slate-400 line-through mb-0.5">{selectedBooking.originalPrice.toLocaleString('vi-VN')}đ</p>
-                      <p className="text-xl font-extrabold text-orange-600">{selectedBooking.finalPrice.toLocaleString('vi-VN')}đ</p>
-                      <div className="mt-1.5 flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-md border border-emerald-100">
-                        <Tag className="w-3.5 h-3.5" />
-                        <span className="text-[11px] font-bold">
-                          {selectedBooking.redemptionId && redemptionsMap[selectedBooking.redemptionId]
-                            ? redemptionsMap[selectedBooking.redemptionId]
-                            : selectedBooking.promotionId && promotionsMap[selectedBooking.promotionId]
-                              ? promotionsMap[selectedBooking.promotionId]
-                              : ((selectedBooking as any).promotionName ? (selectedBooking as any).promotionName : 'Ưu đãi áp dụng')} 
-                          (-{(selectedBooking.originalPrice - selectedBooking.finalPrice).toLocaleString('vi-VN')}đ)
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xl font-extrabold text-orange-600">{selectedBooking.finalPrice?.toLocaleString('vi-VN')}đ</p>
-                  )}
+              {(selectedBooking.appliedReward?.serviceName || (selectedBooking.redemptionId && redemptionsMap[selectedBooking.redemptionId])) && (
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phần Thưởng Áp Dụng</p>
+                  <span className="font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-amber-200">
+                    🎁 Miễn phí: {selectedBooking.appliedReward?.serviceName || redemptionsMap[selectedBooking.redemptionId!]}
+                  </span>
                 </div>
+              )}
+
+              {(selectedBooking.promotionId || selectedBooking.promoCode || (selectedBooking as any).promotionName) && (
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Khuyến Mãi Áp Dụng</p>
+                  <span className="font-semibold px-2.5 py-1 bg-rose-100 text-rose-700 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-rose-200">
+                    🏷️ {selectedBooking.promoCode || (selectedBooking.promotionId ? promotionsMap[selectedBooking.promotionId] : null) || (selectedBooking as any).promotionName || 'Mã khuyến mãi'}
+                    {selectedBooking.originalPrice != null && selectedBooking.finalPrice != null && selectedBooking.originalPrice > selectedBooking.finalPrice && (
+                      <span className="font-bold text-rose-800 ml-1">
+                        (-{(selectedBooking.originalPrice - selectedBooking.finalPrice).toLocaleString('vi-VN')}đ)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                <p className="text-sm font-bold text-slate-600">Tổng Tiền</p>
+                <p className="text-xl font-extrabold text-orange-600">{(selectedBooking.finalPrice ?? 0).toLocaleString('vi-VN')}đ</p>
               </div>
             </div>
             <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">

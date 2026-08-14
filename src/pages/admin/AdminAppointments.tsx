@@ -188,7 +188,7 @@ export default function AdminAppointments() {
       toast.error('Vui lòng nhập ghi chú tình trạng xe')
       return
     }
-    
+
     setIsSubmitting(true)
     try {
       const formData = new FormData()
@@ -200,13 +200,13 @@ export default function AdminAppointments() {
       await staffService.checkInBooking(formData)
       toast.success('Đã Check-in và lưu ảnh kiểm tra xe!')
       setIsCheckInModalOpen(false)
-      
+
       // Reset form
       setIncidentImage1(null)
       setIncidentImage2(null)
       setStaffNote('')
       setCheckInBookingId(null)
-      
+
       fetchBookings()
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi Check-in')
@@ -543,11 +543,12 @@ export default function AdminAppointments() {
                       <span className="font-semibold px-2 py-1 bg-rose-100 text-rose-600 rounded-md">{bookingDetail.promoCode}</span>
                     </div>
                   )}
-                  {bookingDetail.rewardName && (
+                  {(bookingDetail.appliedReward?.serviceName || bookingDetail.appliedReward?.rewardName || bookingDetail.rewardName) && (
                     <div className="col-span-2">
                       <span className="text-slate-500 block mb-1">Phần thưởng áp dụng:</span>
                       <span className="font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-amber-200">
-                        🎁 {bookingDetail.rewardName}
+                        🎁 {bookingDetail.appliedReward?.serviceName || bookingDetail.appliedReward?.rewardName || bookingDetail.rewardName}
+                        {bookingDetail.appliedReward?.pointsSpent ? ` (${bookingDetail.appliedReward.pointsSpent} điểm)` : ''}
                       </span>
                     </div>
                   )}
@@ -583,7 +584,7 @@ export default function AdminAppointments() {
                   <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-orange-500" /> Tình trạng xe lúc nhận
                   </h4>
-                  
+
                   {bookingDetail.staffNote && (
                     <div className="mb-4">
                       <span className="text-slate-500 block mb-1 text-sm">Ghi chú của nhân viên:</span>
@@ -622,7 +623,7 @@ export default function AdminAppointments() {
 
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
               {bookingDetail.status === 'Confirmed' && (
-                <button 
+                <button
                   onClick={() => {
                     setIsModalOpen(false)
                     setCheckInBookingId(bookingDetail.bookingId)
@@ -671,32 +672,32 @@ export default function AdminAppointments() {
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden my-auto">
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
               <h3 className="text-lg font-bold text-slate-800">Kiểm Tra Nhận Xe #{checkInBookingId}</h3>
-              <button 
-                onClick={() => setIsCheckInModalOpen(false)} 
+              <button
+                onClick={() => setIsCheckInModalOpen(false)}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <form onSubmit={handleCheckInSubmit} className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 1 <span className="text-rose-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  accept="image/*"
                   capture="environment"
                   required
                   onChange={(e) => setIncidentImage1(e.target.files?.[0] || null)}
                   className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 2 <span className="text-rose-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  accept="image/*"
                   capture="environment"
                   required
                   onChange={(e) => setIncidentImage2(e.target.files?.[0] || null)}
@@ -715,7 +716,7 @@ export default function AdminAppointments() {
                 ></textarea>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2 mt-4"

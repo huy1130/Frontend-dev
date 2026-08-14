@@ -43,11 +43,11 @@ export default function StaffAppointments() {
               }
             })
           );
-  
+
           const mapped: TodayBookingDto[] = detailedBookings.map((b: any) => ({
             bookingId: b.bookingId,
             customerName: b.customerName || 'Khách vãng lai',
-            customerPhone: b.customerPhone, 
+            customerPhone: b.customerPhone,
             licensePlate: b.licensePlate || 'N/A',
             vehicleType: b.vehicleType || 'N/A',
             status: b.status,
@@ -174,7 +174,7 @@ export default function StaffAppointments() {
       toast.error('Vui lòng nhập ghi chú tình trạng xe')
       return
     }
-    
+
     setIsSubmitting(true)
     try {
       const formData = new FormData()
@@ -186,13 +186,13 @@ export default function StaffAppointments() {
       await staffService.checkInBooking(formData)
       toast.success('Đã Check-in và bắt đầu rửa!')
       setIsCheckInModalOpen(false)
-      
+
       // Reset form
       setIncidentImage1(null)
       setIncidentImage2(null)
       setStaffNote('')
       setCheckInBookingId(null)
-      
+
       fetchBookings()
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi Check-in')
@@ -259,8 +259,8 @@ export default function StaffAppointments() {
               <option value="phone">SĐT</option>
               <option value="plate">Biển số</option>
             </select>
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder={searchType === 'phone' ? "Nhập số điện thoại..." : "Nhập biển số xe..."}
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
@@ -273,14 +273,14 @@ export default function StaffAppointments() {
               Tìm
             </button>
           </form>
-          <button 
+          <button
             onClick={() => setIsScannerOpen(true)}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-all flex items-center gap-2 shadow-lg shadow-slate-900/20"
           >
             <QrCode className="w-5 h-5" />
             <span className="hidden sm:inline">Quét QR</span>
           </button>
-          <button 
+          <button
             onClick={() => {
               setSearchPhone('')
               fetchBookings()
@@ -291,7 +291,7 @@ export default function StaffAppointments() {
           </button>
         </div>
       </div>
-      
+
       {isLoading ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center">
           <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
@@ -311,10 +311,10 @@ export default function StaffAppointments() {
 
             return (
               <div key={booking.bookingId} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                
+
                 {/* Header Info & Actions */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-5">
-                  
+
                   {/* Info Left */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -353,7 +353,7 @@ export default function StaffAppointments() {
 
                   {/* Actions Right */}
                   <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 ml-[52px] md:ml-0">
-                    <button 
+                    <button
                       onClick={() => handleViewDetail(booking.bookingId)}
                       className="flex-1 md:flex-none px-4 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-colors"
                     >
@@ -361,7 +361,7 @@ export default function StaffAppointments() {
                     </button>
 
                     {booking.status === 'Pending' && (
-                      <button 
+                      <button
                         onClick={() => handleStatusUpdate(booking.bookingId, 'Pending')}
                         className="flex-1 md:flex-none px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20"
                       >
@@ -369,7 +369,7 @@ export default function StaffAppointments() {
                       </button>
                     )}
                     {booking.status === 'Confirmed' && (
-                      <button 
+                      <button
                         onClick={() => handleStatusUpdate(booking.bookingId, 'Confirmed')}
                         className="flex-1 md:flex-none px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/20"
                       >
@@ -377,7 +377,7 @@ export default function StaffAppointments() {
                       </button>
                     )}
                     {booking.status === 'Washing' && (
-                      <button 
+                      <button
                         onClick={() => handleStatusUpdate(booking.bookingId, 'Washing')}
                         className="flex-1 md:flex-none px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
                       >
@@ -412,14 +412,12 @@ export default function StaffAppointments() {
                           return (
                             <React.Fragment key={step.key}>
                               <div className="flex items-center gap-2 shrink-0">
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                  isCompleted || isActive ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-400'
-                                }`}>
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${isCompleted || isActive ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20' : 'bg-slate-100 text-slate-400'
+                                  }`}>
                                   {isCompleted ? <Check className="w-4 h-4" strokeWidth={3} /> : <span className="text-xs font-bold">{idx + 1}</span>}
                                 </div>
-                                <span className={`text-sm font-semibold whitespace-nowrap ${
-                                  isCompleted || isActive ? 'text-slate-800' : 'text-slate-400'
-                                }`}>
+                                <span className={`text-sm font-semibold whitespace-nowrap ${isCompleted || isActive ? 'text-slate-800' : 'text-slate-400'
+                                  }`}>
                                   {step.label}
                                 </span>
                               </div>
@@ -452,7 +450,7 @@ export default function StaffAppointments() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto space-y-6">
               {/* Khách hàng */}
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
@@ -506,7 +504,7 @@ export default function StaffAppointments() {
                         <span className="text-xs text-slate-500 block mb-1">Dịch vụ tặng kèm / Add-on:</span>
                         {bookingDetail.addOns.map((addon: any) => (
                           <div key={addon.bookingAddOnId} className="font-semibold text-emerald-600 text-sm">
-                            + {addon.serviceName} 
+                            + {addon.serviceName}
                             {addon.finalPrice === 0 ? ' (Miễn phí)' : ` (${addon.finalPrice.toLocaleString('vi-VN')} đ)`}
                           </div>
                         ))}
@@ -527,11 +525,12 @@ export default function StaffAppointments() {
                       <span className="font-semibold px-2 py-1 bg-rose-100 text-rose-600 rounded-md">{bookingDetail.promoCode}</span>
                     </div>
                   )}
-                  {bookingDetail.rewardName && (
+                  {(bookingDetail.appliedReward?.serviceName || bookingDetail.appliedReward?.rewardName || bookingDetail.rewardName) && (
                     <div className="col-span-2">
                       <span className="text-slate-500 block mb-1">Phần thưởng áp dụng:</span>
                       <span className="font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-amber-200">
-                        🎁 {bookingDetail.rewardName}
+                        Miễn phí dịch vụ:  {bookingDetail.appliedReward?.serviceName || bookingDetail.appliedReward?.rewardName || bookingDetail.rewardName}
+                        {bookingDetail.appliedReward?.pointsSpent ? ` (${bookingDetail.appliedReward.pointsSpent} điểm)` : ''}
                       </span>
                     </div>
                   )}
@@ -567,7 +566,7 @@ export default function StaffAppointments() {
                   <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-orange-500" /> Tình trạng xe lúc nhận
                   </h4>
-                  
+
                   {bookingDetail.staffNote && (
                     <div className="mb-4">
                       <span className="text-slate-500 block mb-1 text-sm">Ghi chú của nhân viên:</span>
@@ -603,10 +602,10 @@ export default function StaffAppointments() {
                 </div>
               )}
             </div>
-            
+
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
               {bookingDetail.status === 'Confirmed' && (
-                <button 
+                <button
                   onClick={() => {
                     setIsModalOpen(false)
                     setCheckInBookingId(bookingDetail.bookingId)
@@ -617,7 +616,7 @@ export default function StaffAppointments() {
                   <PlayCircle className="w-5 h-5" /> Tiến hành Check-in
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
               >
@@ -656,32 +655,32 @@ export default function StaffAppointments() {
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden my-auto">
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
               <h3 className="text-lg font-bold text-slate-800">Kiểm Tra Nhận Xe #{checkInBookingId}</h3>
-              <button 
-                onClick={() => setIsCheckInModalOpen(false)} 
+              <button
+                onClick={() => setIsCheckInModalOpen(false)}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <form onSubmit={handleCheckInSubmit} className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 1 <span className="text-rose-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  accept="image/*"
                   capture="environment"
                   required
                   onChange={(e) => setIncidentImage1(e.target.files?.[0] || null)}
                   className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 2 <span className="text-rose-500">*</span></label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  accept="image/*"
                   capture="environment"
                   required
                   onChange={(e) => setIncidentImage2(e.target.files?.[0] || null)}
@@ -700,7 +699,7 @@ export default function StaffAppointments() {
                 ></textarea>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.2)] flex items-center justify-center gap-2 mt-4"
