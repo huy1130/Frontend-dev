@@ -54,6 +54,7 @@ export default function CustomerHistory() {
   const [reportImage1, setReportImage1] = useState<File | null>(null)
   const [reportImage2, setReportImage2] = useState<File | null>(null)
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   React.useEffect(() => {
     setCurrentPage(1)
@@ -117,6 +118,7 @@ export default function CustomerHistory() {
     setLoadingDetailBookingId(item.bookingId)
     setIsLoadingDetail(true)
     setActiveModalTab('info')
+    fetchMyReports()
     try {
       const res = await bookingService.getBookingDetail(item.bookingId)
       if (res && res.data) {
@@ -142,6 +144,12 @@ export default function CustomerHistory() {
       console.error('Error fetching my reports:', e)
     }
   }
+
+  React.useEffect(() => {
+    if (selectedBooking && activeModalTab === 'report') {
+      fetchMyReports()
+    }
+  }, [selectedBooking, activeModalTab])
 
   const handleCreateReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -752,11 +760,14 @@ export default function CustomerHistory() {
               {activeModalTab === 'report' && (
                 <div className="space-y-4 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lịch Sử Báo Cáo Cho Đơn Lịch Này</p>
+                    <div>
+                      <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Lịch Sử Báo Cáo Cho Đơn Lịch Này</p>
+                      <p className="text-[11px] text-slate-400 font-medium">Theo dõi tiến độ xử lý khiếu nại và phản hồi từ Gara</p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setIsCreateReportModalOpen(true)}
-                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover:scale-[1.02]"
                     >
                       <PlusCircle className="w-4 h-4" />
                       <span>Gửi Báo Cáo Sự Cố</span>
@@ -764,51 +775,139 @@ export default function CustomerHistory() {
                   </div>
 
                   {myReports.filter(r => r.bookingId === selectedBooking.bookingId).length > 0 ? (
-                    <div className="space-y-3">
-                      {myReports.filter(r => r.bookingId === selectedBooking.bookingId).map((report) => (
-                        <div key={report.reportId} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <span className="font-extrabold text-slate-900 text-xs">Mã Khiếu Nại #REP-{report.reportId}</span>
-                            {report.status === 'Pending' && (
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Chờ Xử Lý</span>
-                            )}
-                            {report.status === 'InReview' && (
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200">Đang Xem Xét</span>
-                            )}
-                            {report.status === 'Resolved' && (
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Đã Giải Quyết</span>
-                            )}
-                            {report.status === 'Rejected' && (
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">Từ Chối</span>
-                            )}
-                          </div>
+                    <div className="space-y-4">
+                      {myReports.filter(r => r.bookingId === selectedBooking.bookingId).map((report) => {
+                        const images = [
+                          { url: report.image1, label: 'Bằng chứng 1' },
+                          { url: report.image2, label: 'Bằng chứng 2' },
+                        ].filter(item => Boolean(item.url))
 
-                          <div className="text-xs text-slate-700 font-medium bg-white p-3 rounded-xl border border-slate-200 whitespace-pre-wrap">
-                            <span className="font-bold text-slate-900 block mb-1">Nội dung báo cáo:</span>
-                            {report.customerNote}
-                          </div>
-
-                          {(report.image1 || report.image2) && (
-                            <div className="flex items-center gap-2">
-                              {[report.image1, report.image2].filter(Boolean).map((imgUrl, idx) => (
-                                <a key={idx} href={imgUrl!} target="_blank" rel="noreferrer" className="w-16 h-12 rounded-lg border overflow-hidden block">
-                                  <img src={imgUrl!} alt="Bằng chứng" className="w-full h-full object-cover" />
-                                </a>
-                              ))}
-                            </div>
-                          )}
-
-                          {report.managerNote && (
-                            <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200/80 text-xs space-y-1">
-                              <span className="font-bold text-emerald-900 block">💬 Phản Hồi Từ Gara:</span>
-                              <p className="text-emerald-800 font-medium whitespace-pre-wrap">{report.managerNote}</p>
-                              {report.resolvedAt && (
-                                <span className="text-[10px] text-emerald-600 block pt-1">Thời gian giải quyết: {formatDateTime(report.resolvedAt)}</span>
+                        return (
+                          <div key={report.reportId} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                            {/* Card Header: Code, Date & Status */}
+                            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                              <div>
+                                <span className="font-extrabold text-slate-900 text-xs block">Mã Khiếu Nại #REP-{report.reportId}</span>
+                                {report.createdAt && (
+                                  <span className="text-[10px] text-slate-400 font-medium block">Ngày gửi: {formatDateTime(report.createdAt)}</span>
+                                )}
+                              </div>
+                              {report.status === 'Pending' && (
+                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                  Chờ Tiếp Nhận
+                                </span>
+                              )}
+                              {report.status === 'InReview' && (
+                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200/80 flex items-center gap-1">
+                                  <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                                  Đang Xem Xét
+                                </span>
+                              )}
+                              {report.status === 'Resolved' && (
+                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  Đã Giải Quyết
+                                </span>
+                              )}
+                              {report.status === 'Rejected' && (
+                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200/80 flex items-center gap-1">
+                                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                  Từ Chối
+                                </span>
                               )}
                             </div>
-                          )}
-                        </div>
-                      ))}
+
+                            {/* Customer Note */}
+                            <div className="text-xs text-slate-700 font-medium bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 whitespace-pre-wrap">
+                              <span className="font-bold text-slate-900 block mb-1">Nội dung báo cáo sự cố xe:</span>
+                              {report.customerNote}
+                            </div>
+
+                            {/* Images Gallery */}
+                            {images.length > 0 && (
+                              <div>
+                                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Ảnh bằng chứng đi kèm:</p>
+                                <div className="flex items-center gap-2.5">
+                                  {images.map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      onClick={() => setPreviewImage(item.url || null)}
+                                      className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-2xs cursor-pointer"
+                                    >
+                                      <img
+                                        src={item.url!}
+                                        alt={item.label}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                        onError={(e) => {
+                                          const target = e.currentTarget
+                                          target.style.display = 'none'
+                                          const parent = target.parentElement
+                                          if (parent) {
+                                            const fallback = parent.querySelector('.img-fallback') as HTMLElement
+                                            if (fallback) fallback.classList.remove('hidden')
+                                          }
+                                        }}
+                                      />
+                                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                                        <Eye className="w-4 h-4" />
+                                      </div>
+                                      <div className="img-fallback hidden absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-center p-1 text-[9px] font-bold text-slate-500">
+                                        <span>Lỗi tải ảnh</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Admin / Manager Response Box */}
+                            {report.managerNote ? (
+                              <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${
+                                report.status === 'Resolved'
+                                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
+                                  : report.status === 'Rejected'
+                                  ? 'bg-rose-50/90 border-rose-200 text-rose-950'
+                                  : 'bg-blue-50/90 border-blue-200 text-blue-950'
+                              }`}>
+                                <div className="flex items-center justify-between">
+                                  <span className={`font-extrabold flex items-center gap-1.5 ${
+                                    report.status === 'Resolved' ? 'text-emerald-900' : report.status === 'Rejected' ? 'text-rose-900' : 'text-blue-900'
+                                  }`}>
+                                    <span>💬 Phản Hồi Từ Quản Lý Gara:</span>
+                                  </span>
+                                  {report.resolvedAt && (
+                                    <span className="text-[10px] font-semibold text-slate-500">
+                                      {formatDateTime(report.resolvedAt)}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="font-medium whitespace-pre-wrap leading-relaxed">{report.managerNote}</p>
+
+                                {(report.managerContactPhone || report.managerContactEmail) && (
+                                  <div className="pt-2 border-t border-slate-200/50 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-600">
+                                    <span>Liên hệ hỗ trợ:</span>
+                                    {report.managerContactPhone && (
+                                      <span className="text-slate-800 font-bold">📞 {report.managerContactPhone}</span>
+                                    )}
+                                    {report.managerContactEmail && (
+                                      <span className="text-slate-800 font-bold">✉️ {report.managerContactEmail}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              report.status === 'Pending' && (
+                                <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 text-xs text-amber-800 font-medium flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                                  <span>Báo cáo sự cố đang chờ Ban quản lý gara tiếp nhận và phản hồi.</span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
                     <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
@@ -941,6 +1040,21 @@ export default function CustomerHistory() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Preview Ảnh Xem Lớn */}
+      {previewImage && (
+        <div className="fixed inset-0 z-[130] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setPreviewImage(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl p-2 border border-slate-800" onClick={(e) => e.stopPropagation()}>
+            <img src={previewImage} alt="Xem ảnh lớn" className="max-w-full max-h-[80vh] object-contain rounded-xl" />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 text-white rounded-full transition-colors cursor-pointer"
+            >
+              <XCircle className="w-6 h-6" />
+            </button>
           </div>
         </div>
       )}
