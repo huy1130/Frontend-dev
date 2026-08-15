@@ -14,7 +14,8 @@ import {
   CalendarPlus,
   ShieldCheck,
   Gift,
-  Clock
+  Clock,
+  ShieldAlert
 } from 'lucide-react'
 
 const menuItems = [
@@ -28,6 +29,7 @@ const menuItems = [
   { path: '/admin/payments', name: 'Quản Lý Thanh Toán', icon: CreditCard },
   { path: '/admin/transactions', name: 'Lịch Sử Giao Dịch', icon: History },
   { path: '/admin/employees', name: 'Quản Lý Nhân Viên', icon: Users },
+  { path: '/admin/incidents', name: 'Quản Lý Sự Cố', icon: ShieldAlert },
 ]
 
 export default function AdminSidebar() {

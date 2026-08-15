@@ -16,7 +16,10 @@ import {
   QrCode,
   FileText,
   Eye,
-  Loader2
+  Loader2,
+  ShieldAlert,
+  Send,
+  Camera
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
@@ -25,6 +28,7 @@ import Footer from '../../components/layout/Footer'
 import { bookingService, BookingResponseDTO } from '../../services/bookingService'
 import { promotionService } from '../../services/promotionService'
 import { loyaltyService } from '../../services/loyaltyService'
+import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
 import { formatDateTime } from '../../utils/date'
 import { toast } from 'sonner'
 
@@ -41,7 +45,15 @@ export default function CustomerHistory() {
 
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [loadingDetailBookingId, setLoadingDetailBookingId] = useState<number | null>(null)
-  const [activeModalTab, setActiveModalTab] = useState<'info' | 'condition' | 'receipt'>('info')
+  const [activeModalTab, setActiveModalTab] = useState<'info' | 'condition' | 'receipt' | 'report'>('info')
+
+  // Incident Report states for Customer
+  const [myReports, setMyReports] = useState<IncidentReportDto[]>([])
+  const [isCreateReportModalOpen, setIsCreateReportModalOpen] = useState(false)
+  const [reportNote, setReportNote] = useState('')
+  const [reportImage1, setReportImage1] = useState<File | null>(null)
+  const [reportImage2, setReportImage2] = useState<File | null>(null)
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
 
   React.useEffect(() => {
     setCurrentPage(1)
@@ -56,17 +68,21 @@ export default function CustomerHistory() {
 
         if (phoneNumber) {
           try {
-            const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes] = await Promise.all([
+            const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes, myReportsRes] = await Promise.all([
               bookingService.getBookingHistory(phoneNumber),
               promotionService.getPublicPromotions().catch(() => []),
               promotionService.getEligiblePromotions().catch(() => []),
-              loyaltyService.getMyRedemptions().catch(() => [])
+              loyaltyService.getMyRedemptions().catch(() => []),
+              incidentReportService.getMyReports().catch(() => ({ data: [] }))
             ])
 
             if (historyRes && historyRes.data) {
               const sorted = historyRes.data.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
               setHistoryData(sorted)
             }
+
+            const reportsData = Array.isArray(myReportsRes) ? myReportsRes : myReportsRes.data || []
+            setMyReports(reportsData)
 
             const promoMap: Record<number, string> = {}
             if (Array.isArray(publicPromosRes)) {
@@ -114,6 +130,47 @@ export default function CustomerHistory() {
     } finally {
       setIsLoadingDetail(false)
       setLoadingDetailBookingId(null)
+    }
+  }
+
+  const fetchMyReports = async () => {
+    try {
+      const res = await incidentReportService.getMyReports()
+      const data = Array.isArray(res) ? res : res.data || []
+      setMyReports(data)
+    } catch (e) {
+      console.error('Error fetching my reports:', e)
+    }
+  }
+
+  const handleCreateReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedBooking) return
+    if (!reportNote.trim()) {
+      toast.error('Vui lòng mô tả chi tiết sự cố xe')
+      return
+    }
+
+    setIsSubmittingReport(true)
+    try {
+      const formData = new FormData()
+      formData.append('BookingId', selectedBooking.bookingId.toString())
+      formData.append('CustomerNote', reportNote.trim())
+      if (reportImage1) formData.append('Image1', reportImage1)
+      if (reportImage2) formData.append('Image2', reportImage2)
+
+      await incidentReportService.createReport(formData)
+      toast.success('Gửi báo cáo sự cố thành công! Quản lý gara sẽ phản hồi sớm nhất.')
+      setIsCreateReportModalOpen(false)
+      setReportNote('')
+      setReportImage1(null)
+      setReportImage2(null)
+      fetchMyReports()
+    } catch (err: any) {
+      console.error('Error submitting report:', err)
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi gửi báo cáo sự cố')
+    } finally {
+      setIsSubmittingReport(false)
     }
   }
 
@@ -384,7 +441,7 @@ export default function CustomerHistory() {
       {/* Modal Xem Chi Tiết với các Tab */}
       {selectedBooking && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
             {/* Header Modal */}
             <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
               <div className="flex items-center gap-2.5">
@@ -405,28 +462,30 @@ export default function CustomerHistory() {
             </div>
 
             {/* Thanh Tab Điều Hướng */}
-            <div className="flex border-b border-slate-100 bg-slate-50/50 p-1.5 gap-1">
+            <div className="flex border-b border-slate-100 bg-slate-100/70 p-1.5 gap-1.5 overflow-x-auto scrollbar-none">
               <button
                 type="button"
                 onClick={() => setActiveModalTab('info')}
-                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   activeModalTab === 'info'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60'
+                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
                 }`}
               >
+                <QrCode className="w-3.5 h-3.5" />
                 <span>Mã QR & Chi Tiết</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveModalTab('condition')}
-                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   activeModalTab === 'condition'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60'
+                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
                 }`}
               >
+                <Car className="w-3.5 h-3.5" />
                 <span>Tình Trạng Xe</span>
                 {(selectedBooking.staffNote || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
                   <span className="w-2 h-2 rounded-full bg-orange-500"></span>
@@ -436,9 +495,9 @@ export default function CustomerHistory() {
               <button
                 type="button"
                 onClick={() => setActiveModalTab('receipt')}
-                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                   activeModalTab === 'receipt'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60'
+                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
                 }`}
               >
@@ -446,6 +505,22 @@ export default function CustomerHistory() {
                 <span>Phiếu Gửi Xe</span>
                 {selectedBooking.parkingReceipt && (
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('report')}
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
+                  activeModalTab === 'report'
+                    ? 'bg-white text-rose-600 shadow-sm border border-slate-200/80'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                }`}
+              >
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>Báo Cáo Sự Cố</span>
+                {myReports.some(r => r.bookingId === selectedBooking.bookingId) && (
+                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                 )}
               </button>
             </div>
@@ -672,10 +747,90 @@ export default function CustomerHistory() {
                   )}
                 </div>
               )}
+
+              {/* TAB 4: BÁO CÁO SỰ CỐ / KHIẾU NẠI */}
+              {activeModalTab === 'report' && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lịch Sử Báo Cáo Cho Đơn Lịch Này</p>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreateReportModalOpen(true)}
+                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>Gửi Báo Cáo Sự Cố</span>
+                    </button>
+                  </div>
+
+                  {myReports.filter(r => r.bookingId === selectedBooking.bookingId).length > 0 ? (
+                    <div className="space-y-3">
+                      {myReports.filter(r => r.bookingId === selectedBooking.bookingId).map((report) => (
+                        <div key={report.reportId} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-extrabold text-slate-900 text-xs">Mã Khiếu Nại #REP-{report.reportId}</span>
+                            {report.status === 'Pending' && (
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Chờ Xử Lý</span>
+                            )}
+                            {report.status === 'InReview' && (
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200">Đang Xem Xét</span>
+                            )}
+                            {report.status === 'Resolved' && (
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Đã Giải Quyết</span>
+                            )}
+                            {report.status === 'Rejected' && (
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">Từ Chối</span>
+                            )}
+                          </div>
+
+                          <div className="text-xs text-slate-700 font-medium bg-white p-3 rounded-xl border border-slate-200 whitespace-pre-wrap">
+                            <span className="font-bold text-slate-900 block mb-1">Nội dung báo cáo:</span>
+                            {report.customerNote}
+                          </div>
+
+                          {(report.image1 || report.image2) && (
+                            <div className="flex items-center gap-2">
+                              {[report.image1, report.image2].filter(Boolean).map((imgUrl, idx) => (
+                                <a key={idx} href={imgUrl!} target="_blank" rel="noreferrer" className="w-16 h-12 rounded-lg border overflow-hidden block">
+                                  <img src={imgUrl!} alt="Bằng chứng" className="w-full h-full object-cover" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+
+                          {report.managerNote && (
+                            <div className="bg-emerald-50/80 p-3 rounded-xl border border-emerald-200/80 text-xs space-y-1">
+                              <span className="font-bold text-emerald-900 block">💬 Phản Hồi Từ Gara:</span>
+                              <p className="text-emerald-800 font-medium whitespace-pre-wrap">{report.managerNote}</p>
+                              {report.resolvedAt && (
+                                <span className="text-[10px] text-emerald-600 block pt-1">Thời gian giải quyết: {formatDateTime(report.resolvedAt)}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
+                      <ShieldAlert className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-700 font-bold text-sm mb-1">Chưa Có Báo Cáo Sự Cố Nào</p>
+                      <p className="text-slate-500 text-xs">Nếu xe của bạn gặp vấn đề sau khi rửa, hãy bấm nút "Gửi Báo Cáo Sự Cố" để được bộ phận quản lý hỗ trợ xử lý.</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Footer Modal */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsCreateReportModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold transition-colors text-xs cursor-pointer flex items-center gap-1.5 border border-rose-200"
+              >
+                <ShieldAlert className="w-4 h-4 text-rose-600" />
+                <span>Báo Cáo Sự Cố Xe</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedBooking(null)}
@@ -684,6 +839,108 @@ export default function CustomerHistory() {
                 Đóng
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Tạo Báo Cáo Sự Cố Xe */}
+      {isCreateReportModalOpen && selectedBooking && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-rose-500/10 text-rose-600 rounded-xl">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Báo Cáo Sự Cố Xe #{selectedBooking.bookingId}</h3>
+                  <p className="text-xs text-slate-500 font-medium">Gửi khiếu nại thực trạng xe về hệ thống HybridWash</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateReportModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateReportSubmit} className="p-6 overflow-y-auto space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Mô Tả Chi Tiết Sự Cố <span className="text-rose-500">*</span>:
+                </label>
+                <textarea
+                  rows={4}
+                  value={reportNote}
+                  onChange={(e) => setReportNote(e.target.value)}
+                  placeholder="Mô tả cụ thể vết trầy xước, hỏng hóc hoặc vấn đề về dịch vụ mà bạn muốn phản ánh..."
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100 bg-slate-50 focus:bg-white transition-all"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Tải Ảnh Bằng Chứng (Tối đa 2 ảnh):
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <Camera className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                    <span className="block text-[11px] font-bold text-slate-600 truncate mb-1">
+                      {reportImage1 ? reportImage1.name : 'Ảnh bằng chứng 1'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setReportImage1(e.target.files?.[0] || null)}
+                      className="text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <Camera className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+                    <span className="block text-[11px] font-bold text-slate-600 truncate mb-1">
+                      {reportImage2 ? reportImage2.name : 'Ảnh bằng chứng 2'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setReportImage2(e.target.files?.[0] || null)}
+                      className="text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateReportModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-xs"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReport}
+                  className="px-5 py-2.5 rounded-xl font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all shadow-md flex items-center gap-2 cursor-pointer text-xs disabled:opacity-70"
+                >
+                  {isSubmittingReport ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Đang gửi...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Gửi Báo Cáo Sự Cố</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

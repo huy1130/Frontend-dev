@@ -14,7 +14,8 @@ import {
   CalendarPlus,
   ShieldCheck,
   Gift,
-  Clock
+  Clock,
+  ShieldAlert
 } from 'lucide-react'
 
 const menuItems = [

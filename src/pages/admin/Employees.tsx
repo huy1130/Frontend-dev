@@ -25,9 +25,14 @@ export default function Employees() {
       const res = await adminService.getUsers()
       if (res && res.data) {
         // Gộp Admins và Staffs vào tab Nhân viên
-        const allStaffs = [...(res.data.admins || []), ...(res.data.staffs || [])]
+        const allStaffs = [...(res.data.admins || []), ...(res.data.staffs || [])].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        )
+        const sortedCustomers = [...(res.data.customers || [])].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        )
         setStaffs(allStaffs)
-        setCustomers(res.data.customers || [])
+        setCustomers(sortedCustomers)
       }
     } catch (error) {
       console.error('Lỗi khi lấy danh sách người dùng:', error)
