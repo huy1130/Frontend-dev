@@ -15,6 +15,12 @@ export interface TodayBookingDto {
   endTime?: string
 }
 
+export interface IssueReceiptRequestDTO {
+  bookingId: number
+  isCustomerLeaving: boolean
+  customerSignature?: string | null
+}
+
 export const staffService = {
   // Get all bookings for today
   getTodayBookings: async (): Promise<TodayBookingDto[]> => {
@@ -35,6 +41,12 @@ export const staffService = {
         'Content-Type': 'multipart/form-data',
       },
     })
+    return response
+  },
+
+  // Issue parking receipt
+  issueReceipt: async (data: IssueReceiptRequestDTO): Promise<any> => {
+    const response = await axiosClient.post('/Staff/issue-receipt', data)
     return response
   },
 

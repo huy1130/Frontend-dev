@@ -13,7 +13,10 @@ import {
   AlertCircle,
   Car,
   Tag,
-  QrCode
+  QrCode,
+  FileText,
+  Eye,
+  Loader2
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
@@ -22,6 +25,7 @@ import Footer from '../../components/layout/Footer'
 import { bookingService, BookingResponseDTO } from '../../services/bookingService'
 import { promotionService } from '../../services/promotionService'
 import { loyaltyService } from '../../services/loyaltyService'
+import { formatDateTime } from '../../utils/date'
 import { toast } from 'sonner'
 
 export default function CustomerHistory() {
@@ -34,6 +38,10 @@ export default function CustomerHistory() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 5
+
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [loadingDetailBookingId, setLoadingDetailBookingId] = useState<number | null>(null)
+  const [activeModalTab, setActiveModalTab] = useState<'info' | 'condition' | 'receipt'>('info')
 
   React.useEffect(() => {
     setCurrentPage(1)
@@ -89,8 +97,31 @@ export default function CustomerHistory() {
     fetchHistory()
   }, [])
 
+  const handleViewDetail = async (item: BookingResponseDTO) => {
+    setLoadingDetailBookingId(item.bookingId)
+    setIsLoadingDetail(true)
+    setActiveModalTab('info')
+    try {
+      const res = await bookingService.getBookingDetail(item.bookingId)
+      if (res && res.data) {
+        setSelectedBooking(res.data)
+      } else {
+        setSelectedBooking(item)
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy chi tiết đơn đặt lịch:', error)
+      setSelectedBooking(item)
+    } finally {
+      setIsLoadingDetail(false)
+      setLoadingDetailBookingId(null)
+    }
+  }
+
   const filteredData = historyData.filter((item) => {
     if (filterStatus === 'all') return true
+    if (filterStatus === 'Completed') return item.status === 'Completed' || item.status === 'CheckedOut'
+    if (filterStatus === 'Pending') return item.status === 'Pending' || item.status === 'Confirmed' || item.status === 'Washing'
+    if (filterStatus === 'Cancelled') return item.status === 'Cancelled' || item.status === 'NoShow'
     return item.status === filterStatus
   })
 
@@ -102,8 +133,6 @@ export default function CustomerHistory() {
       <NavBar />
 
       <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-4xl w-full mx-auto space-y-6">
-
-
 
         {/* Back Link */}
         <div className="mb-4">
@@ -137,10 +166,10 @@ export default function CustomerHistory() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-1.5 bg-slate-200/70 p-1 rounded-xl border border-slate-200 self-start w-fit">
+        <div className="flex items-center gap-1.5 bg-slate-200/70 p-1 rounded-xl border border-slate-200 self-start w-fit flex-wrap">
           <button
             onClick={() => setFilterStatus('all')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === 'all'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterStatus === 'all'
               ? 'bg-orange-500 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
@@ -149,30 +178,30 @@ export default function CustomerHistory() {
           </button>
           <button
             onClick={() => setFilterStatus('Pending')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === 'Pending'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterStatus === 'Pending'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
           >
-            Chờ Xử Lý ({historyData.filter(i => i.status === 'Pending').length})
+            Đang Thực Hiện ({historyData.filter(i => ['Pending', 'Confirmed', 'Washing'].includes(i.status)).length})
           </button>
           <button
             onClick={() => setFilterStatus('Completed')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === 'Completed'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterStatus === 'Completed'
               ? 'bg-emerald-600 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
           >
-            Hoàn Thành ({historyData.filter(i => i.status === 'Completed').length})
+            Hoàn Thành ({historyData.filter(i => ['Completed', 'CheckedOut'].includes(i.status)).length})
           </button>
           <button
             onClick={() => setFilterStatus('Cancelled')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === 'Cancelled'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${filterStatus === 'Cancelled'
               ? 'bg-rose-600 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
           >
-            Đã Hủy ({historyData.filter(i => i.status === 'Cancelled').length})
+            Đã Hủy ({historyData.filter(i => ['Cancelled', 'NoShow'].includes(i.status)).length})
           </button>
         </div>
 
@@ -293,10 +322,18 @@ export default function CustomerHistory() {
                       </span>
                       <div className="mt-2.5 flex md:justify-end">
                         <button
-                          onClick={() => setSelectedBooking(item)}
-                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors border border-slate-200"
+                          onClick={() => handleViewDetail(item)}
+                          disabled={isLoadingDetail && loadingDetailBookingId === item.bookingId}
+                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors border border-slate-200 cursor-pointer flex items-center gap-1.5 disabled:opacity-70"
                         >
-                          Xem Chi Tiết
+                          {isLoadingDetail && loadingDetailBookingId === item.bookingId ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-500" />
+                              <span>Đang tải...</span>
+                            </>
+                          ) : (
+                            <span>Xem Chi Tiết</span>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -344,147 +381,305 @@ export default function CustomerHistory() {
 
       </main>
 
-      {/* Modal Xem Chi Tiết */}
+      {/* Modal Xem Chi Tiết với các Tab */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <History className="w-5 h-5 text-orange-600" />
-                Chi Tiết Lịch Đặt
-              </h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-100">
+            {/* Header Modal */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-orange-500/10 text-orange-600 rounded-xl">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Chi Tiết Lịch Đặt #{selectedBooking.bookingId}</h3>
+                  <p className="text-xs text-slate-500 font-medium">Theo dõi thông tin chi tiết và tình trạng dịch vụ</p>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedBooking(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
               >
                 <XCircle className="w-6 h-6" />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto space-y-4">
 
-              {selectedBooking.qrCode && (
-                <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border-2 border-dashed border-orange-200 mb-2">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <QrCode className="w-4 h-4 text-orange-600" />
-                    Mã QR Check-in
-                  </p>
-                  <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
-                    <QRCodeSVG
-                      value={selectedBooking.qrCode}
-                      size={140}
-                      level="H"
-                      includeMargin={true}
-                    />
+            {/* Thanh Tab Điều Hướng */}
+            <div className="flex border-b border-slate-100 bg-slate-50/50 p-1.5 gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('info')}
+                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  activeModalTab === 'info'
+                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                }`}
+              >
+                <span>Mã QR & Chi Tiết</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('condition')}
+                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  activeModalTab === 'condition'
+                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                }`}
+              >
+                <span>Tình Trạng Xe</span>
+                {(selectedBooking.staffNote || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
+                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModalTab('receipt')}
+                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  activeModalTab === 'receipt'
+                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/60'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Phiếu Gửi Xe</span>
+                {selectedBooking.parkingReceipt && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                )}
+              </button>
+            </div>
+
+            {/* Nội dung Tab */}
+            <div className="p-6 overflow-y-auto space-y-4">
+              {/* TAB 1: MÃ QR & THÔNG TIN CHUNG */}
+              {activeModalTab === 'info' && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {selectedBooking.qrCode && (
+                    <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border-2 border-dashed border-orange-200">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <QrCode className="w-4 h-4 text-orange-600" />
+                        Mã QR Check-in
+                      </p>
+                      <div className="p-2 bg-white rounded-xl shadow-sm border border-slate-100">
+                        <QRCodeSVG
+                          value={selectedBooking.qrCode}
+                          size={140}
+                          level="H"
+                          includeMargin={true}
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-2 text-center">
+                        Đưa mã này cho nhân viên để check-in nhanh
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mã Đặt Lịch</p>
+                      <p className="text-sm font-bold text-slate-900">#{selectedBooking.bookingId}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng Thái</p>
+                      <p className={`text-sm font-bold ${['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600'
+                        : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600'
+                          : 'text-rose-600'
+                        }`}>
+                        {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành'
+                          : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý'
+                            : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
+                              : selectedBooking.status === 'Washing' ? 'Đang Rửa'
+                                : selectedBooking.status === 'NoShow' ? 'Không Đến'
+                                  : 'Đã Hủy'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Ngày Đặt</p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {selectedBooking.bookingDate ? new Date(selectedBooking.bookingDate).toLocaleDateString('vi-VN') : ''}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Khung Giờ</p>
+                      <p className="text-sm font-semibold text-slate-800">
+                        {selectedBooking.startTime?.substring(0, 5)} - {selectedBooking.endTime?.substring(0, 5)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-2 text-center">
-                    Đưa mã này cho nhân viên để check-in nhanh
-                  </p>
+
+                  <div className="pt-3 border-t border-slate-100">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phương Tiện</p>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {selectedBooking.licensePlate} ({selectedBooking.vehicleType})
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Dịch Vụ & Tặng Kèm</p>
+                    <div className="flex justify-between items-start">
+                      <p className="text-sm font-bold text-slate-900">{selectedBooking.serviceName}</p>
+                      {selectedBooking.originalPrice != null && (
+                        <p className="text-sm font-bold text-slate-700">
+                          {selectedBooking.originalPrice.toLocaleString('vi-VN')}đ
+                        </p>
+                      )}
+                    </div>
+                    {selectedBooking.addOns && selectedBooking.addOns.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {selectedBooking.addOns.map(addon => (
+                          <div key={addon.bookingAddOnId} className="flex justify-between items-center bg-orange-50/50 p-2 rounded-lg border border-orange-100">
+                            <span className="text-xs font-semibold text-orange-700 flex items-center gap-1.5">
+                              <PlusCircle className="w-3 h-3" />
+                              {addon.serviceName}
+                            </span>
+                            <div className="text-right">
+                              {addon.finalPrice === 0 ? (
+                                <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Miễn phí</span>
+                              ) : (
+                                <span className="text-xs font-bold text-slate-700">{addon.finalPrice.toLocaleString('vi-VN')}đ</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {(selectedBooking.appliedReward?.serviceName || (selectedBooking.redemptionId && redemptionsMap[selectedBooking.redemptionId])) && (
+                    <div className="pt-3 border-t border-slate-100">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phần Thưởng Áp Dụng</p>
+                      <span className="font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md inline-flex items-center gap-1.5 text-xs border border-amber-200">
+                        🎁 Miễn phí: {selectedBooking.appliedReward?.serviceName || redemptionsMap[selectedBooking.redemptionId!]}
+                      </span>
+                    </div>
+                  )}
+
+                  {(selectedBooking.promotionId || selectedBooking.promoCode || (selectedBooking as any).promotionName) && (
+                    <div className="pt-3 border-t border-slate-100">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Khuyến Mãi Áp Dụng</p>
+                      <span className="font-semibold px-2.5 py-1 bg-rose-100 text-rose-700 rounded-md inline-flex items-center gap-1.5 text-xs border border-rose-200">
+                        🏷️ {selectedBooking.promoCode || (selectedBooking.promotionId ? promotionsMap[selectedBooking.promotionId] : null) || (selectedBooking as any).promotionName || 'Mã khuyến mãi'}
+                        {selectedBooking.originalPrice != null && selectedBooking.finalPrice != null && selectedBooking.originalPrice > selectedBooking.finalPrice && (
+                          <span className="font-bold text-rose-800 ml-1">
+                            (-{(selectedBooking.originalPrice - selectedBooking.finalPrice).toLocaleString('vi-VN')}đ)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                    <p className="text-sm font-bold text-slate-600">Tổng Tiền Thanh Toán</p>
+                    <p className="text-xl font-extrabold text-orange-600">{(selectedBooking.finalPrice ?? 0).toLocaleString('vi-VN')}đ</p>
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mã Đặt Lịch</p>
-                  <p className="text-sm font-bold text-slate-900">{selectedBooking.bookingId}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng Thái</p>
-                  <p className={`text-sm font-bold ${['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600'
-                    : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600'
-                      : 'text-rose-600'
-                    }`}>
-                    {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành'
-                      : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý'
-                        : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
-                          : selectedBooking.status === 'Washing' ? 'Đang Rửa'
-                            : selectedBooking.status === 'NoShow' ? 'Không Đến'
-                              : 'Đã Hủy'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Ngày Đặt</p>
-                  <p className="text-sm font-semibold text-slate-800">
-                    {selectedBooking.bookingDate ? new Date(selectedBooking.bookingDate).toLocaleDateString('vi-VN') : ''}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Thời Gian</p>
-                  <p className="text-sm font-semibold text-slate-800">
-                    {selectedBooking.startTime?.substring(0, 5)} - {selectedBooking.endTime?.substring(0, 5)}
-                  </p>
-                </div>
-              </div>
+              {/* TAB 2: TÌNH TRẠNG XE LÚC NHẬN */}
+              {activeModalTab === 'condition' && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {selectedBooking.staffNote || selectedBooking.incidentImage1 || selectedBooking.incidentImage2 ? (
+                    <div className="space-y-3">
+                      {selectedBooking.staffNote && (
+                        <div>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Ghi Chú Nhân Viên</p>
+                          <p className="text-xs text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-200 whitespace-pre-wrap font-semibold leading-relaxed">
+                            {selectedBooking.staffNote}
+                          </p>
+                        </div>
+                      )}
 
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phương Tiện</p>
-                <p className="text-sm font-semibold text-slate-800">
-                  {selectedBooking.licensePlate} ({selectedBooking.vehicleType})
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Dịch Vụ & Tặng Kèm</p>
-                <div className="flex justify-between items-start">
-                  <p className="text-sm font-bold text-slate-900">{selectedBooking.serviceName}</p>
-                  {selectedBooking.originalPrice != null && (
-                    <p className="text-sm font-bold text-slate-700">
-                      {selectedBooking.originalPrice.toLocaleString('vi-VN')}đ
-                    </p>
+                      {(selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
+                        <div>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ảnh Chụp Thực Trạng Xe Khi Nhận (2 Góc)</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[selectedBooking.incidentImage1, selectedBooking.incidentImage2].filter(Boolean).map((imgUrl, idx) => (
+                              <a
+                                key={idx}
+                                href={imgUrl!}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block relative aspect-video rounded-xl overflow-hidden border border-slate-200 group bg-slate-100"
+                              >
+                                <img src={imgUrl!} alt={`Ảnh tình trạng xe ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                  <Eye className="w-6 h-6 text-white" />
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
+                      <AlertCircle className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-700 font-bold text-sm mb-1">Chưa Có Dữ Liệu Tình Trạng Xe</p>
+                      <p className="text-slate-500 text-xs">Hình ảnh thực trạng và ghi chú xe sẽ được nhân viên tải lên sau khi làm thủ tục check-in tại gara.</p>
+                    </div>
                   )}
                 </div>
-                {selectedBooking.addOns && selectedBooking.addOns.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    {selectedBooking.addOns.map(addon => (
-                      <div key={addon.bookingAddOnId} className="flex justify-between items-center bg-orange-50/50 p-2 rounded-lg border border-orange-100">
-                        <span className="text-xs font-semibold text-orange-700 flex items-center gap-1.5">
-                          <PlusCircle className="w-3 h-3" />
-                          {addon.serviceName}
+              )}
+
+              {/* TAB 3: PHIẾU GỬI XE */}
+              {activeModalTab === 'receipt' && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {selectedBooking.parkingReceipt ? (
+                    <div className="bg-orange-50/70 p-4 rounded-2xl border border-orange-200/80 space-y-3">
+                      <div className="flex items-center justify-between border-b border-orange-200/60 pb-2">
+                        <p className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-orange-600" />
+                          Phiếu Gửi Xe (#RECEIPT-{selectedBooking.parkingReceipt.receiptId})
+                        </p>
+                        <span className="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full text-xs">
+                          {selectedBooking.parkingReceipt.status}
                         </span>
-                        <div className="text-right">
-                          {addon.finalPrice === 0 ? (
-                            <span className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Miễn phí</span>
-                          ) : (
-                            <span className="text-xs font-bold text-slate-700">{addon.finalPrice.toLocaleString('vi-VN')}đ</span>
-                          )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <span className="text-slate-500 block mb-0.5">Nhân viên lập phiếu:</span>
+                          <span className="font-bold text-slate-800">{selectedBooking.parkingReceipt.issueStaffName || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block mb-0.5">Thời gian phát hành:</span>
+                          <span className="font-bold text-slate-800">{formatDateTime(selectedBooking.parkingReceipt.issuedAt)}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-500 block mb-0.5">Hình thức gửi xe:</span>
+                          <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-extrabold ${selectedBooking.parkingReceipt.isCustomerLeaving ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-blue-100 text-blue-800 border border-blue-200'}`}>
+                            {selectedBooking.parkingReceipt.isCustomerLeaving ? '🚗 Khách gửi xe lại gara' : '🧍 Khách ở lại chờ tại chỗ'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
-              {(selectedBooking.appliedReward?.serviceName || (selectedBooking.redemptionId && redemptionsMap[selectedBooking.redemptionId])) && (
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phần Thưởng Áp Dụng</p>
-                  <span className="font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-amber-200">
-                    🎁 Miễn phí: {selectedBooking.appliedReward?.serviceName || redemptionsMap[selectedBooking.redemptionId!]}
-                  </span>
+                      {selectedBooking.parkingReceipt.customerSignature && (
+                        <div className="pt-3 border-t border-orange-200/60">
+                          <span className="text-slate-500 block text-xs font-medium mb-1.5">Chữ ký xác nhận của bạn:</span>
+                          <div className="bg-white p-2 rounded-xl border border-slate-200 inline-block shadow-xs">
+                            <img src={selectedBooking.parkingReceipt.customerSignature} alt="Chữ ký khách hàng" className="h-16 object-contain" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
+                      <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-700 font-bold text-sm mb-1">Chưa Có Phiếu Gửi Xe</p>
+                      <p className="text-slate-500 text-xs">Phiếu gửi xe sẽ được phát hành sau khi nhân viên làm thủ tục tiếp nhận xe tại gara.</p>
+                    </div>
+                  )}
                 </div>
               )}
-
-              {(selectedBooking.promotionId || selectedBooking.promoCode || (selectedBooking as any).promotionName) && (
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Khuyến Mãi Áp Dụng</p>
-                  <span className="font-semibold px-2.5 py-1 bg-rose-100 text-rose-700 rounded-md inline-flex items-center gap-1.5 text-xs sm:text-sm border border-rose-200">
-                    🏷️ {selectedBooking.promoCode || (selectedBooking.promotionId ? promotionsMap[selectedBooking.promotionId] : null) || (selectedBooking as any).promotionName || 'Mã khuyến mãi'}
-                    {selectedBooking.originalPrice != null && selectedBooking.finalPrice != null && selectedBooking.originalPrice > selectedBooking.finalPrice && (
-                      <span className="font-bold text-rose-800 ml-1">
-                        (-{(selectedBooking.originalPrice - selectedBooking.finalPrice).toLocaleString('vi-VN')}đ)
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
-
-              <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                <p className="text-sm font-bold text-slate-600">Tổng Tiền</p>
-                <p className="text-xl font-extrabold text-orange-600">{(selectedBooking.finalPrice ?? 0).toLocaleString('vi-VN')}đ</p>
-              </div>
             </div>
-            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+
+            {/* Footer Modal */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
               <button
+                type="button"
                 onClick={() => setSelectedBooking(null)}
-                className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition-colors text-sm"
+                className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold transition-colors text-xs cursor-pointer"
               >
                 Đóng
               </button>

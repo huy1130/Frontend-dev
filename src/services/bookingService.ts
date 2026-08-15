@@ -40,6 +40,17 @@ export interface AppliedRewardDTO {
     usedAt?: string | null;
 }
 
+export interface ParkingReceiptDTO {
+    receiptId: number;
+    bookingId: number;
+    issueStaffId?: number | null;
+    issueStaffName?: string | null;
+    status: string;
+    issuedAt?: string | null;
+    isCustomerLeaving: boolean;
+    customerSignature?: string | null;
+}
+
 export interface BookingResponseDTO {
     bookingId: number;
     customerId?: number;
@@ -63,6 +74,10 @@ export interface BookingResponseDTO {
     addOns?: BookingAddOnDTO[];
     qrCode?: string;
     status: string;
+    incidentImage1?: string | null;
+    incidentImage2?: string | null;
+    staffNote?: string | null;
+    parkingReceipt?: ParkingReceiptDTO | null;
     createdAt?: string;
 }
 

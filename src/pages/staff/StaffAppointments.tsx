@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool } from 'lucide-react'
 import { toast } from 'sonner'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
 import { broadcastPlateScan, subscribePlateScan, getLatestPlateScan, dismissPlateScan, PlateScanEventPayload } from '../../utils/plateNotification'
+import { formatDateTime } from '../../utils/date'
 
 export default function StaffAppointments() {
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
@@ -22,6 +23,15 @@ export default function StaffAppointments() {
   const [isScannerOpen, setIsScannerOpen] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({})
+
+  // Parking Receipt Modal & Canvas State
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
+  const [receiptBookingId, setReceiptBookingId] = useState<number | null>(null)
+  const [isCustomerLeaving, setIsCustomerLeaving] = useState(true)
+  const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [hasSigned, setHasSigned] = useState(false)
 
   // Real-time AI Plate Scan Alert for Staff
   const [realtimeAlert, setRealtimeAlert] = useState<PlateScanEventPayload | null>(null)
@@ -360,17 +370,103 @@ export default function StaffAppointments() {
       toast.success('Đã Check-in và bắt đầu rửa!')
       setIsCheckInModalOpen(false)
 
+      const targetBookingId = checkInBookingId
+
       // Reset form
       setIncidentImage1(null)
       setIncidentImage2(null)
       setStaffNote('')
       setCheckInBookingId(null)
 
+      // Open Receipt Modal for step 2
+      setReceiptBookingId(targetBookingId)
+      setIsCustomerLeaving(true)
+      setHasSigned(false)
+      setIsReceiptModalOpen(true)
+
       fetchBookings()
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi Check-in')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Signature Canvas Helpers
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const rect = canvas.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    ctx.beginPath()
+    ctx.moveTo(clientX - rect.left, clientY - rect.top)
+    setIsDrawing(true)
+  }
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const rect = canvas.getBoundingClientRect()
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    ctx.lineTo(clientX - rect.left, clientY - rect.top)
+    ctx.strokeStyle = '#0f172a'
+    ctx.lineWidth = 2.5
+    ctx.lineCap = 'round'
+    ctx.stroke()
+    setHasSigned(true)
+  }
+
+  const stopDrawing = () => {
+    setIsDrawing(false)
+  }
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    setHasSigned(false)
+  }
+
+  const handleSkipReceipt = () => {
+    setIsReceiptModalOpen(false)
+    setReceiptBookingId(null)
+    toast.info('Đã hoàn tất Check-in (Bỏ qua cấp phiếu giữ xe).')
+  }
+
+  const handleIssueReceiptSubmit = async () => {
+    if (!receiptBookingId) return
+
+    setIsSubmittingReceipt(true)
+    try {
+      let signatureData: string | null = null
+      if (isCustomerLeaving && canvasRef.current && hasSigned) {
+        signatureData = canvasRef.current.toDataURL()
+      }
+
+      await staffService.issueReceipt({
+        bookingId: receiptBookingId,
+        isCustomerLeaving,
+        customerSignature: signatureData
+      })
+
+      toast.success('Phát hành phiếu gửi xe thành công!')
+      setIsReceiptModalOpen(false)
+      setReceiptBookingId(null)
+      fetchBookings()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.Message || err.response?.data?.message || 'Có lỗi khi phát hành phiếu gửi xe')
+    } finally {
+      setIsSubmittingReceipt(false)
     }
   }
 
@@ -812,6 +908,48 @@ export default function StaffAppointments() {
                   )}
                 </div>
               )}
+
+              {/* Thông tin Phiếu giữ xe (Nếu có) */}
+              {bookingDetail.parkingReceipt && (
+                <div className="bg-orange-50/60 rounded-xl p-4 border border-orange-200/80">
+                  <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-orange-600" /> Thông Tin Phiếu Gửi Xe (#RECEIPT-{bookingDetail.parkingReceipt.receiptId})
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Nhân viên lập phiếu:</span>
+                      <span className="font-bold text-slate-800">{bookingDetail.parkingReceipt.issueStaffName || 'Chưa cập nhật'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Thời gian phát hành:</span>
+                      <span className="font-bold text-slate-800">
+                        {formatDateTime(bookingDetail.parkingReceipt.issuedAt)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Hình thức gửi xe:</span>
+                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-extrabold ${bookingDetail.parkingReceipt.isCustomerLeaving ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {bookingDetail.parkingReceipt.isCustomerLeaving ? '🚗 Khách gửi xe lại gara' : '🧍 Khách ở lại chờ tại chỗ'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Trạng thái phiếu:</span>
+                      <span className="font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded text-xs">
+                        {bookingDetail.parkingReceipt.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {bookingDetail.parkingReceipt.customerSignature && (
+                    <div className="pt-2 border-t border-orange-200/60">
+                      <span className="text-slate-500 block text-xs mb-1.5 font-medium">Chữ ký xác nhận của khách hàng:</span>
+                      <div className="bg-white p-2 rounded-lg border border-slate-200 inline-block">
+                        <img src={bookingDetail.parkingReceipt.customerSignature} alt="Chữ ký khách hàng" className="h-16 object-contain" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3">
@@ -1134,6 +1272,130 @@ export default function StaffAppointments() {
               >
                 Đóng
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Cấp Phiếu Gửi Xe (Bước 2 sau Check-in) */}
+      {isReceiptModalOpen && receiptBookingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/10 text-orange-600 rounded-xl">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-slate-900">Phát Hành Phiếu Gửi Xe</h3>
+                  <p className="text-xs text-slate-500">Mã đơn #{receiptBookingId}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSkipReceipt}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Lựa chọn hình thức gửi xe */}
+              <div>
+                <label className="block text-sm font-bold text-slate-800 mb-2">Hình thức gửi xe:</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomerLeaving(true)}
+                    className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${
+                      isCustomerLeaving
+                        ? 'border-orange-500 bg-orange-50/80 text-orange-700 shadow-sm'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <CarFront className="w-4 h-4" /> Khách gửi xe lại
+                    </span>
+                    <span className="text-[11px] font-normal text-slate-500">Gửi xe lại gara, cần chữ ký xác nhận</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomerLeaving(false)}
+                    className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${
+                      !isCustomerLeaving
+                        ? 'border-blue-500 bg-blue-50/80 text-blue-700 shadow-sm'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <User className="w-4 h-4" /> Khách ở lại chờ
+                    </span>
+                    <span className="text-[11px] font-normal text-slate-500">Chờ tại chỗ lấy xe ngay sau rửa</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bảng ký tên Canvas nếu khách gửi xe lại */}
+              {isCustomerLeaving && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                      <PenTool className="w-4 h-4 text-orange-500" /> Chữ ký xác nhận của khách:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={clearCanvas}
+                      className="text-xs text-slate-500 hover:text-rose-600 font-bold underline cursor-pointer"
+                    >
+                      Xóa chữ ký
+                    </button>
+                  </div>
+
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 overflow-hidden relative touch-none">
+                    <canvas
+                      ref={canvasRef}
+                      width={440}
+                      height={120}
+                      onMouseDown={startDrawing}
+                      onMouseMove={draw}
+                      onMouseUp={stopDrawing}
+                      onMouseLeave={stopDrawing}
+                      onTouchStart={startDrawing}
+                      onTouchMove={draw}
+                      onTouchEnd={stopDrawing}
+                      className="w-full h-28 bg-white cursor-crosshair"
+                    />
+                    {!hasSigned && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-slate-400 text-xs font-semibold">
+                        Ký tên tại đây
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleSkipReceipt}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-sm"
+                >
+                  Bỏ qua (Khách chờ tại chỗ)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleIssueReceiptSubmit}
+                  disabled={isSubmittingReceipt}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 transition-all shadow-md shadow-orange-500/25 flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer text-sm"
+                >
+                  {isSubmittingReceipt ? (
+                    <span>Đang phát hành...</span>
+                  ) : (
+                    <span>Xác Nhận & Cấp Phiếu</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

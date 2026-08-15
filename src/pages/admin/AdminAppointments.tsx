@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Check, AlertCircle, Camera, Sparkles, Scan, Search } from 'lucide-react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Check, AlertCircle, Camera, Sparkles, Scan, Search, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
-import { getLocalDateString } from '../../utils/date'
+import { getLocalDateString, formatDateTime } from '../../utils/date'
 import { broadcastPlateScan } from '../../utils/plateNotification'
 
 export default function AdminAppointments() {
@@ -782,6 +782,48 @@ export default function AdminAppointments() {
                             )}
                           </button>
                         ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Thông tin Phiếu giữ xe (Nếu có) */}
+              {bookingDetail.parkingReceipt && (
+                <div className="bg-orange-50/60 rounded-xl p-4 border border-orange-200/80">
+                  <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-orange-600" /> Thông Tin Phiếu Gửi Xe (#RECEIPT-{bookingDetail.parkingReceipt.receiptId})
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Nhân viên lập phiếu:</span>
+                      <span className="font-bold text-slate-800">{bookingDetail.parkingReceipt.issueStaffName || 'Chưa cập nhật'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Thời gian phát hành:</span>
+                      <span className="font-bold text-slate-800">
+                        {formatDateTime(bookingDetail.parkingReceipt.issuedAt)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Hình thức gửi xe:</span>
+                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-extrabold ${bookingDetail.parkingReceipt.isCustomerLeaving ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {bookingDetail.parkingReceipt.isCustomerLeaving ? '🚗 Khách gửi xe lại gara' : '🧍 Khách ở lại chờ tại chỗ'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 block text-xs mb-0.5">Trạng thái phiếu:</span>
+                      <span className="font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded text-xs">
+                        {bookingDetail.parkingReceipt.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {bookingDetail.parkingReceipt.customerSignature && (
+                    <div className="pt-2 border-t border-orange-200/60">
+                      <span className="text-slate-500 block text-xs mb-1.5 font-medium">Chữ ký xác nhận của khách hàng:</span>
+                      <div className="bg-white p-2 rounded-lg border border-slate-200 inline-block">
+                        <img src={bookingDetail.parkingReceipt.customerSignature} alt="Chữ ký khách hàng" className="h-16 object-contain" />
                       </div>
                     </div>
                   )}
