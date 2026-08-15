@@ -466,7 +466,7 @@ export default function TierManagement() {
               </p>
               <div className="flex items-start gap-2 text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200/60 text-[11px] font-medium">
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <span>Khách hàng đủ điều kiện mới sẽ được tự động nâng hạng / hạ hạng và lưu lịch sử trực tiếp vào CSDL SQL Server.</span>
+                <span>Khách hàng đủ điều kiện mới sẽ được tự động nâng hạng / hạ hạng</span>
               </div>
             </div>
 

@@ -105,6 +105,23 @@ export default function TimeSlotManagement() {
     s.startTime.includes(searchTerm) || s.endTime.includes(searchTerm)
   )
 
+  const [togglingSlotId, setTogglingSlotId] = useState<number | null>(null)
+
+  const handleToggleStatus = async (slotId: number, currentStatus: boolean) => {
+    try {
+      setTogglingSlotId(slotId)
+      const nextStatus = !currentStatus
+      await timeSlotService.toggleSlotStatus(slotId, nextStatus)
+      toast.success(nextStatus ? 'Đã kích hoạt khung giờ!' : 'Đã tạm ngưng khung giờ!')
+      setTimeSlots(prev => prev.map(s => s.slotId === slotId ? { ...s, isActive: nextStatus } : s))
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi đổi trạng thái khung giờ')
+    } finally {
+      setTogglingSlotId(null)
+    }
+  }
+
   const formatTime = (timeStr: string) => {
     return timeStr.substring(0, 5); // "08:00:00" -> "08:00"
   }
@@ -184,27 +201,36 @@ export default function TimeSlotManagement() {
               }`}
             >
               <div>
-                {/* Status */}
+                {/* Status Toggle Button */}
                 <div className="flex items-center justify-end mb-3">
-                  <div
-                    className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1.5 ${
+                  <button
+                    type="button"
+                    disabled={togglingSlotId === slot.slotId}
+                    onClick={() => handleToggleStatus(slot.slotId, slot.isActive !== false)}
+                    title={slot.isActive !== false ? 'Bấm để Tạm Ngưng' : 'Bấm để Kích Hoạt'}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                       slot.isActive !== false
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                        : 'bg-rose-50 text-rose-600 border-rose-200'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
                     }`}
                   >
-                    {slot.isActive !== false ? (
+                    {togglingSlotId === slot.slotId ? (
                       <>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Đang xử lý...</span>
+                      </>
+                    ) : slot.isActive !== false ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         <span>Đang Hoạt Động</span>
                       </>
                     ) : (
                       <>
-                        <XCircle className="w-3.5 h-3.5" />
+                        <XCircle className="w-3.5 h-3.5 text-rose-600" />
                         <span>Tạm Ngưng</span>
                       </>
                     )}
-                  </div>
+                  </button>
                 </div>
 
                 {/* Title & Desc */}

@@ -66,6 +66,12 @@ export default function NavBar() {
               Khuyến mãi
             </a>
             <a
+              href="/#timeslots"
+              className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
+            >
+              Khung giờ
+            </a>
+            <a
               href="/#services"
               className="text-sm lg:text-base font-bold text-white hover:text-amber-200 transition-colors drop-shadow-sm"
             >

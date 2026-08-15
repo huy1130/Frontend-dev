@@ -44,5 +44,9 @@ export const timeSlotService = {
 
   getTimeSlotById: (id: number): Promise<TimeSlotDto> => {
     return axiosClient.get(`/TimeSlots/${id}`);
+  },
+
+  toggleSlotStatus: (id: number, isActive: boolean): Promise<any> => {
+    return axiosClient.put(`/TimeSlots/${id}/status`, { isActive });
   }
 };

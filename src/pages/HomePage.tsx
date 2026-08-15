@@ -6,6 +6,7 @@ import HowItWorks from '../components/home/HowItWorks'
 import Features from '../components/home/Features'
 import PublicPromotions from '../components/home/PublicPromotions'
 import IndividualServices from '../components/home/IndividualServices'
+import StoreTimeSlots from '../components/home/StoreTimeSlots'
 import Tiers from '../components/home/Tiers'
 import CallToAction from '../components/home/CallToAction'
 
@@ -17,6 +18,7 @@ export default function HomePage() {
         <Hero />
         <HowItWorks />
         <Features />
+        <StoreTimeSlots />
         <PublicPromotions />
         <IndividualServices />
         <Tiers />
