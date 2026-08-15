@@ -75,72 +75,7 @@ export const mockFeatures: Feature[] = [
   }
 ]
 
-export const mockTiers: MembershipTier[] = [
-  {
-    id: 'tier-copper',
-    level: 'copper',
-    name: 'Hạng Đồng',
-    minPoints: 0,
-    pointMultiplier: '1.0x',
-    discountPercent: 0,
-    color: 'from-orange-700 to-orange-900',
-    badgeBg: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30',
-    benefits: [
-      'Tích lũy 10% điểm thưởng cho mỗi hóa đơn',
-      'Nhắc lịch bảo dưỡng định kỳ tự động',
-      'Được ưu đãi sinh nhật giảm 10%'
-    ]
-  },
-  {
-    id: 'tier-silver',
-    level: 'silver',
-    name: 'Hạng Bạc',
-    minPoints: 500,
-    pointMultiplier: '1.2x',
-    discountPercent: 5,
-    color: 'from-slate-400 to-slate-600',
-    badgeBg: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-500/20 dark:text-slate-300 dark:border-slate-500/30',
-    benefits: [
-      'Tất cả đặc quyền Hạng Đồng',
-      'Giảm 5% cho tất cả các dịch vụ đơn lẻ',
-      'Tích điểm X1.2 cho mọi hóa đơn',
-      'Miễn phí 01 lần rửa xe bọt tuyết mừng sinh nhật'
-    ]
-  },
-  {
-    id: 'tier-gold',
-    level: 'gold',
-    name: 'Hạng Vàng',
-    minPoints: 2000,
-    pointMultiplier: '1.5x',
-    discountPercent: 10,
-    color: 'from-yellow-400 to-yellow-600',
-    badgeBg: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30',
-    benefits: [
-      'Tất cả đặc quyền Hạng Bạc',
-      'Giảm 10% trực tiếp trên tổng hóa đơn',
-      'Ưu tiên xếp hàng đặt lịch giờ cao điểm',
-      'Miễn phí 01 lần khử mùi Ozon mỗi tháng'
-    ]
-  },
-  {
-    id: 'tier-diamond',
-    level: 'diamond',
-    name: 'Hạng Kim Cương',
-    minPoints: 5000,
-    pointMultiplier: '2.0x',
-    discountPercent: 15,
-    color: 'from-cyan-400 to-blue-600',
-    badgeBg: 'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-500/20 dark:text-cyan-300 dark:border-cyan-500/30',
-    benefits: [
-      'Đặc quyền cao cấp bậc nhất hệ thống',
-      'Giảm 15% tất cả dịch vụ & Combo Detailing',
-      'Nhân đôi điểm tích lũy X2.0',
-      'Chuyên viên riêng chăm sóc & tư vấn bảo dưỡng xe',
-      'Dịch vụ nhận & giao xe tận nhà trong bán kính 10km'
-    ]
-  }
-]
+export const mockTiers: any[] = [];
 
 export const mockCustomerReviews: CustomerReview[] = [
   {

@@ -26,6 +26,18 @@ export interface UpdateTierRuleDTO {
   isActive: boolean;
 }
 
+export interface PublicTierRuleDTO {
+  tierName: string;
+  rank: number;
+  minimumSpend: number;
+  minimumVisits: number;
+  qualificationMode: string;
+  evaluationPeriodMonths: number;
+  bookingWindowDays: number;
+  pointMultiplier: number;
+  benefitDescription?: string;
+}
+
 export interface TierReviewResultDTO {
   reviewedCustomers?: number;
   upgradedCustomers?: number;
@@ -34,7 +46,12 @@ export interface TierReviewResultDTO {
 }
 
 export const tierService = {
-  // GET all tier rules
+  // GET public tier rules for homepage / customers
+  getPublicRules: (): Promise<PublicTierRuleDTO[]> => {
+    return axiosClient.get('/tiers');
+  },
+
+  // GET all tier rules (Admin)
   getAllRules: (): Promise<TierRuleDTO[]> => {
     return axiosClient.get('/admin/tier-rules');
   },
