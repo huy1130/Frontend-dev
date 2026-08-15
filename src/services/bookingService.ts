@@ -76,6 +76,8 @@ export interface BookingResponseDTO {
     status: string;
     incidentImage1?: string | null;
     incidentImage2?: string | null;
+    incidentImage1ApiPath?: string | null;
+    incidentImage2ApiPath?: string | null;
     staffNote?: string | null;
     parkingReceipt?: ParkingReceiptDTO | null;
     createdAt?: string;

@@ -5,6 +5,7 @@ import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
 import { broadcastPlateScan, subscribePlateScan, getLatestPlateScan, dismissPlateScan, PlateScanEventPayload } from '../../utils/plateNotification'
 import { formatDateTime } from '../../utils/date'
+import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 
 export default function StaffAppointments() {
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
@@ -868,41 +869,40 @@ export default function StaffAppointments() {
                     </div>
                   )}
 
-                  {(bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
+                  {(bookingDetail.incidentImage1ApiPath || bookingDetail.incidentImage2ApiPath || bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
                     <div>
                       <span className="text-slate-500 block mb-2 text-sm">Ảnh chụp thực trạng: (Bấm vào để xem lớn)</span>
                       <div className="grid grid-cols-2 gap-3">
-                        {(bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0
-                          ? bookingDetail.incidentImageUrls
-                          : [bookingDetail.incidentImage1, bookingDetail.incidentImage2].filter(Boolean)
-                        ).map((imgUrl: string, idx: number) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setPreviewImage(imgUrl)}
-                            className="block group relative overflow-hidden rounded-lg border border-slate-200 aspect-video bg-slate-100 text-left w-full cursor-pointer focus:outline-none"
-                          >
-                            {failedImages[imgUrl] ? (
-                              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-500 p-2 text-center border border-dashed border-slate-300 rounded-lg">
-                                <AlertCircle className="w-5 h-5 text-amber-500 mb-1" />
-                                <span className="text-[11px] font-bold text-slate-600">Ảnh AWS S3 không tải được</span>
-                                <span className="text-[9px] text-slate-400 truncate max-w-full px-1">Bấm để xem URL chi tiết</span>
+                        {(() => {
+                          const images: string[] = []
+                          if (bookingDetail.incidentImage1ApiPath) images.push(bookingDetail.incidentImage1ApiPath)
+                          else if (bookingDetail.incidentImage1) images.push(bookingDetail.incidentImage1)
+
+                          if (bookingDetail.incidentImage2ApiPath) images.push(bookingDetail.incidentImage2ApiPath)
+                          else if (bookingDetail.incidentImage2) images.push(bookingDetail.incidentImage2)
+
+                          if (images.length === 0 && bookingDetail.incidentImageUrls) {
+                            images.push(...bookingDetail.incidentImageUrls.filter(Boolean))
+                          }
+
+                          return images.map((imgSrc: string, idx: number) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setPreviewImage(imgSrc)}
+                              className="block group relative overflow-hidden rounded-lg border border-slate-200 aspect-video bg-slate-100 text-left w-full cursor-pointer focus:outline-none"
+                            >
+                              <AuthenticatedImage
+                                src={imgSrc}
+                                alt={`Tình trạng xe ${idx + 1}`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Eye className="w-6 h-6 text-white" />
                               </div>
-                            ) : (
-                              <>
-                                <img
-                                  src={imgUrl}
-                                  alt={`Tình trạng xe ${idx + 1}`}
-                                  onError={() => setFailedImages((prev) => ({ ...prev, [imgUrl]: true }))}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <Eye className="w-6 h-6 text-white" />
-                                </div>
-                              </>
-                            )}
-                          </button>
-                        ))}
+                            </button>
+                          ))
+                        })()}
                       </div>
                     </div>
                   )}

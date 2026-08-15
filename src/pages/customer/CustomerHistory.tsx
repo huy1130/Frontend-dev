@@ -30,6 +30,7 @@ import { promotionService } from '../../services/promotionService'
 import { loyaltyService } from '../../services/loyaltyService'
 import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
 import { formatDateTime } from '../../utils/date'
+import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 import { toast } from 'sonner'
 
 export default function CustomerHistory() {
@@ -662,7 +663,7 @@ export default function CustomerHistory() {
               {/* TAB 2: TÌNH TRẠNG XE LÚC NHẬN */}
               {activeModalTab === 'condition' && (
                 <div className="space-y-4 animate-in fade-in duration-150">
-                  {selectedBooking.staffNote || selectedBooking.incidentImage1 || selectedBooking.incidentImage2 ? (
+                  {(selectedBooking.staffNote || selectedBooking.incidentImage1ApiPath || selectedBooking.incidentImage2ApiPath || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) ? (
                     <div className="space-y-3">
                       {selectedBooking.staffNote && (
                         <div>
@@ -673,24 +674,36 @@ export default function CustomerHistory() {
                         </div>
                       )}
 
-                      {(selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
+                      {(selectedBooking.incidentImage1ApiPath || selectedBooking.incidentImage2ApiPath || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
                         <div>
                           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ảnh Chụp Thực Trạng Xe Khi Nhận (2 Góc)</p>
                           <div className="grid grid-cols-2 gap-3">
-                            {[selectedBooking.incidentImage1, selectedBooking.incidentImage2].filter(Boolean).map((imgUrl, idx) => (
-                              <a
-                                key={idx}
-                                href={imgUrl!}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block relative aspect-video rounded-xl overflow-hidden border border-slate-200 group bg-slate-100"
-                              >
-                                <img src={imgUrl!} alt={`Ảnh tình trạng xe ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                  <Eye className="w-6 h-6 text-white" />
-                                </div>
-                              </a>
-                            ))}
+                            {(() => {
+                              const images: string[] = []
+                              if (selectedBooking.incidentImage1ApiPath) images.push(selectedBooking.incidentImage1ApiPath)
+                              else if (selectedBooking.incidentImage1) images.push(selectedBooking.incidentImage1)
+
+                              if (selectedBooking.incidentImage2ApiPath) images.push(selectedBooking.incidentImage2ApiPath)
+                              else if (selectedBooking.incidentImage2) images.push(selectedBooking.incidentImage2)
+
+                              return images.map((imgSrc: string, idx: number) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setPreviewImage(imgSrc)}
+                                  className="block relative aspect-video rounded-xl overflow-hidden border border-slate-200 group bg-slate-100 cursor-pointer text-left w-full focus:outline-none"
+                                >
+                                  <AuthenticatedImage
+                                    src={imgSrc}
+                                    alt={`Ảnh tình trạng xe ${idx + 1}`}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <Eye className="w-6 h-6 text-white" />
+                                  </div>
+                                </button>
+                              ))
+                            })()}
                           </div>
                         </div>
                       )}
@@ -1048,7 +1061,7 @@ export default function CustomerHistory() {
       {previewImage && (
         <div className="fixed inset-0 z-[130] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setPreviewImage(null)}>
           <div className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl p-2 border border-slate-800" onClick={(e) => e.stopPropagation()}>
-            <img src={previewImage} alt="Xem ảnh lớn" className="max-w-full max-h-[80vh] object-contain rounded-xl" />
+            <AuthenticatedImage src={previewImage} alt="Xem ảnh lớn" className="max-w-full max-h-[80vh] object-contain rounded-xl" />
             <button
               onClick={() => setPreviewImage(null)}
               className="absolute top-4 right-4 p-2 bg-slate-800/80 hover:bg-slate-700 text-white rounded-full transition-colors cursor-pointer"
