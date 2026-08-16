@@ -55,6 +55,7 @@ export interface BookingResponseDTO {
     bookingId: number;
     customerId?: number;
     customerName?: string;
+    customerPhone?: string;
     vehicleId?: number;
     licensePlate: string;
     vehicleType?: string;
@@ -66,6 +67,7 @@ export interface BookingResponseDTO {
     bookingDate: string;
     originalPrice?: number;
     finalPrice?: number;
+    depositAmount?: number | null;
     promotionId?: number | null;
     promoCode?: string | null;
     redemptionId?: number | null;
