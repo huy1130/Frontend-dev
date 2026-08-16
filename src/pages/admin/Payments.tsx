@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   CreditCard,
@@ -41,6 +41,12 @@ export default function Payments() {
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [vehicleFilter, setVehicleFilter] = useState<string>('ALL')
   const [statusFilter, setStatusFilter] = useState<string>('DEPOSITED')
+  const [startDate, setStartDate] = useState<string>('')
+  const [endDate, setEndDate] = useState<string>('')
+
+  // Date input refs for easy clicking
+  const startDateInputRef = useRef<HTMLInputElement>(null)
+  const endDateInputRef = useRef<HTMLInputElement>(null)
 
   // Booking Detail Modal
   const [selectedBooking, setSelectedBooking] = useState<BookingResponseDTO | null>(null)
@@ -167,6 +173,31 @@ export default function Payments() {
     }
   }
 
+  // Format Date string 'YYYY-MM-DD' to Vietnamese 'DD/MM/YYYY'
+  const formatDisplayDate = (dateStr: string): string => {
+    if (!dateStr) return ''
+    const parts = dateStr.split('-')
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`
+    }
+    return dateStr
+  }
+
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val)
+    if (endDate && val && endDate < val) {
+      setEndDate(val)
+    }
+  }
+
+  const handleEndDateChange = (val: string) => {
+    if (startDate && val && val < startDate) {
+      setEndDate(startDate)
+    } else {
+      setEndDate(val)
+    }
+  }
+
   // Filtered Bookings
   const filteredBookings = bookings.filter((item) => {
     // Search query
@@ -195,7 +226,17 @@ export default function Payments() {
       (statusFilter === 'COMPLETED' && (item.status === 'CheckedOut' || item.status === 'Completed')) ||
       (statusFilter === 'CANCELLED' && item.status === 'Cancelled')
 
-    return matchesSearch && matchesVehicle && matchesStatus
+    // Date Range Filter (handles reverse min/max bounds)
+    let matchesDate = true
+    if (item.bookingDate) {
+      const bDate = item.bookingDate.split('T')[0]
+      const minDate = startDate && endDate && startDate > endDate ? endDate : startDate
+      const maxDate = startDate && endDate && startDate > endDate ? startDate : endDate
+      if (minDate && bDate < minDate) matchesDate = false
+      if (maxDate && bDate > maxDate) matchesDate = false
+    }
+
+    return matchesSearch && matchesVehicle && matchesStatus && matchesDate
   })
 
   // Statistics Calculation for Deposited Bookings
@@ -315,25 +356,24 @@ export default function Payments() {
           </div>
 
           {/* Search & Filter Toolbar */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-            {/* Search Input */}
-            <div className="relative w-full md:w-96">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Tìm mã đơn, tên khách, biển số xe..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all bg-slate-50/50"
-              />
-            </div>
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col xl:flex-row items-center justify-between gap-3">
+            {/* Search Input & Dropdowns */}
+            <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Tìm mã đơn, tên khách, biển số..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all bg-slate-50/50"
+                />
+              </div>
 
-            {/* Filter Dropdowns */}
-            <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2.5 rounded-xl border border-orange-300 text-xs font-extrabold text-orange-700 bg-orange-50 outline-none focus:border-orange-500 cursor-pointer"
+                className="px-3 py-2 rounded-xl border border-orange-300 text-xs font-extrabold text-orange-700 bg-orange-50 outline-none focus:border-orange-500 cursor-pointer"
               >
                 <option value="DEPOSITED">Đơn Đã Đặt Cọc</option>
                 <option value="ALL">Tất Cả Đơn (Tính cọc dự kiến)</option>
@@ -345,19 +385,79 @@ export default function Payments() {
               <select
                 value={vehicleFilter}
                 onChange={(e) => setVehicleFilter(e.target.value)}
-                className="px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-700 bg-slate-50 outline-none focus:border-orange-500 cursor-pointer"
+                className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-700 bg-slate-50 outline-none focus:border-orange-500 cursor-pointer"
               >
                 <option value="ALL">Tất cả phương tiện</option>
                 <option value="BIKE">Xe Máy (Bike)</option>
                 <option value="CAR">Ô Tô (Car)</option>
               </select>
+            </div>
+
+            {/* Easy-to-click Date Range Controls */}
+            <div className="flex items-center gap-2 w-full xl:w-auto justify-end">
+              {/* Start Date Pill */}
+              <div
+                onClick={() => startDateInputRef.current?.showPicker()}
+                className="relative flex items-center gap-1.5 bg-slate-50 hover:bg-orange-50/50 border border-slate-200 hover:border-orange-400 rounded-xl px-3 py-2 cursor-pointer transition-all shadow-xs group shrink-0"
+                title="Nhấp để chọn Từ ngày"
+              >
+                <Calendar className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors shrink-0" />
+                <span className="text-[11px] font-bold text-slate-400">Từ:</span>
+                <span className={`text-xs font-extrabold ${startDate ? 'text-slate-900' : 'text-slate-400'}`}>
+                  {startDate ? formatDisplayDate(startDate) : 'dd/mm/yyyy'}
+                </span>
+                <input
+                  ref={startDateInputRef}
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+              </div>
+
+              <span className="text-slate-300 text-xs font-bold shrink-0">-</span>
+
+              {/* End Date Pill */}
+              <div
+                onClick={() => endDateInputRef.current?.showPicker()}
+                className="relative flex items-center gap-1.5 bg-slate-50 hover:bg-orange-50/50 border border-slate-200 hover:border-orange-400 rounded-xl px-3 py-2 cursor-pointer transition-all shadow-xs group shrink-0"
+                title="Nhấp để chọn Đến ngày"
+              >
+                <Calendar className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors shrink-0" />
+                <span className="text-[11px] font-bold text-slate-400">Đến:</span>
+                <span className={`text-xs font-extrabold ${endDate ? 'text-slate-900' : 'text-slate-400'}`}>
+                  {endDate ? formatDisplayDate(endDate) : 'dd/mm/yyyy'}
+                </span>
+                <input
+                  ref={endDateInputRef}
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => handleEndDateChange(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+              </div>
+
+              {(startDate || endDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStartDate('')
+                    setEndDate('')
+                  }}
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors shrink-0"
+                  title="Xóa lọc ngày"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
 
               <button
                 onClick={fetchBookings}
-                className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors shrink-0"
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors shrink-0"
                 title="Làm mới dữ liệu"
               >
-                <RefreshCw className={`w-4 h-4 ${isLoadingBookings ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingBookings ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
