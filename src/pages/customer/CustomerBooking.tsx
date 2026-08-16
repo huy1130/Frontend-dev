@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -17,7 +17,11 @@ import {
   ChevronLeft,
   Plus,
   Info,
-  XCircle
+  XCircle,
+  CreditCard,
+  Loader2,
+  Copy,
+  ExternalLink
 } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
@@ -27,6 +31,7 @@ import { bookingService } from '../../services/bookingService'
 import { promotionService, PromotionDTO } from '../../services/promotionService'
 import { timeSlotService, AvailableSlotDto } from '../../services/timeSlotService'
 import { loyaltyService } from '../../services/loyaltyService'
+import { systemParameterService, SystemParameterDto } from '../../services/systemParameterService'
 import { getLocalDateString } from '../../utils/date'
 import { toast } from 'sonner'
 
@@ -51,7 +56,27 @@ interface CarItem {
 
 export default function CustomerBooking() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [currentStep, setCurrentStep] = useState<number>(1)
+
+  // Auto-cancel booking if user clicked Cancel on PayOS checkout page
+  React.useEffect(() => {
+    const cancelId = searchParams.get('cancelBookingId')
+    const isCancelled = searchParams.get('cancel') === 'true' || searchParams.get('status') === 'CANCELLED'
+
+    if (cancelId && isCancelled) {
+      const bId = parseInt(cancelId, 10)
+      if (bId) {
+        bookingService.cancelBooking(bId)
+          .then(() => {
+            toast.error(`Bạn đã hủy thanh toán cọc PayOS. Đơn đặt lịch #${bId} đã được chuyển sang trạng thái Đã Hủy.`)
+          })
+          .catch((err) => {
+            console.error('Lỗi khi cập nhật trạng thái hủy đơn:', err)
+          })
+      }
+    }
+  }, [searchParams])
 
   // Step 1 State: Date & Time
   const [selectedCarId, setSelectedCarId] = useState<number>(0)
@@ -83,8 +108,57 @@ export default function CustomerBooking() {
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [bookingRef, setBookingRef] = useState<string>('')
   const [createdBooking, setCreatedBooking] = useState<any>(null)
+  const [depositPaymentUrl, setDepositPaymentUrl] = useState<string>('')
+  const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false)
+  const [isDeposited, setIsDeposited] = useState<boolean>(false)
+  const [isCheckingDeposit, setIsCheckingDeposit] = useState<boolean>(false)
 
-  // API Data
+  // Polling for deposit payment completion
+  React.useEffect(() => {
+    let interval: any
+    if (isSuccess && createdBooking?.bookingId && !isDeposited) {
+      interval = setInterval(async () => {
+        try {
+          const detailRes = await bookingService.getBookingDetail(createdBooking.bookingId)
+          if (detailRes && detailRes.data) {
+            const currentStatus = detailRes.data.status || detailRes.data.bookingStatus
+            if (currentStatus === 'Deposited') {
+              setIsDeposited(true)
+              setCreatedBooking(detailRes.data)
+              toast.success('Thanh toán cọc thành công! Lịch hẹn của bạn đã được xác nhận!')
+            }
+          }
+        } catch (e) {
+          // silent polling
+        }
+      }, 3000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isSuccess, createdBooking?.bookingId, isDeposited])
+
+  const handleCheckDepositStatus = async () => {
+    if (!createdBooking?.bookingId) return
+    setIsCheckingDeposit(true)
+    try {
+      const detailRes = await bookingService.getBookingDetail(createdBooking.bookingId)
+      const currentStatus = detailRes?.data?.status || detailRes?.data?.bookingStatus
+      if (currentStatus === 'Deposited') {
+        setIsDeposited(true)
+        setCreatedBooking(detailRes.data)
+        toast.success('Đã xác nhận thanh toán đặt cọc thành công!')
+      } else {
+        toast.info('Hệ thống chưa nhận được giao dịch. Vui lòng hoàn tất chuyển khoản và bấm kiểm tra lại.')
+      }
+    } catch (err) {
+      toast.error('Không thể kiểm tra trạng thái thanh toán.')
+    } finally {
+      setIsCheckingDeposit(false)
+    }
+  }
+
+  const [systemParams, setSystemParams] = useState<SystemParameterDto | null>(null)
   const [myCars, setMyCars] = useState<VehicleResponseDTO[]>([])
   const [availableServices, setAvailableServices] = useState<ServiceDto[]>([])
   const [availablePromos, setAvailablePromos] = useState<PromotionDTO[]>([])
@@ -96,14 +170,19 @@ export default function CustomerBooking() {
     const fetchData = async () => {
       setIsLoading(true)
       try {
-        const [carsRes, servicesRes, promosRes, myRedemptionsRes, rewardsRes, loyaltyRes] = await Promise.all([
+        const [carsRes, servicesRes, promosRes, myRedemptionsRes, rewardsRes, loyaltyRes, sysParamRes] = await Promise.all([
           customerService.getMyVehicles(),
           serviceService.getActiveServices(),
           promotionService.getEligiblePromotions().catch(() => []),
           loyaltyService.getMyRedemptions().catch(() => []),
           loyaltyService.getEligibleRewards().catch(() => []),
-          loyaltyService.getSummary().catch(() => null)
+          loyaltyService.getSummary().catch(() => null),
+          systemParameterService.getSystemParameter().catch(() => null)
         ])
+        
+        if (sysParamRes) {
+          setSystemParams(sysParamRes)
+        }
         
         if (carsRes.success) {
           setMyCars(carsRes.data)
@@ -207,6 +286,12 @@ export default function CustomerBooking() {
 
   const finalTotal = Math.max(0, subtotalPrice - discountValue - redemptionDiscountValue)
 
+  const selectedCar = myCars.find((c) => c.vehicleId === selectedCarId)
+  const isBike = selectedCar ? (selectedCar.vehicleType || '').toLowerCase().includes('bike') || (selectedCar.vehicleType || '').toLowerCase().includes('xe máy') : false
+  const bikeRate = systemParams?.bikeDepositAmount ?? 20000
+  const carPercent = systemParams?.carDepositPercentage ?? 20
+  const estimatedDeposit = Math.max(10000, isBike ? bikeRate : Math.round((finalTotal * carPercent) / 100))
+
   const handleConfirmBooking = async () => {
     if (!selectedCarId || !selectedServiceId || !selectedSlotId) {
       toast.error('Vui lòng chọn đầy đủ Xe, Khung giờ và Dịch vụ.');
@@ -242,12 +327,25 @@ export default function CustomerBooking() {
         redemptionId: appliedRedemptionId ? appliedRedemptionId : null
       })
 
-      // API trả về trực tiếp cục BookingDto thay vì {success: true}
+      // API trả về trực tiếp cục BookingDto
       if (res && res.bookingId) {
-        setBookingRef('Mã lịch hẹn - ' + res.bookingId)
-        setCreatedBooking(res)
-        setIsSuccess(true)
-        toast.success('Đặt lịch thành công!')
+        toast.success('Khởi tạo đơn thành công! Đang chuyển hướng sang cổng thanh toán cọc PayOS...')
+
+        // Tự động chuyển hướng trực tiếp trang tới cổng PayOS
+        try {
+          const payRes = await bookingService.createDepositPayment(res.bookingId)
+          const checkoutUrl = payRes?.checkoutUrl || payRes?.CheckoutUrl
+          if (checkoutUrl) {
+            window.location.href = checkoutUrl
+            return
+          }
+        } catch (depositErr: any) {
+          console.error('Lỗi khi tạo link cọc PayOS:', depositErr)
+          toast.error(depositErr.response?.data?.message || 'Không thể chuyển tới cổng PayOS. Vui lòng kiểm tra lại trong lịch sử.')
+          setBookingRef('Mã lịch hẹn - ' + res.bookingId)
+          setCreatedBooking(res)
+          setIsSuccess(true)
+        }
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đặt lịch.')
@@ -322,55 +420,174 @@ export default function CustomerBooking() {
           </div>
         )}
 
-        {/* SUCCESS CONFIRMATION SCREEN */}
+        {/* SUCCESS CONFIRMATION & PAYMENT SCREEN */}
         {isSuccess ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center max-w-xl mx-auto shadow-xl shadow-slate-200/50 space-y-5">
-            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-            </div>
+          <div className={`bg-white border rounded-3xl p-6 sm:p-10 text-center max-w-4xl mx-auto shadow-2xl space-y-6 transition-all ${
+            isDeposited || createdBooking?.status === 'Deposited'
+              ? 'border-emerald-200 shadow-emerald-500/10'
+              : 'border-orange-200 shadow-orange-500/10'
+          }`}>
 
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-1">Đặt Lịch Thành Công!</h2>
-              <p className="text-slate-600 text-xs sm:text-sm">
-                Mã lịch hẹn của bạn là <span className="text-orange-600 font-extrabold">{bookingRef}</span>. Nhân viên sẽ liên hệ xác nhận trong ít phút.
-              </p>
-            </div>
+            {/* HEADER ICON & TITLE */}
+            {isDeposited || createdBooking?.status === 'Deposited' ? (
+              <>
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-200 shadow-lg shadow-emerald-500/20 animate-in zoom-in duration-300">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+                </div>
+
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs mb-2">
+                    ✓ Đã Xác Nhận Đặt Cọc Thành Công
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
+                    🎉 Đặt Lịch Thành Công & Đã Nhận Đặt Cọc!
+                  </h2>
+                  <p className="text-slate-600 text-xs sm:text-sm max-w-lg mx-auto">
+                    Mã lịch hẹn của bạn là <span className="text-orange-600 font-extrabold">{bookingRef}</span>. Đơn hàng đã được xác nhận giữ chỗ ưu tiên!
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto border-2 border-amber-200 shadow-lg shadow-amber-500/20">
+                  <Clock className="w-10 h-10 text-amber-600 animate-pulse" />
+                </div>
+
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-xs mb-2">
+                    ● Vui Lòng Thanh Toán Cọc Để Hoàn Tất Đặt Lịch
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
+                    Thanh Toán Đặt Cọc Giữ Chỗ
+                  </h2>
+                  <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto">
+                    Lịch hẹn <span className="text-orange-600 font-extrabold">{bookingRef}</span> đã được khởi tạo. Quý khách vui lòng chuyển khoản khoản cọc <span className="font-extrabold text-orange-600">{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</span> để hoàn tất giữ chỗ.
+                  </p>
+                </div>
+              </>
+            )}
 
             {/* Summary Ticket */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left space-y-2.5 text-sm">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-left space-y-3 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-200 pb-3">
+                <div>
+                  <span className="text-slate-400 text-xs block font-semibold">Xe của bạn:</span>
+                  <span className="font-extrabold text-slate-900">
+                    {createdBooking?.licensePlate ? `${createdBooking.licensePlate} - ${createdBooking.vehicleType || ''}` : `${myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - ${myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}`}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-xs block font-semibold">Thời gian hẹn:</span>
+                  <span className="font-extrabold text-slate-900">
+                    {(() => {
+                      if (createdBooking?.startTime && createdBooking?.endTime) {
+                        return `${createdBooking.startTime.substring(0, 5)} - ${createdBooking.endTime.substring(0, 5)} ngày ${new Date(createdBooking.bookingDate).toLocaleDateString('vi-VN')}`
+                      }
+                      const slot = availableSlots.find(s => s.slotId === selectedSlotId)
+                      return slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
+                    })()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 text-xs block font-semibold">Dịch vụ đã chọn:</span>
+                  <span className="font-extrabold text-slate-900">
+                    {createdBooking?.serviceName || selectedService?.serviceName}
+                  </span>
+                </div>
+              </div>
 
-              <div className="flex justify-between border-b border-slate-200 pb-2.5">
-                <span className="text-slate-500">Xe của bạn:</span>
-                <span className="font-bold text-slate-900">{createdBooking?.licensePlate ? `${createdBooking.licensePlate} - ${createdBooking.vehicleType || ''}` : `${myCars.find(c => c.vehicleId === selectedCarId)?.licensePlate} - ${myCars.find(c => c.vehicleId === selectedCarId)?.vehicleType}`}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-200 pb-2.5">
-                <span className="text-slate-500">Thời gian:</span>
-                <span className="font-bold text-slate-900">
-                  {(() => {
-                    if (createdBooking?.startTime && createdBooking?.endTime) {
-                      return `${createdBooking.startTime.substring(0, 5)} - ${createdBooking.endTime.substring(0, 5)} ngày ${new Date(createdBooking.bookingDate).toLocaleDateString('vi-VN')}`
-                    }
-                    const slot = availableSlots.find(s => s.slotId === selectedSlotId)
-                    return slot ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)} ngày ${new Date(selectedDate).toLocaleDateString('vi-VN')}` : selectedDate
-                  })()}
-                </span>
-              </div>
-              <div className="flex justify-between border-b border-slate-200 pb-2.5">
-                <span className="text-slate-500">Dịch vụ đã chọn:</span>
+              <div className="flex flex-wrap justify-between items-center pt-1 gap-2">
+                <div className="flex items-center gap-4 text-xs font-bold">
+                  <span className="text-slate-500">Tổng giá trị đơn: <strong className="text-slate-900">{((createdBooking?.finalPrice ?? finalTotal) || 0).toLocaleString('vi-VN')}đ</strong></span>
+                  <span className="text-slate-300">|</span>
+                  <span className="text-orange-600">Đã cọc: <strong>{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong></span>
+                </div>
                 <div className="text-right">
-                  <div className="font-bold text-slate-900">{createdBooking?.serviceName || selectedService?.serviceName}</div>
-                  {selectedRedemption && selectedRedemption.rewardType === 'AddOn' && (
-                    <div className="font-bold text-emerald-600 text-[11px] mt-0.5">
-                      + {selectedRedemption.rewardName} (Tặng kèm)
+                  <span className="text-slate-500 text-xs mr-2 font-semibold">Còn lại trả tại tiệm:</span>
+                  <span className="font-black text-slate-900 text-lg">
+                    {Math.max(0, ((createdBooking?.finalPrice ?? finalTotal) || 0) - (createdBooking?.depositAmount || estimatedDeposit)).toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* PAYOS CHECKOUT BUTTON CARD */}
+            {!(isDeposited || createdBooking?.status === 'Deposited') ? (
+              <div className="bg-orange-50/80 border-2 border-orange-300 rounded-3xl p-6 sm:p-8 space-y-5 text-left shadow-lg">
+                <div className="flex items-center justify-between border-b border-orange-200/80 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-orange-500 text-white flex items-center justify-center font-bold shadow-md shadow-orange-500/20 shrink-0">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-slate-900 text-base sm:text-lg">Thanh Toán Đặt Cọc Cổng PayOS</h4>
+                      <p className="text-xs text-slate-600">Thanh toán cọc giữ chỗ an toàn qua quét mã VietQR ngân hàng</p>
+                    </div>
+                  </div>
+                  <span className="px-3.5 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black animate-pulse shrink-0">
+                    ● Đang chờ cọc tiền
+                  </span>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-orange-200/60 space-y-4">
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Vui lòng bấm nút bên dưới để mở trang thanh toán <strong>PayOS chính thức</strong>. Bạn có thể quét mã VietQR từ bất kỳ App Ngân Hàng hoặc Ví Điện Tử nào (MBBank, Vietcombank, Momo...) để hoàn tất khoản cọc <strong className="text-orange-600">{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong>.
+                  </p>
+
+                  {depositPaymentUrl ? (
+                    <a
+                      href={depositPaymentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-orange-500/25 flex items-center justify-center gap-2.5 cursor-pointer no-underline"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                      <span>Thanh Toán Đặt Cọc Ngay Qua PayOS</span>
+                      <ExternalLink className="w-4 h-4 ml-1" />
+                    </a>
+                  ) : (
+                    <div className="py-4 px-4 bg-orange-50 border border-orange-200 rounded-2xl text-xs font-extrabold text-orange-600 flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Đang khởi tạo mã QR thanh toán PayOS...</span>
                     </div>
                   )}
                 </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                  <span className="text-slate-500 font-medium">
+                    💡 Sau khi hoàn tất chuyển khoản trên PayOS, bấm nút bên phải để kiểm tra ngay:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCheckDepositStatus}
+                    disabled={isCheckingDeposit}
+                    className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-slate-100 text-slate-800 font-extrabold text-xs rounded-xl transition-all border border-slate-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                  >
+                    {isCheckingDeposit ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-orange-500" />
+                        <span>Đang kiểm tra...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Tôi Đã Chuyển Khoản - Kiểm Tra Ngay</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-between pt-1 items-center">
-                <span className="text-slate-600 font-semibold">Tổng thanh toán:</span>
-                <span className="font-extrabold text-orange-600 text-xl sm:text-2xl">{((createdBooking?.finalPrice ?? finalTotal) || 0).toLocaleString('vi-VN')}đ</span>
+            ) : (
+              /* SUCCESS BANNER FOR COMPLETED DEPOSIT */
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-3xl p-8 text-center space-y-3 shadow-lg shadow-emerald-500/10">
+                <div className="text-emerald-800 font-black text-xl">
+                  ✓ ĐÃ XÁC NHẬN THANH TOÁN ĐẶT CỌC!
+                </div>
+                <p className="text-xs sm:text-sm text-emerald-700 max-w-lg mx-auto leading-relaxed">
+                  Khoản tiền cọc <strong>{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong> đã được hệ thống ghi nhận thành công. Suất dịch vụ rửa xe của bạn đã được đảm bảo đúng khung giờ hẹn!
+                </p>
               </div>
-            </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <Link
@@ -833,26 +1050,39 @@ export default function CustomerBooking() {
                           </div>
                         )}
 
-                        <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                          <div>
-                            <span className="text-[11px] text-slate-500 block font-medium">Tổng tiền thanh toán</span>
-                            <span className="text-2xl font-extrabold text-orange-600 whitespace-nowrap">
-                              {finalTotal.toLocaleString('vi-VN')}đ
+                        <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                          <span className="text-slate-600 font-bold text-xs sm:text-sm">Tổng giá trị đơn:</span>
+                          <span className="text-lg font-extrabold text-slate-900 whitespace-nowrap">
+                            {finalTotal.toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+
+                        {/* Deposit Breakdown Box */}
+                        <div className="bg-orange-50/80 border border-orange-200 rounded-xl p-3.5 space-y-2 text-left">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-extrabold text-orange-900 flex items-center gap-1.5">
+                              <CreditCard className="w-4 h-4 text-orange-600 shrink-0" />
+                              Tiền cọc giữ chỗ:
                             </span>
+                            <span className="font-black text-orange-600 text-sm">{estimatedDeposit.toLocaleString('vi-VN')}đ</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[11px] text-slate-500 border-t border-orange-200/60 pt-1.5">
+                            <span>Còn lại trả tại tiệm:</span>
+                            <span className="font-bold text-slate-700">{Math.max(0, finalTotal - estimatedDeposit).toLocaleString('vi-VN')}đ</span>
                           </div>
                         </div>
                       </div>
 
                       <button
                         onClick={handleConfirmBooking}
-                        className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-base rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2"
+                        className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold text-base rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <Sparkles className="w-4 h-4" />
-                        <span>Xác Nhận Đặt Lịch Ngay</span>
+                        <CreditCard className="w-5 h-5" />
+                        <span>Xác Nhận & Thanh Toán Cọc</span>
                       </button>
 
                       <p className="text-center text-[11px] text-slate-500 font-medium">
-                        Thanh toán trực tiếp tại spa rửa xe hoặc qua ứng dụng.
+                        Quý khách sẽ chuyển khoản tiền cọc qua cổng PayOS để hoàn tất giữ chỗ.
                       </p>
                     </div>
                   </div>

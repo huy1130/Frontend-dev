@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   History,
   Calendar as CalendarIcon,
@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   PlusCircle,
+  CreditCard,
   ChevronRight,
   ChevronLeft,
   AlertCircle,
@@ -34,7 +35,19 @@ import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 import { toast } from 'sonner'
 
 export default function CustomerHistory() {
+  const [searchParams] = useSearchParams()
   const [filterStatus, setFilterStatus] = useState<'all' | 'Pending' | 'Completed' | 'Cancelled'>('all')
+
+  // Automatic notification upon returning from PayOS payment
+  React.useEffect(() => {
+    const bookingIdParam = searchParams.get('bookingId')
+    const codeParam = searchParams.get('code')
+    const statusParam = searchParams.get('status')
+
+    if (bookingIdParam && (codeParam === '00' || statusParam === 'PAID' || statusParam === 'success')) {
+      toast.success(`🎉 Giao dịch thanh toán cọc đơn #${bookingIdParam} đã hoàn tất!`)
+    }
+  }, [searchParams])
   const [historyData, setHistoryData] = useState<BookingResponseDTO[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState<BookingResponseDTO | null>(null)
@@ -324,6 +337,12 @@ export default function CustomerHistory() {
                           <span>Chờ Xử Lý</span>
                         </span>
                       )}
+                      {item.status === 'Deposited' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-300 text-[11px] font-extrabold shadow-xs">
+                          <CreditCard className="w-3.5 h-3.5 text-teal-600" />
+                          <span>Đã Đặt Cọc</span>
+                        </span>
+                      )}
                       {item.status === 'Confirmed' && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
                           <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
@@ -382,10 +401,21 @@ export default function CustomerHistory() {
                     </div>
 
                     <div className="md:col-span-4 text-left md:text-right border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
-                      <span className="text-[11px] text-slate-500 block mb-0.5 font-medium">Tổng tiền thanh toán</span>
-                      <span className="text-xl font-extrabold text-orange-600">
-                        {item.finalPrice?.toLocaleString('vi-VN')}đ
-                      </span>
+                      {item.status === 'Deposited' ? (
+                        <div>
+                          <span className="text-[11px] text-slate-500 font-semibold block mb-0.5">Thanh toán còn lại</span>
+                          <span className="text-xl font-extrabold text-orange-600">
+                            {Math.max(0, (item.finalPrice ?? 0) - (item.depositAmount ?? ((item.vehicleType || '').toLowerCase().includes('bike') ? 20000 : Math.round((item.finalPrice ?? 0) * 0.2)))).toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="text-[11px] text-slate-500 block mb-0.5 font-medium">Tổng tiền thanh toán</span>
+                          <span className="text-xl font-extrabold text-orange-600">
+                            {item.finalPrice?.toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+                      )}
                       <div className="mt-2.5 flex md:justify-end">
                         <button
                           onClick={() => handleViewDetail(item)}
@@ -475,11 +505,10 @@ export default function CustomerHistory() {
               <button
                 type="button"
                 onClick={() => setActiveModalTab('info')}
-                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
-                  activeModalTab === 'info'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-                }`}
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${activeModalTab === 'info'
+                  ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                  }`}
               >
                 <QrCode className="w-3.5 h-3.5" />
                 <span>Mã QR & Chi Tiết</span>
@@ -488,11 +517,10 @@ export default function CustomerHistory() {
               <button
                 type="button"
                 onClick={() => setActiveModalTab('condition')}
-                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
-                  activeModalTab === 'condition'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-                }`}
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${activeModalTab === 'condition'
+                  ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                  }`}
               >
                 <Car className="w-3.5 h-3.5" />
                 <span>Tình Trạng Xe</span>
@@ -504,11 +532,10 @@ export default function CustomerHistory() {
               <button
                 type="button"
                 onClick={() => setActiveModalTab('receipt')}
-                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
-                  activeModalTab === 'receipt'
-                    ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-                }`}
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${activeModalTab === 'receipt'
+                  ? 'bg-white text-orange-600 shadow-sm border border-slate-200/80'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                  }`}
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>Phiếu Gửi Xe</span>
@@ -520,11 +547,10 @@ export default function CustomerHistory() {
               <button
                 type="button"
                 onClick={() => setActiveModalTab('report')}
-                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
-                  activeModalTab === 'report'
-                    ? 'bg-white text-rose-600 shadow-sm border border-slate-200/80'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-                }`}
+                className={`flex-1 shrink-0 py-2.5 px-3.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${activeModalTab === 'report'
+                  ? 'bg-white text-rose-600 shadow-sm border border-slate-200/80'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
+                  }`}
               >
                 <ShieldAlert className="w-3.5 h-3.5" />
                 <span>Báo Cáo Sự Cố</span>
@@ -567,15 +593,17 @@ export default function CustomerHistory() {
                     <div>
                       <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng Thái</p>
                       <p className={`text-sm font-bold ${['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600'
+                        : selectedBooking.status === 'Deposited' ? 'text-teal-600'
                         : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600'
                           : 'text-rose-600'
                         }`}>
                         {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành'
-                          : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý'
-                            : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
-                              : selectedBooking.status === 'Washing' ? 'Đang Rửa'
-                                : selectedBooking.status === 'NoShow' ? 'Không Đến'
-                                  : 'Đã Hủy'}
+                          : selectedBooking.status === 'Deposited' ? 'Đã Đặt Cọc'
+                            : selectedBooking.status === 'Pending' ? 'Chờ Xử Lý'
+                              : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
+                                : selectedBooking.status === 'Washing' ? 'Đang Rửa'
+                                  : selectedBooking.status === 'NoShow' ? 'Không Đến'
+                                    : 'Đã Hủy'}
                       </p>
                     </div>
                     <div>
@@ -599,12 +627,12 @@ export default function CustomerHistory() {
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100">
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Dịch Vụ & Tặng Kèm</p>
                     <div className="flex justify-between items-start">
                       <p className="text-sm font-bold text-slate-900">{selectedBooking.serviceName}</p>
                       {selectedBooking.originalPrice != null && (
-                        <p className="text-sm font-bold text-slate-700">
+                        <p className="text-sm font-bold text-slate-800">
                           {selectedBooking.originalPrice.toLocaleString('vi-VN')}đ
                         </p>
                       )}
@@ -653,10 +681,53 @@ export default function CustomerHistory() {
                     </div>
                   )}
 
-                  <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
-                    <p className="text-sm font-bold text-slate-600">Tổng Tiền Thanh Toán</p>
-                    <p className="text-xl font-extrabold text-orange-600">{(selectedBooking.finalPrice ?? 0).toLocaleString('vi-VN')}đ</p>
-                  </div>
+                  {(() => {
+                    const total = selectedBooking.finalPrice ?? selectedBooking.originalPrice ?? 0
+                    const isBike = (selectedBooking.vehicleType || '').toLowerCase().includes('bike') || (selectedBooking.vehicleType || '').toLowerCase().includes('xe máy')
+                    const depositAmt = selectedBooking.depositAmount ?? (isBike ? 20000 : Math.round(total * 0.2))
+                    const remaining = Math.max(0, total - depositAmt)
+
+                    return (
+                      <div className="pt-3 border-t border-slate-200 space-y-2 mt-3">
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                          <span>Tổng giá trị dịch vụ:</span>
+                          <span className="font-bold text-slate-900">{total.toLocaleString('vi-VN')}đ</span>
+                        </div>
+
+                        {selectedBooking.status === 'Deposited' ? (
+                          <>
+                            <div className="flex justify-between items-center text-xs font-bold text-teal-700">
+                              <span className="flex items-center gap-1.5">
+                                <CreditCard className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                <span>Đã cọc giữ chỗ (PayOS):</span>
+                              </span>
+                              <span className="font-black text-teal-700">-{depositAmt.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm font-black text-orange-600 pt-2 border-t border-slate-200">
+                              <span>Còn lại thanh toán khi đến tiệm:</span>
+                              <span className="text-xl text-orange-600 font-black">{remaining.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                          </>
+                        ) : selectedBooking.status === 'Pending' ? (
+                          <>
+                            <div className="flex justify-between items-center text-xs font-bold text-blue-700">
+                              <span>Tiền cọc giữ chỗ cần chuyển:</span>
+                              <span className="font-black">{depositAmt.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                              <span>Còn lại thanh toán khi rửa xong:</span>
+                              <span className="font-bold text-slate-900">{remaining.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex justify-between items-center text-sm font-black text-orange-600 pt-1.5 border-t border-slate-200">
+                            <span>Tổng tiền thanh toán:</span>
+                            <span className="text-xl font-black text-orange-600">{total.toLocaleString('vi-VN')}đ</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
 
@@ -876,17 +947,15 @@ export default function CustomerHistory() {
 
                             {/* Admin / Manager Response Box */}
                             {report.managerNote ? (
-                              <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${
-                                report.status === 'Resolved'
-                                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
-                                  : report.status === 'Rejected'
+                              <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${report.status === 'Resolved'
+                                ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
+                                : report.status === 'Rejected'
                                   ? 'bg-rose-50/90 border-rose-200 text-rose-950'
                                   : 'bg-blue-50/90 border-blue-200 text-blue-950'
-                              }`}>
+                                }`}>
                                 <div className="flex items-center justify-between">
-                                  <span className={`font-extrabold flex items-center gap-1.5 ${
-                                    report.status === 'Resolved' ? 'text-emerald-900' : report.status === 'Rejected' ? 'text-rose-900' : 'text-blue-900'
-                                  }`}>
+                                  <span className={`font-extrabold flex items-center gap-1.5 ${report.status === 'Resolved' ? 'text-emerald-900' : report.status === 'Rejected' ? 'text-rose-900' : 'text-blue-900'
+                                    }`}>
                                     <span>💬 Phản Hồi Từ Quản Lý Gara:</span>
                                   </span>
                                   {report.resolvedAt && (

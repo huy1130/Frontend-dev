@@ -119,7 +119,7 @@ export const bookingService = {
   
   // Admin Methods
   getAdminBookings: (date?: string): Promise<{ success: boolean; data: { items: BookingResponseDTO[] } }> => {
-    const url = date ? `/Booking/admin?date=${date}` : `/Booking/admin`;
+    const url = date ? `/Booking/admin?date=${date}&pageSize=1000&sortOrder=desc` : `/Booking/admin?pageSize=1000&sortOrder=desc`;
     return axiosClient.get(url);
   },
   
@@ -127,7 +127,18 @@ export const bookingService = {
     return axiosClient.put(`/Booking/${bookingId}/status?status=${status}`);
   },
   
+  cancelBooking: (bookingId: number): Promise<any> => {
+    return axiosClient.put(`/Booking/${bookingId}/cancel`);
+  },
+
   getBookingDetail: (bookingId: number): Promise<{ success: boolean; data: any }> => {
     return axiosClient.get(`/Booking/${bookingId}`);
+  },
+
+  createDepositPayment: (bookingId: number, returnUrl?: string, cancelUrl?: string): Promise<{ checkoutUrl?: string; CheckoutUrl?: string }> => {
+    const origin = window.location.origin;
+    const rUrl = returnUrl || `${origin}/customer/history?bookingId=${bookingId}&status=success`;
+    const cUrl = cancelUrl || `${origin}/customer/booking?cancelBookingId=${bookingId}&cancel=true`;
+    return axiosClient.post(`/payments/deposit-qr/${bookingId}?returnUrl=${encodeURIComponent(rUrl)}&cancelUrl=${encodeURIComponent(cUrl)}`);
   }
 };

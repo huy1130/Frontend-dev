@@ -529,7 +529,7 @@ export default function AdminAppointments() {
                       <Eye className="w-4 h-4" /> Chi tiết
                     </button>
 
-                    {booking.status === 'Pending' && (
+                    {(booking.status === 'Pending' || booking.status === 'Deposited') && (
                       <button
                         onClick={() => handleAction(booking.bookingId, 'Confirmed', 'Đã xác nhận lịch hẹn!')}
                         className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap"

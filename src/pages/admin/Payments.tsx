@@ -217,14 +217,8 @@ export default function Payments() {
       (vehicleFilter === 'BIKE' && isBike) ||
       (vehicleFilter === 'CAR' && !isBike)
 
-    // Status filter
-    const isDeposited = item.status === 'Deposited' || (item.depositAmount != null && item.depositAmount > 0)
-    const matchesStatus =
-      statusFilter === 'ALL' ||
-      (statusFilter === 'DEPOSITED' && isDeposited) ||
-      (statusFilter === 'CONFIRMED' && item.status === 'Confirmed') ||
-      (statusFilter === 'COMPLETED' && (item.status === 'CheckedOut' || item.status === 'Completed')) ||
-      (statusFilter === 'CANCELLED' && item.status === 'Cancelled')
+    // Status filter - STRICTLY Deposited bookings only
+    const matchesStatus = item.status === 'Deposited'
 
     // Date Range Filter (handles reverse min/max bounds)
     let matchesDate = true
@@ -241,7 +235,7 @@ export default function Payments() {
 
   // Statistics Calculation for Deposited Bookings
   const actualDepositedBookings = bookings.filter(
-    (b) => b.status === 'Deposited' || (b.depositAmount != null && b.depositAmount > 0)
+    (b) => b.status === 'Deposited'
   )
 
   // Use actual deposited bookings for metrics if filtering by DEPOSITED, else use displayed set
@@ -370,17 +364,10 @@ export default function Payments() {
                 />
               </div>
 
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-orange-300 text-xs font-extrabold text-orange-700 bg-orange-50 outline-none focus:border-orange-500 cursor-pointer"
-              >
-                <option value="DEPOSITED">Đơn Đã Đặt Cọc</option>
-                <option value="ALL">Tất Cả Đơn (Tính cọc dự kiến)</option>
-                <option value="CONFIRMED">Đã Xác Nhận</option>
-                <option value="COMPLETED">Đã Hoàn Thành</option>
-                <option value="CANCELLED">Đã Hủy</option>
-              </select>
+              <div className="px-3.5 py-2 rounded-xl border border-emerald-300 text-xs font-black text-emerald-800 bg-emerald-50 flex items-center gap-1.5 shadow-xs shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Danh Sách Đơn Đã Đặt Cọc</span>
+              </div>
 
               <select
                 value={vehicleFilter}
