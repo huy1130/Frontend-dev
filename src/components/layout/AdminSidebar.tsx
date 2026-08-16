@@ -1,5 +1,5 @@
 import React from 'react'
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   BarChart3,
@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Gift,
   Clock,
-  ShieldAlert
+  ShieldAlert,
+  Sliders
 } from 'lucide-react'
 
 const menuItems = [
@@ -34,6 +35,7 @@ const menuItems = [
 
 export default function AdminSidebar() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || 'Admin'
   const fullName = sessionStorage.getItem('fullName') || localStorage.getItem('fullName') || 'Admin User'
@@ -85,21 +87,23 @@ export default function AdminSidebar() {
 
         {menuItems.map((item) => {
           const Icon = item.icon
+          const isActive = item.path === '/admin'
+            ? (location.pathname === '/admin' && !location.search)
+            : location.pathname === item.path
+
           return (
-            <NavLink
+            <Link
               key={item.path}
               to={item.path}
-              end={item.path === '/admin'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-3 rounded-xl font-extrabold text-xs transition-all duration-200 ${isActive
+              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl font-extrabold text-xs transition-all duration-200 ${
+                isActive
                   ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/25 scale-[1.02]'
                   : 'text-slate-600 hover:text-orange-600 hover:bg-orange-50/80 font-bold'
-                }`
-              }
+              }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span>{item.name}</span>
-            </NavLink>
+            </Link>
           )
         })}
       </div>

@@ -7,6 +7,8 @@ export interface IncidentReportDto {
   customerName?: string | null
   image1?: string | null
   image2?: string | null
+  image1ApiPath?: string | null
+  image2ApiPath?: string | null
   customerNote: string
   status: string // 'Pending' | 'InReview' | 'Resolved' | 'Rejected'
   managerNote?: string | null

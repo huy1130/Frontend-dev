@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, XCircle, Clock, Eye, Loader2, FileText, Fi
 import { toast } from 'sonner'
 import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
 import { formatDateTime } from '../../utils/date'
+import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 
 export default function IncidentManagement() {
   const [reports, setReports] = useState<IncidentReportDto[]>([])
@@ -252,7 +253,7 @@ export default function IncidentManagement() {
                   {selectedReport.customerNote}
                 </p>
 
-                {(selectedReport.image1 || selectedReport.image2) && (
+                {(selectedReport.image1ApiPath || selectedReport.image2ApiPath || selectedReport.image1 || selectedReport.image2) && (
                   <div className="pt-3 border-t border-slate-200">
                     <p className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                       <Camera className="w-4 h-4 text-orange-600" />
@@ -260,40 +261,31 @@ export default function IncidentManagement() {
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { url: selectedReport.image1, label: 'Ảnh bằng chứng 1' },
-                        { url: selectedReport.image2, label: 'Ảnh bằng chứng 2' },
+                        {
+                          url: selectedReport.image1ApiPath || (selectedReport.image1 ? `/IncidentReport/${selectedReport.reportId}/images/1` : null),
+                          label: 'Ảnh bằng chứng 1',
+                        },
+                        {
+                          url: selectedReport.image2ApiPath || (selectedReport.image2 ? `/IncidentReport/${selectedReport.reportId}/images/2` : null),
+                          label: 'Ảnh bằng chứng 2',
+                        },
                       ].map((item, idx) => item.url ? (
-                        <div
+                        <button
                           key={idx}
-                          className="relative aspect-video rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 group shadow-xs transition-all hover:border-orange-500"
+                          type="button"
+                          onClick={() => setPreviewImage(item.url || null)}
+                          className="relative aspect-video rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-100 group shadow-xs transition-all hover:border-orange-500 text-left w-full cursor-pointer focus:outline-none"
                         >
-                          <img
+                          <AuthenticatedImage
                             src={item.url}
                             alt={item.label}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              const target = e.currentTarget
-                              target.style.display = 'none'
-                              const parent = target.parentElement
-                              if (parent) {
-                                const fallback = parent.querySelector('.img-fallback') as HTMLElement
-                                if (fallback) fallback.classList.remove('hidden')
-                              }
-                            }}
                           />
-                          <div
-                            onClick={() => setPreviewImage(item.url || null)}
-                            className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity cursor-pointer text-white"
-                          >
+                          <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity text-white">
                             <Eye className="w-6 h-6" />
                             <span className="text-[11px] font-bold">Xem ảnh lớn</span>
                           </div>
-                          <div className="img-fallback hidden absolute inset-0 bg-slate-100 flex flex-col items-center justify-center p-3 text-center space-y-1">
-                            <AlertTriangle className="w-6 h-6 text-amber-500 mb-0.5" />
-                            <span className="text-xs font-extrabold text-slate-900">{item.label}</span>
-                            <span className="text-[10px] font-bold text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded-md">Không thể hiển thị ảnh</span>
-                          </div>
-                        </div>
+                        </button>
                       ) : null)}
                     </div>
                   </div>
@@ -396,7 +388,7 @@ export default function IncidentManagement() {
             >
               <XCircle className="w-6 h-6" />
             </button>
-            <img src={previewImage} alt="Ảnh bằng chứng" className="w-full max-h-[80vh] object-contain rounded-xl" />
+            <AuthenticatedImage src={previewImage} alt="Ảnh bằng chứng" className="w-full max-h-[80vh] object-contain rounded-xl" />
           </div>
         </div>
       )}
