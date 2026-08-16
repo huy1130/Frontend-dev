@@ -20,7 +20,9 @@ import {
   Loader2,
   ShieldAlert,
   Send,
-  Camera
+  Camera,
+  Copy,
+  ExternalLink
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
@@ -53,6 +55,12 @@ export default function CustomerHistory() {
   const [selectedBooking, setSelectedBooking] = useState<BookingResponseDTO | null>(null)
   const [promotionsMap, setPromotionsMap] = useState<Record<number, string>>({})
   const [redemptionsMap, setRedemptionsMap] = useState<Record<number, string>>({})
+
+  // VietQR Deposit Modal state
+  const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
+  const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
+  const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
+  const [depositPayosUrl, setDepositPayosUrl] = useState<string>('')
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 5
@@ -416,7 +424,28 @@ export default function CustomerHistory() {
                           </span>
                         </div>
                       )}
-                      <div className="mt-2.5 flex md:justify-end">
+                      <div className="mt-2.5 flex flex-wrap gap-2 md:justify-end">
+                        {item.status === 'Pending' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                toast.info('Đang mở trang thanh toán cọc PayOS...')
+                                const payRes = await bookingService.createDepositPayment(item.bookingId)
+                                const checkoutUrl = payRes?.checkoutUrl || payRes?.CheckoutUrl
+                                if (checkoutUrl) {
+                                  window.location.href = checkoutUrl
+                                  return
+                                }
+                              } catch (err: any) {
+                                toast.error(err.response?.data?.message || 'Không thể tạo link cọc PayOS')
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Thanh Toán Cọc PayOS</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => handleViewDetail(item)}
                           disabled={isLoadingDetail && loadingDetailBookingId === item.bookingId}

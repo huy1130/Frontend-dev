@@ -108,6 +108,12 @@ export default function CustomerBooking() {
   const [isSuccess, setIsSuccess] = useState<boolean>(false)
   const [bookingRef, setBookingRef] = useState<string>('')
   const [createdBooking, setCreatedBooking] = useState<any>(null)
+
+  // Deposit QR Modal State
+  const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
+  const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
+  const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
+  const [depositPayosUrl, setDepositPayosUrl] = useState<string>('')
   const [depositPaymentUrl, setDepositPaymentUrl] = useState<string>('')
   const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false)
   const [isDeposited, setIsDeposited] = useState<boolean>(false)
