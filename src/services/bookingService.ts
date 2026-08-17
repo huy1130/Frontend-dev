@@ -118,8 +118,8 @@ export const bookingService = {
   },
   
   // Admin Methods
-  getAdminBookings: (date?: string): Promise<{ success: boolean; data: { items: BookingResponseDTO[] } }> => {
-    const url = date ? `/Booking/admin?date=${date}&pageSize=1000&sortOrder=desc` : `/Booking/admin?pageSize=1000&sortOrder=desc`;
+  getAdminBookings: (date?: string): Promise<any> => {
+    const url = date ? `/Staff/history?dateStr=${date}` : `/Staff/history`;
     return axiosClient.get(url);
   },
   

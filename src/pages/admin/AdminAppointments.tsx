@@ -111,7 +111,7 @@ export default function AdminAppointments() {
         const rawData: any = response?.data || response;
         const items = Array.isArray(rawData)
           ? rawData
-          : rawData?.items || rawData?.Items || rawData?.data || [];
+          : rawData?.bookings || rawData?.Bookings || rawData?.items || rawData?.Items || rawData?.data || [];
 
         if (Array.isArray(items)) {
           const detailedBookings = await Promise.all(
@@ -304,10 +304,6 @@ export default function AdminAppointments() {
   const handleCheckInSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!checkInBookingId) return
-    if (!incidentImage1 || !incidentImage2) {
-      toast.error('Vui lòng chụp đủ 2 ảnh tình trạng xe')
-      return
-    }
     if (!staffNote.trim()) {
       toast.error('Vui lòng nhập ghi chú tình trạng xe')
       return
@@ -317,8 +313,8 @@ export default function AdminAppointments() {
     try {
       const formData = new FormData()
       formData.append('BookingId', checkInBookingId.toString())
-      formData.append('IncidentImage1', incidentImage1)
-      formData.append('IncidentImage2', incidentImage2)
+      if (incidentImage1) formData.append('IncidentImage1', incidentImage1)
+      if (incidentImage2) formData.append('IncidentImage2', incidentImage2)
       formData.append('StaffNote', staffNote)
 
       await staffService.checkInBooking(formData)
@@ -1018,24 +1014,22 @@ export default function AdminAppointments() {
 
             <form onSubmit={handleCheckInSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 1 <span className="text-rose-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 1 (tùy chọn)</label>
                 <input
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  required
                   onChange={(e) => setIncidentImage1(e.target.files?.[0] || null)}
                   className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 2 <span className="text-rose-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 2 (tùy chọn)</label>
                 <input
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  required
                   onChange={(e) => setIncidentImage2(e.target.files?.[0] || null)}
                   className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
                 />

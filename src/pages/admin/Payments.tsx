@@ -71,7 +71,7 @@ export default function Payments() {
       const rawData: any = res?.data || res
       const items: BookingResponseDTO[] = Array.isArray(rawData)
         ? rawData
-        : rawData?.items || rawData?.data || []
+        : rawData?.bookings || rawData?.Bookings || rawData?.items || rawData?.data || []
 
       setBookings(items)
     } catch (error) {

@@ -26,6 +26,13 @@ export interface IssueReceiptRequestDTO {
 }
 
 export const staffService = {
+  // Get history by date
+  getDailyHistory: async (dateStr?: string): Promise<any> => {
+    const url = dateStr ? `/Staff/history?dateStr=${dateStr}` : '/Staff/history'
+    const response = await axiosClient.get(url)
+    return response.data
+  },
+
   // Get all bookings for today
   getTodayBookings: async (): Promise<TodayBookingDto[]> => {
     const response = await axiosClient.get('/Staff/today-bookings')
