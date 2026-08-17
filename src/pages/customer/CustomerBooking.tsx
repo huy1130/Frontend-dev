@@ -276,21 +276,49 @@ export default function CustomerBooking() {
   const selectedService = availableServices.find((s) => s.serviceId === selectedServiceId)
   const subtotalPrice = selectedService ? selectedService.price : 0
 
-  const selectedPromo = availablePromos.find((p) => p.promotionId === appliedPromoId)
-  let discountValue = 0
-  if (selectedPromo) {
-    if (selectedPromo.promoType === 'Discount') {
-      if (selectedPromo.discountType === 'Fixed' && selectedPromo.discountValue) {
-        discountValue = selectedPromo.discountValue
-      } else if (selectedPromo.discountType === 'Percent' && selectedPromo.discountValue) {
-        discountValue = subtotalPrice * selectedPromo.discountValue / 100
-        if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
-          discountValue = selectedPromo.maxDiscount
+  // Helper to calculate discount for any promotion
+  const calcPromoDiscount = (promo: PromotionDTO) => {
+    const isApplicable = !promo.serviceId || promo.serviceId === selectedServiceId
+    if (!isApplicable) return 0
+    let val = 0
+    if (promo.promoType === 'Discount') {
+      if (promo.discountType === 'Fixed' && promo.discountValue) {
+        val = promo.discountValue
+      } else if (promo.discountType === 'Percent' && promo.discountValue) {
+        val = (subtotalPrice * promo.discountValue) / 100
+        if (promo.maxDiscount && val > promo.maxDiscount) {
+          val = promo.maxDiscount
         }
       }
-    } else if ((selectedPromo.promoType === 'FreeWash' || selectedPromo.promoType === 'AddOn') && selectedPromo.serviceId === selectedServiceId) {
-      discountValue = subtotalPrice
+    } else if ((promo.promoType === 'FreeWash' || promo.promoType === 'AddOn') && promo.serviceId === selectedServiceId) {
+      val = subtotalPrice
     }
+    return val
+  }
+
+  // Find the automatic best promotion for the current selected service
+  const autoBestPromo = React.useMemo(() => {
+    let best: PromotionDTO | null = null
+    let maxVal = -1
+    for (const p of availablePromos) {
+      const isApplicable = !p.serviceId || p.serviceId === selectedServiceId
+      if (isApplicable) {
+        const val = calcPromoDiscount(p)
+        if (val > maxVal) {
+          maxVal = val
+          best = p
+        }
+      }
+    }
+    return best
+  }, [availablePromos, selectedServiceId, subtotalPrice])
+
+  const isAutoPromoMode = appliedPromoId === 0 && appliedRedemptionId === 0
+  const selectedPromo = isAutoPromoMode ? autoBestPromo : availablePromos.find((p) => p.promotionId === appliedPromoId)
+
+  let discountValue = 0
+  if (selectedPromo) {
+    discountValue = calcPromoDiscount(selectedPromo)
   }
 
   const selectedRedemption = myRedemptions.find((r) => r.redemptionId === appliedRedemptionId)
@@ -899,6 +927,58 @@ export default function CustomerBooking() {
                       </div>
                     </div>
 
+                    {/* Automatic Best Promotion Switcher Banner */}
+                    <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 border-2 border-orange-400/80 rounded-2xl p-4 transition-all shadow-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                            isAutoPromoMode ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            <Sparkles className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                                ✨ Tự Động Áp Dụng Ưu Đãi Tốt Nhất
+                              </h4>
+                              <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                                Khuyên dùng
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-0.5">
+                              {autoBestPromo ? (
+                                <>
+                                  Mã có lợi nhất: <strong className="text-orange-600 font-bold">{autoBestPromo.promoName}</strong>
+                                  {calcPromoDiscount(autoBestPromo) > 0 && (
+                                    <span className="ml-1 text-emerald-600 font-extrabold">
+                                      (-{calcPromoDiscount(autoBestPromo).toLocaleString('vi-VN')}đ)
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                'Hệ thống tự động tìm mã giảm giá cao nhất cho đơn hàng của bạn'
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAppliedPromoId(0)
+                            setAppliedRedemptionId(0)
+                          }}
+                          className={`text-xs font-extrabold px-3.5 py-2 rounded-xl border shrink-0 transition-all cursor-pointer ${
+                            isAutoPromoMode
+                              ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
+                              : 'bg-white hover:bg-orange-50 text-orange-600 border-orange-300'
+                          }`}
+                        >
+                          {isAutoPromoMode ? '✓ Đang bật' : 'Bật Tự Động'}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Customer Rewards / Redemptions Selector */}
                     <div>
                       <h4 className="font-extrabold text-slate-900 text-sm mb-2.5 flex items-center gap-1.5">
@@ -931,7 +1011,6 @@ export default function CustomerBooking() {
                                   setAppliedRedemptionId(0);
                                 } else {
                                   if (appliedPromoId) {
-                                    toast.info('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
                                     setAppliedPromoId(0);
                                   }
                                   setAppliedRedemptionId(redemption.redemptionId);
@@ -986,6 +1065,7 @@ export default function CustomerBooking() {
                         ) : availablePromos.map((promo) => {
                           const isApplicable = !promo.serviceId || promo.serviceId === selectedServiceId
                           const isApplied = appliedPromoId === promo.promotionId && isApplicable
+                          const isBest = autoBestPromo?.promotionId === promo.promotionId && isApplicable
 
                           let badgeText = ''
                           if (promo.promoType === 'Discount') {
@@ -1004,7 +1084,6 @@ export default function CustomerBooking() {
                                   setAppliedPromoId(0);
                                 } else {
                                   if (appliedRedemptionId) {
-                                    toast.info('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
                                     setAppliedRedemptionId(0);
                                   }
                                   setAppliedPromoId(promo.promotionId);
@@ -1022,7 +1101,14 @@ export default function CustomerBooking() {
                                   <Percent className="w-4 h-4" />
                                 </div>
                                 <div>
-                                  <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.promoName}</h5>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.promoName}</h5>
+                                    {isBest && (
+                                      <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-md border border-amber-300">
+                                        🔥 Tốt nhất
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="text-[11px] text-slate-500">
                                     {!isApplicable && <span className="text-red-500 font-bold mr-1">(Không áp dụng cho dịch vụ này)</span>}
                                     Hạn: {promo.validTo ? new Date(promo.validTo).toLocaleDateString('vi-VN') : 'Không giới hạn'}
@@ -1058,9 +1144,15 @@ export default function CustomerBooking() {
                         </div>
 
                         {selectedPromo && (
-                          <div className="flex justify-between items-center text-emerald-600 font-semibold gap-2">
-                            <span className="shrink-0">Khuyến mãi hệ thống:</span>
-                            <span className="whitespace-nowrap font-bold">-{discountValue.toLocaleString('vi-VN')}đ</span>
+                          <div className="flex justify-between items-start text-emerald-600 font-semibold gap-2">
+                            <span className="shrink-0 flex items-center gap-1">
+                              {isAutoPromoMode && <Sparkles className="w-3.5 h-3.5 text-orange-500 shrink-0" />}
+                              <span>{isAutoPromoMode ? 'Ưu đãi tự động:' : 'Khuyến mãi đã chọn:'}</span>
+                            </span>
+                            <div className="text-right">
+                              <span className="whitespace-nowrap font-bold block">-{discountValue.toLocaleString('vi-VN')}đ</span>
+                              <span className="text-[10px] text-slate-500 font-normal block">({selectedPromo.promoName})</span>
+                            </div>
                           </div>
                         )}
 
