@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool, AlertTriangle } from 'lucide-react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool, AlertTriangle, Copy, Banknote } from 'lucide-react'
 import { toast } from 'sonner'
 import { QRCodeSVG } from 'qrcode.react'
 import { staffService, TodayBookingDto } from '../../services/staffService'
@@ -52,7 +52,17 @@ export default function StaffAppointments() {
   const [isFinalPaymentModalOpen, setIsFinalPaymentModalOpen] = useState(false)
   const [paymentBooking, setPaymentBooking] = useState<any>(null)
   const [finalPaymentUrl, setFinalPaymentUrl] = useState<string | null>(null)
+  const [finalPaymentDetails, setFinalPaymentDetails] = useState<{
+    accountName?: string;
+    accountNumber?: string;
+    description?: string;
+    qrCode?: string;
+    qrImageUrl?: string;
+  } | null>(null)
   const [isLoadingFinalPayment, setIsLoadingFinalPayment] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'payos'>('cash')
+  const [cashTendered, setCashTendered] = useState<string>('')
+  const [isSubmittingCash, setIsSubmittingCash] = useState(false)
 
   const fetchBookings = async () => {
     setIsLoading(true)
@@ -361,33 +371,58 @@ export default function StaffAppointments() {
     }
   }, [isScannerOpen])
 
-  const handleOpenFinalPayment = async (booking: any) => {
+  const handleOpenFinalPayment = async (booking: TodayBookingDto | any) => {
     const report = reportsMap[booking.bookingId]
     if (report && report.status !== 'Rejected') {
       toast.error(`Lịch hẹn #${booking.bookingId} đang có khiếu nại chưa xử lý xong. Vui lòng xử lý khiếu nại trước.`)
       return
     }
 
-    setPaymentBooking(booking)
-    setIsFinalPaymentModalOpen(true)
-    setIsLoadingFinalPayment(true)
-    setFinalPaymentUrl(null)
-
+    let targetBooking = booking
     try {
-      try {
-        const detailRes = await bookingService.getBookingDetail(booking.bookingId)
-        const fullDetail = detailRes?.data || detailRes
-        if (fullDetail) {
-          setPaymentBooking(fullDetail)
-        }
-      } catch (e) {
-        console.warn('Could not fetch detailed booking prices for payment modal', e)
+      const detailRes = await bookingService.getBookingDetail(booking.bookingId)
+      const fullDetail = detailRes?.data || detailRes
+      if (fullDetail) {
+        targetBooking = fullDetail
       }
+    } catch (e) {
+      console.warn('Could not fetch detailed booking prices for payment modal', e)
+    }
 
+    const remaining = targetBooking.amountToPay ??
+      ((targetBooking.finalPrice || targetBooking.originalPrice || 0) - (targetBooking.depositAmount || 0))
+
+    setPaymentBooking(targetBooking)
+    setIsFinalPaymentModalOpen(true)
+    setFinalPaymentUrl(null)
+    setFinalPaymentDetails(null)
+    setPaymentMethod('cash')
+    setCashTendered('')
+
+    // Nếu nợ 0đ, mở Modal xác nhận và không cần gọi API PayOS
+    if (remaining <= 0) {
+      setIsLoadingFinalPayment(false)
+      return
+    }
+
+    // Nếu còn nợ tiền > 0đ: Gọi API lấy link PayOS QR
+    setIsLoadingFinalPayment(true)
+    try {
       const res = await bookingService.createFinalPayment(booking.bookingId)
-      const url = res?.checkoutUrl || res?.CheckoutUrl
-      if (url) {
-        setFinalPaymentUrl(url)
+      const data = res?.data || res
+      const url = data?.checkoutUrl || data?.CheckoutUrl
+      const qr = data?.qrCode || data?.QrCode
+      const qrImg = data?.qrImageUrl || data?.QrImageUrl
+
+      if (url || qr || qrImg) {
+        setFinalPaymentUrl(url || null)
+        setFinalPaymentDetails({
+          accountName: data?.accountName || data?.AccountName || '',
+          accountNumber: data?.accountNumber || data?.AccountNumber || '',
+          description: data?.description || data?.Description || '',
+          qrCode: qr || '',
+          qrImageUrl: qrImg || '',
+        })
       } else {
         toast.error('Không thể tạo liên kết thanh toán PayOS')
       }
@@ -395,6 +430,34 @@ export default function StaffAppointments() {
       toast.error(err.response?.data?.Message || err.response?.data?.message || 'Lỗi khi khởi tạo thanh toán')
     } finally {
       setIsLoadingFinalPayment(false)
+    }
+  }
+
+  const handleCashPaymentSubmit = async () => {
+    if (!paymentBooking) return
+    const remaining = paymentBooking.amountToPay ??
+      ((paymentBooking.finalPrice || paymentBooking.originalPrice || 0) - (paymentBooking.depositAmount || 0))
+
+    const tenderedNum = parseFloat(cashTendered) || 0
+    if (tenderedNum < remaining && remaining > 0) {
+      toast.error(`Số tiền khách đưa (${tenderedNum.toLocaleString('vi-VN')}đ) chưa đủ thanh toán số tiền nợ (${remaining.toLocaleString('vi-VN')}đ)!`)
+      return
+    }
+
+    setIsSubmittingCash(true)
+    try {
+      await bookingService.updateBookingStatus(paymentBooking.bookingId, 'Completed')
+      toast.success('🎉 Đã xác nhận thu tiền mặt và hoàn tất đơn hàng!')
+      setIsFinalPaymentModalOpen(false)
+      setPaymentBooking(null)
+      setFinalPaymentUrl(null)
+      setFinalPaymentDetails(null)
+      setCashTendered('')
+      fetchBookings()
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.response?.data?.Message || 'Lỗi khi xác nhận thanh toán tiền mặt')
+    } finally {
+      setIsSubmittingCash(false)
     }
   }
 
@@ -565,8 +628,7 @@ export default function StaffAppointments() {
     { key: 'Confirmed', label: 'Đã xác nhận' },
     { key: 'Checkin', label: 'Đã nhận xe' },
     { key: 'Washing', label: 'Đang rửa' },
-    { key: 'Washed', label: 'Đã rửa xong' },
-    { key: 'Payment', label: 'Thanh toán' },
+    { key: 'Completed', label: 'Đã thanh toán' },
     { key: 'CheckedOut', label: 'Hoàn thành' }
   ]
 
@@ -586,12 +648,12 @@ export default function StaffAppointments() {
   const getStepIndex = (status: string) => {
     switch (status) {
       case 'Pending': return -1;
+      case 'Deposited': return -1;
       case 'Confirmed': return 0;
       case 'Checkin': return 1;
       case 'Washing': return 2;
       case 'Completed': return 3;
-      case 'Payment': return 4;
-      case 'CheckedOut': return 5;
+      case 'CheckedOut': return 4;
       default: return -1;
     }
   }
@@ -760,12 +822,13 @@ export default function StaffAppointments() {
                     )}
                     {booking.status === 'Washing' && (
                       (reportsMap[booking.bookingId] && reportsMap[booking.bookingId].status !== 'Rejected') ? (
-                        <Link
-                          to="/admin/incidents"
+                        <button
+                          type="button"
+                          onClick={() => toast.error(`Lịch hẹn #${booking.bookingId} đang có khiếu nại chưa xử lý. Vui lòng báo Admin xử lý khiếu nại trước khi thanh toán.`)}
                           className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap cursor-pointer"
                         >
                           <AlertTriangle className="w-4 h-4" /> Xử Lý Khiếu Nại
-                        </Link>
+                        </button>
                       ) : (
                         <button
                           onClick={() => handleOpenFinalPayment(booking)}
@@ -1531,58 +1594,337 @@ export default function StaffAppointments() {
               </button>
             </div>
 
-            <div className="p-6 space-y-5 text-center">
-              {/* Thông tin tiền tệ */}
-              <div className="bg-purple-50/60 border border-purple-100 rounded-2xl p-4 text-left space-y-2">
-                <div className="flex justify-between text-xs font-semibold text-slate-500">
-                  <span>Biển số xe:</span>
-                  <span className="text-slate-800 font-bold">{paymentBooking.licensePlate}</span>
-                </div>
-                <div className="flex justify-between text-xs font-semibold text-slate-500">
-                  <span>Khách hàng:</span>
-                  <span className="text-slate-800 font-bold">{paymentBooking.customerName}</span>
-                </div>
-                <div className="h-px bg-purple-100 my-1"></div>
-                <div className="flex justify-between text-sm font-bold text-purple-900">
-                  <span>Số tiền thu nốt:</span>
-                  <span className="text-base font-extrabold text-purple-700">
-                    {(
-                      paymentBooking.amountToPay ??
-                      ((paymentBooking.finalPrice || paymentBooking.originalPrice || 0) - (paymentBooking.depositAmount || 0))
-                    ).toLocaleString('vi-VN')}đ
-                  </span>
-                </div>
-              </div>
+            <div className="p-6 space-y-4 text-center">
+              {(() => {
+                const remaining = paymentBooking.amountToPay ??
+                  ((paymentBooking.finalPrice || paymentBooking.originalPrice || 0) - (paymentBooking.depositAmount || 0));
+                const tenderedVal = parseFloat(cashTendered) || 0;
+                const changeVal = tenderedVal - remaining;
 
-              {/* Khung Mã QR PayOS */}
-              {isLoadingFinalPayment ? (
-                <div className="py-12 flex flex-col items-center justify-center space-y-3">
-                  <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm font-semibold text-slate-500">Đang khởi tạo mã QR PayOS...</p>
-                </div>
-              ) : finalPaymentUrl ? (
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="p-4 bg-white border-2 border-purple-200 rounded-3xl shadow-md">
-                    <QRCodeSVG value={finalPaymentUrl} size={210} includeMargin={true} />
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full animate-pulse">
-                    <div className="w-2 h-2 rounded-full bg-purple-600 animate-ping"></div>
-                    <span>Đang chờ khách quét mã QR để thanh toán...</span>
-                  </div>
+                // TH1: Số tiền còn lại là 0đ -> Hiển thị Modal Xác nhận hoàn tất 0đ
+                if (remaining <= 0) {
+                  return (
+                    <div className="space-y-4 pt-1 text-center">
+                      <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl p-4.5 text-left space-y-2.5 shadow-sm">
+                        <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-sm border-b border-emerald-200/80 pb-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                          <span>Đơn hàng đã thanh toán 100% (0đ nợ)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                          <span>Biển số xe:</span>
+                          <span className="text-slate-800 font-bold">{paymentBooking.licensePlate}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                          <span>Khách hàng:</span>
+                          <span className="text-slate-800 font-bold">{paymentBooking.customerName}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                          <span>Trạng thái cọc:</span>
+                          <span className="text-emerald-700 font-bold bg-emerald-100/90 px-2 py-0.5 rounded-md text-[11px]">Đã cọc / Giảm 100%</span>
+                        </div>
+                        <div className="h-px bg-emerald-200/60 my-1"></div>
+                        <div className="flex justify-between items-center text-sm font-bold text-emerald-900">
+                          <span>Số tiền cần thu nốt:</span>
+                          <span className="text-xl font-black text-emerald-700">0đ</span>
+                        </div>
+                      </div>
 
-                  <a
-                    href={finalPaymentUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-bold text-slate-500 hover:text-purple-600 underline"
-                  >
-                    Hoặc mở trang thanh toán PayOS trực tiếp
-                  </a>
-                </div>
-              ) : (
-                <p className="text-sm text-rose-500 font-medium">Không thể tải mã QR. Vui lòng thử lại sau.</p>
-              )}
+                      <p className="text-xs text-slate-500 font-medium px-2">
+                        Khách hàng không còn số tiền nợ. Vui lòng bấm nút bên dưới để xác nhận hoàn tất bước thanh toán.
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={handleCashPaymentSubmit}
+                        disabled={isSubmittingCash}
+                        className="w-full h-11 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                      >
+                        {isSubmittingCash ? (
+                          <span>Đang xử lý...</span>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4.5 h-4.5" />
+                            <span>Xác Nhận Đã Thu (0đ) & Hoàn Tất</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                }
+
+                // TH2: Còn nợ tiền > 0đ - Tiền Mặt
+                if (paymentMethod === 'cash') {
+                  return (
+                    <div className="space-y-4">
+                      {/* Payment Method Switcher Tabs */}
+                      <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('cash')}
+                          className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                            paymentMethod === 'cash'
+                              ? 'bg-white text-emerald-700 shadow-sm'
+                              : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          <Banknote className="w-4 h-4 text-emerald-600" />
+                          <span>Tiền Mặt tại Quầy</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('payos')}
+                          className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                            (paymentMethod as string) === 'payos'
+                              ? 'bg-white text-purple-700 shadow-sm'
+                              : 'text-slate-500 hover:text-slate-800'
+                          }`}
+                        >
+                          <QrCode className="w-4 h-4 text-purple-600" />
+                          <span>Mã QR PayOS</span>
+                        </button>
+                      </div>
+
+                      {/* Thông tin nợ tiền */}
+                      <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 text-left space-y-2">
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                          <span>Biển số xe:</span>
+                          <span className="text-slate-800 font-bold">{paymentBooking.licensePlate}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                          <span>Khách hàng:</span>
+                          <span className="text-slate-800 font-bold">{paymentBooking.customerName}</span>
+                        </div>
+                        <div className="h-px bg-emerald-200/60 my-1"></div>
+                        <div className="flex justify-between items-center text-sm font-bold text-emerald-900">
+                          <span>Số tiền thu nốt:</span>
+                          <span className="text-lg font-black text-emerald-700">
+                            {remaining.toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Ô Nhập Tiền Khách Đưa */}
+                      <div className="space-y-2 text-left">
+                        <label className="block text-xs font-bold text-slate-700">
+                          Số tiền khách đưa (VND):
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={cashTendered}
+                            onChange={(e) => setCashTendered(e.target.value)}
+                            placeholder={`Nhập tiền (VD: ${remaining})`}
+                            className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+                          />
+                          <span className="absolute right-3.5 top-2.5 text-xs font-bold text-slate-400">đ</span>
+                        </div>
+
+                        {/* Quick Selection Chips */}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setCashTendered(remaining.toString())}
+                            className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700 text-slate-600 rounded-lg transition-colors cursor-pointer"
+                          >
+                            Đủ tiền ({remaining.toLocaleString('vi-VN')}đ)
+                          </button>
+                          {[100000, 200000, 500000].map((quickAmt) => (
+                            quickAmt >= remaining && (
+                              <button
+                                key={quickAmt}
+                                type="button"
+                                onClick={() => setCashTendered(quickAmt.toString())}
+                                className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-emerald-100 hover:text-emerald-700 text-slate-600 rounded-lg transition-colors cursor-pointer"
+                              >
+                                {quickAmt.toLocaleString('vi-VN')}đ
+                              </button>
+                            )
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Tự Tính Tiền Thối */}
+                      {tenderedVal > 0 && (
+                        <div className={`p-3.5 rounded-2xl text-left border flex items-center justify-between transition-all ${
+                          changeVal >= 0
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
+                            : 'bg-rose-50 border-rose-200 text-rose-800'
+                        }`}>
+                          <span className="text-xs font-bold">
+                            {changeVal >= 0 ? 'Tiền thối lại cho khách:' : 'Khách đưa còn thiếu:'}
+                          </span>
+                          <span className={`font-mono text-base font-black ${
+                            changeVal >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                          }`}>
+                            {Math.abs(changeVal).toLocaleString('vi-VN')}đ
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Nút Xác Nhận Thu Tiền Mặt */}
+                      <button
+                        type="button"
+                        onClick={handleCashPaymentSubmit}
+                        disabled={isSubmittingCash || (tenderedVal > 0 && changeVal < 0)}
+                        className="w-full h-11 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                      >
+                        {isSubmittingCash ? (
+                          <span>Đang xử lý...</span>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4.5 h-4.5" />
+                            <span>Xác Nhận Đã Thu Tiền Mặt</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                }
+
+                // TH3: Còn nợ tiền > 0đ - Chuyển Khoản PayOS QR
+                return (
+                  <div className="space-y-4">
+                    {/* Payment Method Switcher Tabs */}
+                    <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('cash')}
+                        className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          (paymentMethod as string) === 'cash'
+                            ? 'bg-white text-emerald-700 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        <Banknote className="w-4 h-4 text-emerald-600" />
+                        <span>Tiền Mặt tại Quầy</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('payos')}
+                        className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          (paymentMethod as string) === 'payos'
+                            ? 'bg-white text-purple-700 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        <QrCode className="w-4 h-4 text-purple-600" />
+                        <span>Mã QR PayOS</span>
+                      </button>
+                    </div>
+
+                    {/* Thông tin chuyển khoản */}
+                    <div className="bg-purple-50/60 border border-purple-100 rounded-2xl p-4 text-left space-y-2.5">
+                      <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                        <span>Biển số xe:</span>
+                        <span className="text-slate-800 font-bold">{paymentBooking.licensePlate}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                        <span>Khách hàng:</span>
+                        <span className="text-slate-800 font-bold">{paymentBooking.customerName}</span>
+                      </div>
+
+                      {finalPaymentDetails?.accountName && (
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                          <span>Chủ tài khoản:</span>
+                          <span className="text-slate-900 font-bold uppercase">{finalPaymentDetails.accountName}</span>
+                        </div>
+                      )}
+
+                      {finalPaymentDetails?.accountNumber && (
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                          <span>Số tài khoản:</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-purple-700 font-mono font-black text-sm">{finalPaymentDetails.accountNumber}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(finalPaymentDetails.accountNumber!)
+                                toast.success('Đã sao chép Số Tài Khoản!')
+                              }}
+                              className="p-1 hover:bg-purple-100 text-purple-700 rounded-md transition-colors cursor-pointer"
+                              title="Sao chép STK"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {finalPaymentDetails?.description && (
+                        <div className="flex justify-between items-center text-xs font-semibold text-slate-500">
+                          <span>Nội dung CK:</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono bg-purple-100 text-purple-900 px-2 py-0.5 rounded-md font-bold text-xs">
+                              {finalPaymentDetails.description}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(finalPaymentDetails.description!)
+                                toast.success('Đã sao chép Nội Dung!')
+                              }}
+                              className="p-1 hover:bg-purple-100 text-purple-700 rounded-md transition-colors cursor-pointer"
+                              title="Sao chép nội dung"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="h-px bg-purple-100 my-1"></div>
+                      <div className="flex justify-between items-center text-sm font-bold text-purple-900">
+                        <span>Số tiền thu nốt:</span>
+                        <span className="text-base font-extrabold text-purple-700">
+                          {remaining.toLocaleString('vi-VN')}đ
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Khung Mã QR PayOS */}
+                    {isLoadingFinalPayment ? (
+                      <div className="py-12 flex flex-col items-center justify-center space-y-3">
+                        <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-sm font-semibold text-slate-500">Đang khởi tạo mã QR PayOS...</p>
+                      </div>
+                    ) : finalPaymentUrl ? (
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="p-4 bg-white border-2 border-purple-200 rounded-3xl shadow-md">
+                          {finalPaymentDetails?.qrImageUrl ? (
+                            <img
+                              src={finalPaymentDetails.qrImageUrl}
+                              alt="VietQR PayOS"
+                              className="w-[210px] h-[210px] object-contain rounded-xl"
+                            />
+                          ) : (
+                            <QRCodeSVG
+                              value={finalPaymentDetails?.qrCode || finalPaymentUrl || ''}
+                              size={210}
+                              includeMargin={true}
+                            />
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full animate-pulse">
+                          <div className="w-2 h-2 rounded-full bg-purple-600 animate-ping"></div>
+                          <span>Đang chờ khách quét mã QR để thanh toán...</span>
+                        </div>
+
+                        <a
+                          href={finalPaymentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-bold text-slate-500 hover:text-purple-600 underline"
+                        >
+                          Hoặc mở trang thanh toán PayOS trực tiếp
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-rose-500 font-medium">Không thể tải mã QR. Vui lòng thử lại sau.</p>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
