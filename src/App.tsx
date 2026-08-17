@@ -34,9 +34,15 @@ import TierManagement from './pages/admin/TierManagement'
 import TimeSlotManagement from './pages/admin/TimeSlotManagement'
 import { Toaster } from 'sonner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import { useSignalR } from './hooks/useSignalR'
 
 const AdminIndex = () => <Dashboard />
 const StaffIndex = () => <Navigate to="/staff/appointments" replace />
+
+function SignalRAppListener() {
+  useSignalR()
+  return null
+}
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -63,7 +69,8 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
-      <Toaster richColors position="top-right" duration={2000} />
+      <SignalRAppListener />
+      <Toaster richColors position="top-right" duration={5000} />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />

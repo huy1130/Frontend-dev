@@ -173,10 +173,6 @@ export default function StaffAppointments() {
   useEffect(() => {
     const unsubscribe = subscribePlateScan((event) => {
       setRealtimeAlert(event)
-      toast.dismiss() // Clear any existing toasts (e.g. "Đăng nhập thành công!") to prevent overlapping
-      toast.info(`🚗 Xe biển số: ${event.plateNumber} (Mã lịch hẹn: #${event.bookingId || 'N/A'}) vừa được quét thành công!`, {
-        duration: 5000,
-      })
       fetchBookings()
     })
     return () => unsubscribe()

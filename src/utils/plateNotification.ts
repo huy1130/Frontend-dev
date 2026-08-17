@@ -38,6 +38,8 @@ export const dismissPlateScan = (timestamp?: number) => {
   }
 };
 
+const localSubscribers = new Set<(event: PlateScanEventPayload) => void>();
+
 export const broadcastPlateScan = (payload: Omit<PlateScanEventPayload, 'timestamp'>) => {
   const fullPayload: PlateScanEventPayload = {
     ...payload,
@@ -66,6 +68,15 @@ export const broadcastPlateScan = (payload: Omit<PlateScanEventPayload, 'timesta
   } catch (e) {
     console.warn('Failed to set localStorage item', e);
   }
+
+  // 3. Trigger local listeners in the current tab immediately
+  localSubscribers.forEach(sub => {
+    try {
+      sub(fullPayload);
+    } catch (err) {
+      console.error('Error in local plate scan subscriber', err);
+    }
+  });
 };
 
 export const getLatestPlateScan = (maxAgeMs: number = 30 * 60 * 1000): PlateScanEventPayload | null => {
@@ -96,10 +107,13 @@ export const subscribePlateScan = (onPlateScanned: (event: PlateScanEventPayload
 
   const processEvent = (event: PlateScanEventPayload) => {
     if (!event || !event.plateNumber || !event.timestamp) return;
-    if (event.timestamp === lastProcessedTimestamp) return; // Deduplicate dual triggers (BroadcastChannel + LocalStorage)
+    if (event.timestamp === lastProcessedTimestamp) return; // Deduplicate dual triggers
     lastProcessedTimestamp = event.timestamp;
     onPlateScanned(event);
   };
+
+  // Add to local subscribers for same-tab instant triggers
+  localSubscribers.add(processEvent);
 
   // Listener 1: BroadcastChannel
   const handleMessage = (e: MessageEvent) => {
@@ -130,6 +144,7 @@ export const subscribePlateScan = (onPlateScanned: (event: PlateScanEventPayload
 
   // Return unsubscribe function
   return () => {
+    localSubscribers.delete(processEvent);
     if (broadcastChannel) {
       broadcastChannel.removeEventListener('message', handleMessage);
     }

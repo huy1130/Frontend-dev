@@ -17,6 +17,12 @@ export default defineConfig({
         target: 'http://localhost:5280',
         changeOrigin: true,
         secure: false, // In case of local self-signed SSL certificate
+      },
+      '/notificationHub': {
+        target: 'http://localhost:5280',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
       }
     }
   }
