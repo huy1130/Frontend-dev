@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { clearAuthState, isTokenExpired } from '../../utils/auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,8 +28,12 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole');
   const location = useLocation();
 
-  if (!token || !userRole) {
-    // Redirect to login if not authenticated
+  if (!token || !userRole || isTokenExpired(token)) {
+    if (token && isTokenExpired(token)) {
+      clearAuthState();
+      toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+    }
+    // Redirect to login if not authenticated or token expired
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

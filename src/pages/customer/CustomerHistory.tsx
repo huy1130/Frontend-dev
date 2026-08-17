@@ -891,9 +891,9 @@ export default function CustomerHistory() {
                     <div className="space-y-4">
                       {myReports.filter(r => r.bookingId === selectedBooking.bookingId).map((report) => {
                         const images = [
-                          { url: report.image1, label: 'Bằng chứng 1' },
-                          { url: report.image2, label: 'Bằng chứng 2' },
-                        ].filter(item => Boolean(item.url))
+                          { url: report.image1ApiPath || (report.image1 ? `/IncidentReport/${report.reportId}/images/1` : null), label: 'Bằng chứng 1' },
+                          { url: report.image2ApiPath || (report.image2 ? `/IncidentReport/${report.reportId}/images/2` : null), label: 'Bằng chứng 2' },
+                        ].filter((item): item is { url: string; label: string } => Boolean(item.url))
 
                         return (
                           <div key={report.reportId} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
@@ -945,28 +945,16 @@ export default function CustomerHistory() {
                                   {images.map((item, idx) => (
                                     <div
                                       key={idx}
-                                      onClick={() => setPreviewImage(item.url || null)}
-                                      className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-2xs cursor-pointer"
+                                      onClick={() => setPreviewImage(item.url)}
+                                      className="relative w-24 h-18 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-xs cursor-pointer"
                                     >
-                                      <img
-                                        src={item.url!}
+                                      <AuthenticatedImage
+                                        src={item.url}
                                         alt={item.label}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                        onError={(e) => {
-                                          const target = e.currentTarget
-                                          target.style.display = 'none'
-                                          const parent = target.parentElement
-                                          if (parent) {
-                                            const fallback = parent.querySelector('.img-fallback') as HTMLElement
-                                            if (fallback) fallback.classList.remove('hidden')
-                                          }
-                                        }}
                                       />
                                       <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
                                         <Eye className="w-4 h-4" />
-                                      </div>
-                                      <div className="img-fallback hidden absolute inset-0 bg-slate-100 flex flex-col items-center justify-center text-center p-1 text-[9px] font-bold text-slate-500">
-                                        <span>Lỗi tải ảnh</span>
                                       </div>
                                     </div>
                                   ))}

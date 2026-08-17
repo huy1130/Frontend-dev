@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { handleAutoLogout, isTokenExpired } from '../utils/auth';
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -12,6 +13,10 @@ axiosClient.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('token') || localStorage.getItem('token');
     if (token) {
+      if (isTokenExpired(token)) {
+        handleAutoLogout('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+        return Promise.reject(new axios.Cancel('Token expired'));
+      }
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
@@ -27,7 +32,9 @@ axiosClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    // Handle global errors here
+    if (error.response && error.response.status === 401) {
+      handleAutoLogout('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+    }
     return Promise.reject(error);
   }
 );

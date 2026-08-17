@@ -140,5 +140,12 @@ export const bookingService = {
     const rUrl = returnUrl || `${origin}/customer/history?bookingId=${bookingId}&status=success`;
     const cUrl = cancelUrl || `${origin}/customer/booking?cancelBookingId=${bookingId}&cancel=true`;
     return axiosClient.post(`/payments/deposit-qr/${bookingId}?returnUrl=${encodeURIComponent(rUrl)}&cancelUrl=${encodeURIComponent(cUrl)}`);
+  },
+
+  createFinalPayment: (bookingId: number, returnUrl?: string, cancelUrl?: string): Promise<{ checkoutUrl?: string; CheckoutUrl?: string }> => {
+    const origin = window.location.origin;
+    const rUrl = returnUrl || `${origin}/customer/history?bookingId=${bookingId}&status=success`;
+    const cUrl = cancelUrl || `${origin}/customer/booking?cancelBookingId=${bookingId}&cancel=true`;
+    return axiosClient.post(`/payments/final-qr/${bookingId}?returnUrl=${encodeURIComponent(rUrl)}&cancelUrl=${encodeURIComponent(cUrl)}`);
   }
 };
