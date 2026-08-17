@@ -21,8 +21,10 @@ import {
   CreditCard,
   Loader2,
   Copy,
-  ExternalLink
+  ExternalLink,
+  QrCode
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { customerService, VehicleResponseDTO } from '../../services/customerService'
@@ -110,6 +112,17 @@ export default function CustomerBooking() {
   const [createdBooking, setCreatedBooking] = useState<any>(null)
 
   // Deposit QR Modal State
+  const [depositModalData, setDepositModalData] = useState<{
+    bookingId: number
+    amount: number
+    accountNumber: string
+    accountName: string
+    bin: string
+    description: string
+    qrCode?: string
+    qrImageUrl?: string
+    checkoutUrl?: string
+  } | null>(null)
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
   const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
   const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
@@ -263,21 +276,49 @@ export default function CustomerBooking() {
   const selectedService = availableServices.find((s) => s.serviceId === selectedServiceId)
   const subtotalPrice = selectedService ? selectedService.price : 0
 
-  const selectedPromo = availablePromos.find((p) => p.promotionId === appliedPromoId)
-  let discountValue = 0
-  if (selectedPromo) {
-    if (selectedPromo.promoType === 'Discount') {
-      if (selectedPromo.discountType === 'Fixed' && selectedPromo.discountValue) {
-        discountValue = selectedPromo.discountValue
-      } else if (selectedPromo.discountType === 'Percent' && selectedPromo.discountValue) {
-        discountValue = subtotalPrice * selectedPromo.discountValue / 100
-        if (selectedPromo.maxDiscount && discountValue > selectedPromo.maxDiscount) {
-          discountValue = selectedPromo.maxDiscount
+  // Helper to calculate discount for any promotion
+  const calcPromoDiscount = (promo: PromotionDTO) => {
+    const isApplicable = !promo.serviceId || promo.serviceId === selectedServiceId
+    if (!isApplicable) return 0
+    let val = 0
+    if (promo.promoType === 'Discount') {
+      if (promo.discountType === 'Fixed' && promo.discountValue) {
+        val = promo.discountValue
+      } else if (promo.discountType === 'Percent' && promo.discountValue) {
+        val = (subtotalPrice * promo.discountValue) / 100
+        if (promo.maxDiscount && val > promo.maxDiscount) {
+          val = promo.maxDiscount
         }
       }
-    } else if ((selectedPromo.promoType === 'FreeWash' || selectedPromo.promoType === 'AddOn') && selectedPromo.serviceId === selectedServiceId) {
-      discountValue = subtotalPrice
+    } else if ((promo.promoType === 'FreeWash' || promo.promoType === 'AddOn') && promo.serviceId === selectedServiceId) {
+      val = subtotalPrice
     }
+    return val
+  }
+
+  // Find the automatic best promotion for the current selected service
+  const autoBestPromo = React.useMemo(() => {
+    let best: PromotionDTO | null = null
+    let maxVal = -1
+    for (const p of availablePromos) {
+      const isApplicable = !p.serviceId || p.serviceId === selectedServiceId
+      if (isApplicable) {
+        const val = calcPromoDiscount(p)
+        if (val > maxVal) {
+          maxVal = val
+          best = p
+        }
+      }
+    }
+    return best
+  }, [availablePromos, selectedServiceId, subtotalPrice])
+
+  const isAutoPromoMode = appliedPromoId === 0 && appliedRedemptionId === 0
+  const selectedPromo = isAutoPromoMode ? autoBestPromo : availablePromos.find((p) => p.promotionId === appliedPromoId)
+
+  let discountValue = 0
+  if (selectedPromo) {
+    discountValue = calcPromoDiscount(selectedPromo)
   }
 
   const selectedRedemption = myRedemptions.find((r) => r.redemptionId === appliedRedemptionId)
@@ -296,7 +337,7 @@ export default function CustomerBooking() {
   const isBike = selectedCar ? (selectedCar.vehicleType || '').toLowerCase().includes('bike') || (selectedCar.vehicleType || '').toLowerCase().includes('xe máy') : false
   const bikeRate = systemParams?.bikeDepositAmount ?? 20000
   const carPercent = systemParams?.carDepositPercentage ?? 20
-  const estimatedDeposit = Math.max(10000, isBike ? bikeRate : Math.round((finalTotal * carPercent) / 100))
+  const estimatedDeposit = finalTotal === 0 ? 0 : Math.max(0, isBike ? Math.min(bikeRate, finalTotal) : Math.round((finalTotal * carPercent) / 100))
 
   const handleConfirmBooking = async () => {
     if (!selectedCarId || !selectedServiceId || !selectedSlotId) {
@@ -335,22 +376,24 @@ export default function CustomerBooking() {
 
       // API trả về trực tiếp cục BookingDto
       if (res && res.bookingId) {
-        toast.success('Khởi tạo đơn thành công! Đang chuyển hướng sang cổng thanh toán cọc PayOS...')
-
-        // Tự động chuyển hướng trực tiếp trang tới cổng PayOS
+        toast.success('Khởi tạo đơn thành công!')
         try {
           const payRes = await bookingService.createDepositPayment(res.bookingId)
-          const checkoutUrl = payRes?.checkoutUrl || payRes?.CheckoutUrl
-          if (checkoutUrl) {
-            window.location.href = checkoutUrl
-            return
+          if (payRes) {
+            const depositAmt = payRes.amount ?? payRes.Amount ?? 0
+            const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
+            if (depositAmt <= 0 || isPaid) {
+              toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động xác nhận giữ chỗ thành công.')
+              navigate('/customer/history')
+            } else {
+              navigate(`/customer/history?openQr=${res.bookingId}`)
+            }
+          } else {
+            navigate('/customer/history')
           }
         } catch (depositErr: any) {
-          console.error('Lỗi khi tạo link cọc PayOS:', depositErr)
-          toast.error(depositErr.response?.data?.message || 'Không thể chuyển tới cổng PayOS. Vui lòng kiểm tra lại trong lịch sử.')
-          setBookingRef('Mã lịch hẹn - ' + res.bookingId)
-          setCreatedBooking(res)
-          setIsSuccess(true)
+          toast.error(depositErr.response?.data?.message || 'Khởi tạo đơn thành công! Đang mở lịch sử đặt lịch.')
+          navigate('/customer/history')
         }
       }
     } catch (error: any) {
@@ -537,26 +580,31 @@ export default function CustomerBooking() {
 
                 <div className="bg-white p-5 rounded-2xl border border-orange-200/60 space-y-4">
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Vui lòng bấm nút bên dưới để mở trang thanh toán <strong>PayOS chính thức</strong>. Bạn có thể quét mã VietQR từ bất kỳ App Ngân Hàng hoặc Ví Điện Tử nào (MBBank, Vietcombank, Momo...) để hoàn tất khoản cọc <strong className="text-orange-600">{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong>.
+                    Vui lòng quét mã VietQR trên bảng thanh toán cọc bằng App Ngân Hàng hoặc Ví Điện Tử (MBBank, Vietcombank, Momo...) để hoàn tất khoản cọc <strong className="text-orange-600">{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong>.
                   </p>
 
-                  {depositPaymentUrl ? (
-                    <a
-                      href={depositPaymentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-orange-500/25 flex items-center justify-center gap-2.5 cursor-pointer no-underline"
-                    >
-                      <CreditCard className="w-5 h-5" />
-                      <span>Thanh Toán Đặt Cọc Ngay Qua PayOS</span>
-                      <ExternalLink className="w-4 h-4 ml-1" />
-                    </a>
-                  ) : (
-                    <div className="py-4 px-4 bg-orange-50 border border-orange-200 rounded-2xl text-xs font-extrabold text-orange-600 flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang khởi tạo mã QR thanh toán PayOS...</span>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (createdBooking) {
+                        setDepositModalData({
+                          bookingId: createdBooking.bookingId,
+                          amount: createdBooking.depositAmount || estimatedDeposit,
+                          accountNumber: createdBooking.accountNumber || '',
+                          accountName: createdBooking.accountName || '',
+                          bin: createdBooking.bin || '',
+                          description: createdBooking.description || `Deposit for booking ${createdBooking.bookingId}`,
+                          qrCode: createdBooking.qrCode,
+                          qrImageUrl: createdBooking.qrImageUrl,
+                          checkoutUrl: createdBooking.checkoutUrl
+                        })
+                      }
+                    }}
+                    className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold text-sm rounded-2xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <QrCode className="w-5 h-5" />
+                    <span>Mở Bảng Mã QR Thanh Toán Cọc</span>
+                  </button>
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
@@ -879,6 +927,58 @@ export default function CustomerBooking() {
                       </div>
                     </div>
 
+                    {/* Automatic Best Promotion Switcher Banner */}
+                    <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 border-2 border-orange-400/80 rounded-2xl p-4 transition-all shadow-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${
+                            isAutoPromoMode ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-200 text-slate-600'
+                          }`}>
+                            <Sparkles className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                                ✨ Tự Động Áp Dụng Ưu Đãi Tốt Nhất
+                              </h4>
+                              <span className="bg-orange-100 text-orange-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                                Khuyên dùng
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-0.5">
+                              {autoBestPromo ? (
+                                <>
+                                  Mã có lợi nhất: <strong className="text-orange-600 font-bold">{autoBestPromo.promoName}</strong>
+                                  {calcPromoDiscount(autoBestPromo) > 0 && (
+                                    <span className="ml-1 text-emerald-600 font-extrabold">
+                                      (-{calcPromoDiscount(autoBestPromo).toLocaleString('vi-VN')}đ)
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                'Hệ thống tự động tìm mã giảm giá cao nhất cho đơn hàng của bạn'
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAppliedPromoId(0)
+                            setAppliedRedemptionId(0)
+                          }}
+                          className={`text-xs font-extrabold px-3.5 py-2 rounded-xl border shrink-0 transition-all cursor-pointer ${
+                            isAutoPromoMode
+                              ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
+                              : 'bg-white hover:bg-orange-50 text-orange-600 border-orange-300'
+                          }`}
+                        >
+                          {isAutoPromoMode ? '✓ Đang bật' : 'Bật Tự Động'}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Customer Rewards / Redemptions Selector */}
                     <div>
                       <h4 className="font-extrabold text-slate-900 text-sm mb-2.5 flex items-center gap-1.5">
@@ -911,7 +1011,6 @@ export default function CustomerBooking() {
                                   setAppliedRedemptionId(0);
                                 } else {
                                   if (appliedPromoId) {
-                                    toast.info('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
                                     setAppliedPromoId(0);
                                   }
                                   setAppliedRedemptionId(redemption.redemptionId);
@@ -966,6 +1065,7 @@ export default function CustomerBooking() {
                         ) : availablePromos.map((promo) => {
                           const isApplicable = !promo.serviceId || promo.serviceId === selectedServiceId
                           const isApplied = appliedPromoId === promo.promotionId && isApplicable
+                          const isBest = autoBestPromo?.promotionId === promo.promotionId && isApplicable
 
                           let badgeText = ''
                           if (promo.promoType === 'Discount') {
@@ -984,7 +1084,6 @@ export default function CustomerBooking() {
                                   setAppliedPromoId(0);
                                 } else {
                                   if (appliedRedemptionId) {
-                                    toast.info('Chỉ được chọn khuyến mãi hoặc phần thưởng cho lịch hẹn của bạn.');
                                     setAppliedRedemptionId(0);
                                   }
                                   setAppliedPromoId(promo.promotionId);
@@ -1002,7 +1101,14 @@ export default function CustomerBooking() {
                                   <Percent className="w-4 h-4" />
                                 </div>
                                 <div>
-                                  <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.promoName}</h5>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{promo.promoName}</h5>
+                                    {isBest && (
+                                      <span className="bg-amber-100 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-md border border-amber-300">
+                                        🔥 Tốt nhất
+                                      </span>
+                                    )}
+                                  </div>
                                   <p className="text-[11px] text-slate-500">
                                     {!isApplicable && <span className="text-red-500 font-bold mr-1">(Không áp dụng cho dịch vụ này)</span>}
                                     Hạn: {promo.validTo ? new Date(promo.validTo).toLocaleDateString('vi-VN') : 'Không giới hạn'}
@@ -1038,9 +1144,15 @@ export default function CustomerBooking() {
                         </div>
 
                         {selectedPromo && (
-                          <div className="flex justify-between items-center text-emerald-600 font-semibold gap-2">
-                            <span className="shrink-0">Khuyến mãi hệ thống:</span>
-                            <span className="whitespace-nowrap font-bold">-{discountValue.toLocaleString('vi-VN')}đ</span>
+                          <div className="flex justify-between items-start text-emerald-600 font-semibold gap-2">
+                            <span className="shrink-0 flex items-center gap-1">
+                              {isAutoPromoMode && <Sparkles className="w-3.5 h-3.5 text-orange-500 shrink-0" />}
+                              <span>{isAutoPromoMode ? 'Ưu đãi tự động:' : 'Khuyến mãi đã chọn:'}</span>
+                            </span>
+                            <div className="text-right">
+                              <span className="whitespace-nowrap font-bold block">-{discountValue.toLocaleString('vi-VN')}đ</span>
+                              <span className="text-[10px] text-slate-500 font-normal block">({selectedPromo.promoName})</span>
+                            </div>
                           </div>
                         )}
 
@@ -1147,6 +1259,129 @@ export default function CustomerBooking() {
           </div>
         )}
 
+        {/* Modal Thanh Toán Cọc VietQR/PayOS */}
+        {depositModalData && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-orange-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-orange-500 text-white rounded-2xl shadow-md shadow-orange-500/20">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-900">Thanh Toán Tiền Cọc</h3>
+                    <p className="text-xs text-slate-500 font-medium">Mã lịch hẹn #{depositModalData.bookingId}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDepositModalData(null)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="p-3 bg-white border-2 border-orange-200 rounded-3xl shadow-lg relative group">
+                    {depositModalData.qrImageUrl ? (
+                      <img
+                        src={depositModalData.qrImageUrl}
+                        alt="Mã QR Chuyển Khoản PayOS"
+                        className="w-52 h-52 object-contain rounded-2xl"
+                      />
+                    ) : (
+                      <QRCodeSVG
+                        value={depositModalData.qrCode || depositModalData.checkoutUrl || ''}
+                        size={200}
+                        includeMargin={true}
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium mt-2.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    Quét mã bằng App Ngân Hàng để chuyển khoản cọc
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
+                  {depositModalData.accountName && (
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                      <span className="text-slate-500 font-semibold">Chủ tài khoản:</span>
+                      <span className="font-extrabold text-slate-900 uppercase">{depositModalData.accountName}</span>
+                    </div>
+                  )}
+
+                  {depositModalData.accountNumber && (
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                      <span className="text-slate-500 font-semibold">Số tài khoản:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-orange-600 font-mono text-sm">{depositModalData.accountNumber}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(depositModalData.accountNumber)
+                            toast.success('Đã sao chép Số Tài Khoản!')
+                          }}
+                          className="p-1 hover:bg-slate-200 text-slate-600 rounded-md transition-colors cursor-pointer"
+                          title="Sao chép STK"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                    <span className="text-slate-500 font-semibold">Số tiền cọc:</span>
+                    <span className="font-black text-rose-600 text-sm">
+                      {depositModalData.amount.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+
+                  {depositModalData.description && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-semibold">Nội dung chuyển khoản:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-slate-900 font-mono bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+                          {depositModalData.description}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(depositModalData.description)
+                            toast.success('Đã sao chép Nội Dung!')
+                          }}
+                          className="p-1 hover:bg-slate-200 text-slate-600 rounded-md transition-colors cursor-pointer"
+                          title="Sao chép Nội Dung"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+                  ⚠️ <strong>Lưu ý:</strong> Quý khách vui lòng điền <strong>chính xác tuyệt đối</strong> nội dung chuyển khoản để hệ thống PayOS tự động xác nhận tiền cọc.
+                </p>
+
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositModalData(null)
+                      navigate('/customer/history')
+                    }}
+                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm rounded-xl transition-all border border-slate-200 cursor-pointer"
+                  >
+                    Đóng (Xem Lịch Sử Đặt Lịch)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

@@ -135,14 +135,14 @@ export const bookingService = {
     return axiosClient.get(`/Booking/${bookingId}`);
   },
 
-  createDepositPayment: (bookingId: number, returnUrl?: string, cancelUrl?: string): Promise<{ checkoutUrl?: string; CheckoutUrl?: string }> => {
+  createDepositPayment: (bookingId: number, returnUrl?: string, cancelUrl?: string): Promise<any> => {
     const origin = window.location.origin;
     const rUrl = returnUrl || `${origin}/customer/history?bookingId=${bookingId}&status=success`;
     const cUrl = cancelUrl || `${origin}/customer/booking?cancelBookingId=${bookingId}&cancel=true`;
     return axiosClient.post(`/payments/deposit-qr/${bookingId}?returnUrl=${encodeURIComponent(rUrl)}&cancelUrl=${encodeURIComponent(cUrl)}`);
   },
 
-  createFinalPayment: (bookingId: number, returnUrl?: string, cancelUrl?: string): Promise<{ checkoutUrl?: string; CheckoutUrl?: string }> => {
+  createFinalPayment: (bookingId: number, returnUrl?: string, cancelUrl?: string): Promise<any> => {
     const origin = window.location.origin;
     const rUrl = returnUrl || `${origin}/customer/history?bookingId=${bookingId}&status=success`;
     const cUrl = cancelUrl || `${origin}/customer/booking?cancelBookingId=${bookingId}&cancel=true`;

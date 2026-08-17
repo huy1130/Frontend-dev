@@ -42,6 +42,8 @@ export default function AdminAppointments() {
   const [isFinalPaymentModalOpen, setIsFinalPaymentModalOpen] = useState(false)
   const [paymentBooking, setPaymentBooking] = useState<any>(null)
   const [finalPaymentUrl, setFinalPaymentUrl] = useState<string | null>(null)
+  const [finalPaymentQrCode, setFinalPaymentQrCode] = useState<string | null>(null)
+  const [finalPaymentQrImage, setFinalPaymentQrImage] = useState<string | null>(null)
   const [isLoadingFinalPayment, setIsLoadingFinalPayment] = useState(false)
 
   const fetchBookings = async () => {
@@ -254,10 +256,14 @@ export default function AdminAppointments() {
         console.warn('Could not fetch detailed booking prices for payment modal', e)
       }
 
-      const res = await bookingService.createFinalPayment(booking.bookingId)
+      const res: any = await bookingService.createFinalPayment(booking.bookingId)
       const url = res?.checkoutUrl || res?.CheckoutUrl
-      if (url) {
-        setFinalPaymentUrl(url)
+      const qr = res?.qrCode || res?.QrCode
+      const qrImg = res?.qrImageUrl || res?.QrImageUrl
+      if (url || qr || qrImg) {
+        setFinalPaymentUrl(url || null)
+        setFinalPaymentQrCode(qr || null)
+        setFinalPaymentQrImage(qrImg || null)
       } else {
         toast.error('Không thể tạo liên kết thanh toán PayOS')
       }
@@ -1194,6 +1200,8 @@ export default function AdminAppointments() {
                   setIsFinalPaymentModalOpen(false)
                   setPaymentBooking(null)
                   setFinalPaymentUrl(null)
+                  setFinalPaymentQrCode(null)
+                  setFinalPaymentQrImage(null)
                 }}
                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
               >
@@ -1233,7 +1241,11 @@ export default function AdminAppointments() {
               ) : finalPaymentUrl ? (
                 <div className="flex flex-col items-center space-y-4">
                   <div className="p-4 bg-white border-2 border-purple-200 rounded-3xl shadow-md">
-                    <QRCodeSVG value={finalPaymentUrl} size={210} includeMargin={true} />
+                    {finalPaymentQrImage ? (
+                      <img src={finalPaymentQrImage} alt="VietQR PayOS" className="w-[210px] h-[210px] object-contain rounded-xl" />
+                    ) : (
+                      <QRCodeSVG value={finalPaymentQrCode || finalPaymentUrl || ''} size={210} includeMargin={true} />
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full animate-pulse">
@@ -1261,6 +1273,8 @@ export default function AdminAppointments() {
                   setIsFinalPaymentModalOpen(false)
                   setPaymentBooking(null)
                   setFinalPaymentUrl(null)
+                  setFinalPaymentQrCode(null)
+                  setFinalPaymentQrImage(null)
                 }}
                 className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm rounded-xl transition-colors cursor-pointer"
               >
