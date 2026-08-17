@@ -208,9 +208,6 @@ export default function CustomerCars() {
                 >
                   <option value="Car">Xe Ô tô (Car)</option>
                   <option value="Motorbike">Xe Máy (Motorbike)</option>
-                  <option value="Sedan">Sedan</option>
-                  <option value="SUV">SUV</option>
-                  <option value="Hatchback">Hatchback</option>
                 </select>
               </div>
 
