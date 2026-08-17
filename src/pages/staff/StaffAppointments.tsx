@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool } from 'lucide-react'
 import { toast } from 'sonner'
+import { QRCodeSVG } from 'qrcode.react'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
 import { broadcastPlateScan, subscribePlateScan, getLatestPlateScan, dismissPlateScan, PlateScanEventPayload } from '../../utils/plateNotification'
@@ -44,6 +45,12 @@ export default function StaffAppointments() {
   const [ocrImagePreview, setOcrImagePreview] = useState<string | null>(null)
   const [ocrHasBooking, setOcrHasBooking] = useState(false)
 
+  // Final Payment Modal State
+  const [isFinalPaymentModalOpen, setIsFinalPaymentModalOpen] = useState(false)
+  const [paymentBooking, setPaymentBooking] = useState<any>(null)
+  const [finalPaymentUrl, setFinalPaymentUrl] = useState<string | null>(null)
+  const [isLoadingFinalPayment, setIsLoadingFinalPayment] = useState(false)
+
   const fetchBookings = async () => {
     setIsLoading(true)
     try {
@@ -75,7 +82,15 @@ export default function StaffAppointments() {
             response.data.map(async (b: any) => {
               try {
                 const detailResponse = await bookingService.getBookingDetail(b.bookingId);
-                return { ...b, customerPhone: detailResponse.data?.customerPhone || 'N/A' };
+                const d = detailResponse.data || detailResponse;
+                return {
+                  ...b,
+                  customerPhone: d?.customerPhone || b.customerPhone || 'N/A',
+                  originalPrice: d?.originalPrice ?? b.originalPrice,
+                  finalPrice: d?.finalPrice ?? b.finalPrice,
+                  depositAmount: d?.depositAmount ?? b.depositAmount,
+                  amountToPay: d?.amountToPay
+                };
               } catch (e) {
                 return { ...b, customerPhone: 'N/A' };
               }
@@ -94,7 +109,11 @@ export default function StaffAppointments() {
             serviceName: b.serviceName,
             bookingDate: b.bookingDate,
             startTime: b.startTime,
-            endTime: b.endTime
+            endTime: b.endTime,
+            originalPrice: b.originalPrice,
+            finalPrice: b.finalPrice,
+            depositAmount: b.depositAmount,
+            amountToPay: b.amountToPay
           }))
           setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
         }
@@ -328,6 +347,60 @@ export default function StaffAppointments() {
     }
   }, [isScannerOpen])
 
+  const handleOpenFinalPayment = async (booking: any) => {
+    setPaymentBooking(booking)
+    setIsFinalPaymentModalOpen(true)
+    setIsLoadingFinalPayment(true)
+    setFinalPaymentUrl(null)
+
+    try {
+      try {
+        const detailRes = await bookingService.getBookingDetail(booking.bookingId)
+        const fullDetail = detailRes?.data || detailRes
+        if (fullDetail) {
+          setPaymentBooking(fullDetail)
+        }
+      } catch (e) {
+        console.warn('Could not fetch detailed booking prices for payment modal', e)
+      }
+
+      const res = await bookingService.createFinalPayment(booking.bookingId)
+      const url = res?.checkoutUrl || res?.CheckoutUrl
+      if (url) {
+        setFinalPaymentUrl(url)
+      } else {
+        toast.error('Không thể tạo liên kết thanh toán PayOS')
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.Message || err.response?.data?.message || 'Lỗi khi khởi tạo thanh toán')
+    } finally {
+      setIsLoadingFinalPayment(false)
+    }
+  }
+
+  // Polling check for payment completion when modal is open
+  useEffect(() => {
+    if (!isFinalPaymentModalOpen || !paymentBooking) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const detailRes = await bookingService.getBookingDetail(paymentBooking.bookingId);
+        const detailObj = detailRes?.data || detailRes;
+        if (detailObj && (detailObj.status === 'Completed' || detailObj.status === 'CheckedOut')) {
+          toast.success('🎉 Khách hàng đã thanh toán thành công qua PayOS!');
+          setIsFinalPaymentModalOpen(false);
+          setPaymentBooking(null);
+          setFinalPaymentUrl(null);
+          fetchBookings();
+        }
+      } catch (e) {
+        console.warn('Polling final payment status failed', e);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isFinalPaymentModalOpen, paymentBooking]);
+
   const handleStatusUpdate = async (bookingId: number, currentStatus: string) => {
     try {
       if (currentStatus === 'Pending' || currentStatus === 'Deposited') {
@@ -337,7 +410,7 @@ export default function StaffAppointments() {
         setCheckInBookingId(bookingId)
         setIsCheckInModalOpen(true)
         return // Wait for modal submission
-      } else if (currentStatus === 'Washing') {
+      } else if (currentStatus === 'Completed') {
         await staffService.checkOutBooking(bookingId)
         toast.success('Giao xe thành công!')
       }
@@ -671,7 +744,15 @@ export default function StaffAppointments() {
                     )}
                     {booking.status === 'Washing' && (
                       <button
-                        onClick={() => handleStatusUpdate(booking.bookingId, 'Washing')}
+                        onClick={() => handleOpenFinalPayment(booking)}
+                        className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20 whitespace-nowrap"
+                      >
+                        <QrCode className="w-4 h-4" /> Thanh Toán Nốt
+                      </button>
+                    )}
+                    {booking.status === 'Completed' && (
+                      <button
+                        onClick={() => handleStatusUpdate(booking.bookingId, 'Completed')}
                         className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap"
                       >
                         <LogOut className="w-4 h-4" /> Bàn Giao Xe
@@ -1396,6 +1477,102 @@ export default function StaffAppointments() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Thanh Toán Phần Còn Lại qua PayOS */}
+      {isFinalPaymentModalOpen && paymentBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-purple-100 text-purple-600 rounded-xl">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">Thanh Toán Phần Còn Lại</h3>
+                  <p className="text-xs text-slate-500 font-medium">Mã lịch hẹn #{paymentBooking.bookingId}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsFinalPaymentModalOpen(false)
+                  setPaymentBooking(null)
+                  setFinalPaymentUrl(null)
+                }}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 text-center">
+              {/* Thông tin tiền tệ */}
+              <div className="bg-purple-50/60 border border-purple-100 rounded-2xl p-4 text-left space-y-2">
+                <div className="flex justify-between text-xs font-semibold text-slate-500">
+                  <span>Biển số xe:</span>
+                  <span className="text-slate-800 font-bold">{paymentBooking.licensePlate}</span>
+                </div>
+                <div className="flex justify-between text-xs font-semibold text-slate-500">
+                  <span>Khách hàng:</span>
+                  <span className="text-slate-800 font-bold">{paymentBooking.customerName}</span>
+                </div>
+                <div className="h-px bg-purple-100 my-1"></div>
+                <div className="flex justify-between text-sm font-bold text-purple-900">
+                  <span>Số tiền thu nốt:</span>
+                  <span className="text-base font-extrabold text-purple-700">
+                    {(
+                      paymentBooking.amountToPay ??
+                      ((paymentBooking.finalPrice || paymentBooking.originalPrice || 0) - (paymentBooking.depositAmount || 0))
+                    ).toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+              </div>
+
+              {/* Khung Mã QR PayOS */}
+              {isLoadingFinalPayment ? (
+                <div className="py-12 flex flex-col items-center justify-center space-y-3">
+                  <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-sm font-semibold text-slate-500">Đang khởi tạo mã QR PayOS...</p>
+                </div>
+              ) : finalPaymentUrl ? (
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="p-4 bg-white border-2 border-purple-200 rounded-3xl shadow-md">
+                    <QRCodeSVG value={finalPaymentUrl} size={210} includeMargin={true} />
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full animate-pulse">
+                    <div className="w-2 h-2 rounded-full bg-purple-600 animate-ping"></div>
+                    <span>Đang chờ khách quét mã QR để thanh toán...</span>
+                  </div>
+
+                  <a
+                    href={finalPaymentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold text-slate-500 hover:text-purple-600 underline"
+                  >
+                    Hoặc mở trang thanh toán PayOS trực tiếp
+                  </a>
+                </div>
+              ) : (
+                <p className="text-sm text-rose-500 font-medium">Không thể tải mã QR. Vui lòng thử lại sau.</p>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+              <button
+                onClick={() => {
+                  setIsFinalPaymentModalOpen(false)
+                  setPaymentBooking(null)
+                  setFinalPaymentUrl(null)
+                }}
+                className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm rounded-xl transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
             </div>
           </div>
         </div>

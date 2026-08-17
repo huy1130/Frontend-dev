@@ -13,6 +13,10 @@ export interface TodayBookingDto {
   bookingDate: string
   startTime?: string
   endTime?: string
+  originalPrice?: number
+  finalPrice?: number
+  depositAmount?: number
+  amountToPay?: number
 }
 
 export interface IssueReceiptRequestDTO {
