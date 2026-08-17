@@ -40,7 +40,32 @@ export default function CustomerHistory() {
   const [searchParams] = useSearchParams()
   const [filterStatus, setFilterStatus] = useState<'all' | 'Pending' | 'Completed' | 'Cancelled'>('all')
 
-  // Automatic notification upon returning from PayOS payment
+
+  const [historyData, setHistoryData] = useState<BookingResponseDTO[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedBooking, setSelectedBooking] = useState<BookingResponseDTO | null>(null)
+  const [promotionsMap, setPromotionsMap] = useState<Record<number, string>>({})
+  const [redemptionsMap, setRedemptionsMap] = useState<Record<number, string>>({})
+
+  // VietQR Deposit Modal state
+  const [depositModalData, setDepositModalData] = useState<{
+    bookingId: number
+    amount: number
+    accountNumber: string
+    accountName: string
+    bin: string
+    description: string
+    qrCode?: string
+    qrImageUrl?: string
+    checkoutUrl?: string
+  } | null>(null)
+  const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
+  const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
+  const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
+  const [depositPayosUrl, setDepositPayosUrl] = useState<string>('')
+
+  // Automatic notification upon returning from PayOS payment or opening QR modal from booking
+  const openQrParam = searchParams.get('openQr')
   React.useEffect(() => {
     const bookingIdParam = searchParams.get('bookingId')
     const codeParam = searchParams.get('code')
@@ -49,18 +74,40 @@ export default function CustomerHistory() {
     if (bookingIdParam && (codeParam === '00' || statusParam === 'PAID' || statusParam === 'success')) {
       toast.success(`🎉 Giao dịch thanh toán cọc đơn #${bookingIdParam} đã hoàn tất!`)
     }
-  }, [searchParams])
-  const [historyData, setHistoryData] = useState<BookingResponseDTO[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedBooking, setSelectedBooking] = useState<BookingResponseDTO | null>(null)
-  const [promotionsMap, setPromotionsMap] = useState<Record<number, string>>({})
-  const [redemptionsMap, setRedemptionsMap] = useState<Record<number, string>>({})
 
-  // VietQR Deposit Modal state
-  const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
-  const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
-  const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
-  const [depositPayosUrl, setDepositPayosUrl] = useState<string>('')
+    if (openQrParam) {
+      const bId = parseInt(openQrParam, 10)
+      if (!isNaN(bId)) {
+        (async () => {
+          try {
+            toast.info('Đang khởi tạo mã QR cọc PayOS...')
+            const payRes = await bookingService.createDepositPayment(bId)
+            if (payRes) {
+              const depositAmt = payRes.amount ?? payRes.Amount ?? 0
+              const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
+              if (depositAmt <= 0 || isPaid) {
+                toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động cập nhật trạng thái Đã Đặt Cọc.')
+              } else {
+                setDepositModalData({
+                  bookingId: bId,
+                  amount: depositAmt,
+                  accountNumber: payRes.accountNumber || payRes.AccountNumber || '',
+                  accountName: payRes.accountName || payRes.AccountName || '',
+                  bin: payRes.bin || payRes.Bin || '',
+                  description: payRes.description || payRes.Description || `Deposit for booking ${bId}`,
+                  qrCode: payRes.qrCode || payRes.QrCode,
+                  qrImageUrl: payRes.qrImageUrl || payRes.QrImageUrl,
+                  checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl
+                })
+              }
+            }
+          } catch (err: any) {
+            toast.error('Không thể tạo mã QR thanh toán cọc.')
+          }
+        })()
+      }
+    }
+  }, [searchParams, openQrParam])
 
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 5
@@ -82,57 +129,58 @@ export default function CustomerHistory() {
     setCurrentPage(1)
   }, [filterStatus])
 
-  React.useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const token = sessionStorage.getItem('token') || localStorage.getItem('token')
-        if (!token) return
-        const phoneNumber = sessionStorage.getItem('phoneNumber') || localStorage.getItem('phoneNumber')
+  const fetchHistory = async () => {
+    try {
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token')
+      if (!token) return
+      const phoneNumber = sessionStorage.getItem('phoneNumber') || localStorage.getItem('phoneNumber')
 
-        if (phoneNumber) {
-          try {
-            const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes, myReportsRes] = await Promise.all([
-              bookingService.getBookingHistory(phoneNumber),
-              promotionService.getPublicPromotions().catch(() => []),
-              promotionService.getEligiblePromotions().catch(() => []),
-              loyaltyService.getMyRedemptions().catch(() => []),
-              incidentReportService.getMyReports().catch(() => ({ data: [] }))
-            ])
+      if (phoneNumber) {
+        try {
+          const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes, myReportsRes] = await Promise.all([
+            bookingService.getBookingHistory(phoneNumber),
+            promotionService.getPublicPromotions().catch(() => []),
+            promotionService.getEligiblePromotions().catch(() => []),
+            loyaltyService.getMyRedemptions().catch(() => []),
+            incidentReportService.getMyReports().catch(() => ({ data: [] }))
+          ])
 
-            if (historyRes && historyRes.data) {
-              const sorted = historyRes.data.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
-              setHistoryData(sorted)
-            }
-
-            const reportsData = Array.isArray(myReportsRes) ? myReportsRes : myReportsRes.data || []
-            setMyReports(reportsData)
-
-            const promoMap: Record<number, string> = {}
-            if (Array.isArray(publicPromosRes)) {
-              publicPromosRes.forEach(p => promoMap[p.promotionId] = p.promoName)
-            }
-            if (Array.isArray(eligiblePromosRes)) {
-              eligiblePromosRes.forEach(p => promoMap[p.promotionId] = p.promoName)
-            }
-            setPromotionsMap(promoMap)
-
-            const redemptionMap: Record<number, string> = {}
-            if (Array.isArray(redemptionsRes)) {
-              redemptionsRes.forEach((r: any) => redemptionMap[r.redemptionId] = r.rewardName)
-            }
-            setRedemptionsMap(redemptionMap)
-          } catch (error) {
-            console.error('Error fetching data:', error)
-            toast.error('Có lỗi xảy ra khi lấy dữ liệu.')
+          if (historyRes && historyRes.data) {
+            const sorted = historyRes.data.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
+            setHistoryData(sorted)
           }
+
+          const reportsData = Array.isArray(myReportsRes) ? myReportsRes : myReportsRes.data || []
+          setMyReports(reportsData)
+
+          const promoMap: Record<number, string> = {}
+          if (Array.isArray(publicPromosRes)) {
+            publicPromosRes.forEach(p => promoMap[p.promotionId] = p.promoName)
+          }
+          if (Array.isArray(eligiblePromosRes)) {
+            eligiblePromosRes.forEach(p => promoMap[p.promotionId] = p.promoName)
+          }
+          setPromotionsMap(promoMap)
+
+          const redemptionMap: Record<number, string> = {}
+          if (Array.isArray(redemptionsRes)) {
+            redemptionsRes.forEach((r: any) => redemptionMap[r.redemptionId] = r.rewardName)
+          }
+          setRedemptionsMap(redemptionMap)
+        } catch (error) {
+          console.error('Error fetching data:', error)
+          toast.error('Có lỗi xảy ra khi lấy dữ liệu.')
         }
-      } catch (error) {
-        console.error('Error fetching history:', error)
-        toast.error('Có lỗi xảy ra khi lấy lịch sử đặt lịch.')
-      } finally {
-        setIsLoading(false)
       }
+    } catch (error) {
+      console.error('Error fetching history:', error)
+      toast.error('Có lỗi xảy ra khi lấy lịch sử đặt lịch.')
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  React.useEffect(() => {
     fetchHistory()
   }, [])
 
@@ -429,12 +477,27 @@ export default function CustomerHistory() {
                           <button
                             onClick={async () => {
                               try {
-                                toast.info('Đang mở trang thanh toán cọc PayOS...')
+                                toast.info('Đang khởi tạo mã QR cọc PayOS...')
                                 const payRes = await bookingService.createDepositPayment(item.bookingId)
-                                const checkoutUrl = payRes?.checkoutUrl || payRes?.CheckoutUrl
-                                if (checkoutUrl) {
-                                  window.location.href = checkoutUrl
-                                  return
+                                if (payRes) {
+                                  const depositAmt = payRes.amount ?? payRes.Amount ?? 0
+                                  const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
+                                  if (depositAmt <= 0 || isPaid) {
+                                    toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động cập nhật trạng thái Đã Đặt Cọc.')
+                                    fetchHistory()
+                                  } else {
+                                    setDepositModalData({
+                                      bookingId: item.bookingId,
+                                      amount: depositAmt,
+                                      accountNumber: payRes.accountNumber || payRes.AccountNumber || '',
+                                      accountName: payRes.accountName || payRes.AccountName || '',
+                                      bin: payRes.bin || payRes.Bin || '',
+                                      description: payRes.description || payRes.Description || `Deposit for booking ${item.bookingId}`,
+                                      qrCode: payRes.qrCode || payRes.QrCode,
+                                      qrImageUrl: payRes.qrImageUrl || payRes.QrImageUrl,
+                                      checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl
+                                    })
+                                  }
                                 }
                               } catch (err: any) {
                                 toast.error(err.response?.data?.message || 'Không thể tạo link cọc PayOS')
@@ -1154,6 +1217,127 @@ export default function CustomerHistory() {
             >
               <XCircle className="w-6 h-6" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Thanh Toán Cọc VietQR/PayOS */}
+      {depositModalData && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-orange-50/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-orange-500 text-white rounded-2xl shadow-md shadow-orange-500/20">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900">Thanh Toán Tiền Cọc</h3>
+                  <p className="text-xs text-slate-500 font-medium">Mã lịch hẹn #{depositModalData.bookingId}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDepositModalData(null)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className="flex flex-col items-center justify-center">
+                <div className="p-3 bg-white border-2 border-orange-200 rounded-3xl shadow-lg relative group">
+                  {depositModalData.qrImageUrl ? (
+                    <img
+                      src={depositModalData.qrImageUrl}
+                      alt="Mã QR Chuyển Khoản PayOS"
+                      className="w-52 h-52 object-contain rounded-2xl"
+                    />
+                  ) : (
+                    <QRCodeSVG
+                      value={depositModalData.qrCode || depositModalData.checkoutUrl || ''}
+                      size={200}
+                      includeMargin={true}
+                    />
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 font-medium mt-2.5 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                  Quét mã bằng App Ngân Hàng để chuyển khoản cọc
+                </p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
+                {depositModalData.accountName && (
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                    <span className="text-slate-500 font-semibold">Chủ tài khoản:</span>
+                    <span className="font-extrabold text-slate-900 uppercase">{depositModalData.accountName}</span>
+                  </div>
+                )}
+
+                {depositModalData.accountNumber && (
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                    <span className="text-slate-500 font-semibold">Số tài khoản:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-orange-600 font-mono text-sm">{depositModalData.accountNumber}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(depositModalData.accountNumber)
+                          toast.success('Đã sao chép Số Tài Khoản!')
+                        }}
+                        className="p-1 hover:bg-slate-200 text-slate-600 rounded-md transition-colors cursor-pointer"
+                        title="Sao chép STK"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                  <span className="text-slate-500 font-semibold">Số tiền cọc:</span>
+                  <span className="font-black text-rose-600 text-sm">
+                    {depositModalData.amount.toLocaleString('vi-VN')}đ
+                  </span>
+                </div>
+
+                {depositModalData.description && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-semibold">Nội dung chuyển khoản:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-slate-900 font-mono bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+                        {depositModalData.description}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(depositModalData.description)
+                          toast.success('Đã sao chép Nội Dung!')
+                        }}
+                        className="p-1 hover:bg-slate-200 text-slate-600 rounded-md transition-colors cursor-pointer"
+                        title="Sao chép Nội Dung"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+                ⚠️ <strong>Lưu ý:</strong> Quý khách vui lòng điền <strong>chính xác tuyệt đối</strong> nội dung chuyển khoản để hệ thống PayOS tự động xác nhận tiền cọc.
+              </p>
+
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setDepositModalData(null)}
+                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm rounded-xl transition-all border border-slate-200 cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

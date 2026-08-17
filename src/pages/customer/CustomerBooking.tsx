@@ -21,8 +21,10 @@ import {
   CreditCard,
   Loader2,
   Copy,
-  ExternalLink
+  ExternalLink,
+  QrCode
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { customerService, VehicleResponseDTO } from '../../services/customerService'
@@ -110,6 +112,17 @@ export default function CustomerBooking() {
   const [createdBooking, setCreatedBooking] = useState<any>(null)
 
   // Deposit QR Modal State
+  const [depositModalData, setDepositModalData] = useState<{
+    bookingId: number
+    amount: number
+    accountNumber: string
+    accountName: string
+    bin: string
+    description: string
+    qrCode?: string
+    qrImageUrl?: string
+    checkoutUrl?: string
+  } | null>(null)
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
   const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
   const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
@@ -296,7 +309,7 @@ export default function CustomerBooking() {
   const isBike = selectedCar ? (selectedCar.vehicleType || '').toLowerCase().includes('bike') || (selectedCar.vehicleType || '').toLowerCase().includes('xe máy') : false
   const bikeRate = systemParams?.bikeDepositAmount ?? 20000
   const carPercent = systemParams?.carDepositPercentage ?? 20
-  const estimatedDeposit = Math.max(10000, isBike ? bikeRate : Math.round((finalTotal * carPercent) / 100))
+  const estimatedDeposit = finalTotal === 0 ? 0 : Math.max(0, isBike ? Math.min(bikeRate, finalTotal) : Math.round((finalTotal * carPercent) / 100))
 
   const handleConfirmBooking = async () => {
     if (!selectedCarId || !selectedServiceId || !selectedSlotId) {
@@ -335,22 +348,24 @@ export default function CustomerBooking() {
 
       // API trả về trực tiếp cục BookingDto
       if (res && res.bookingId) {
-        toast.success('Khởi tạo đơn thành công! Đang chuyển hướng sang cổng thanh toán cọc PayOS...')
-
-        // Tự động chuyển hướng trực tiếp trang tới cổng PayOS
+        toast.success('Khởi tạo đơn thành công!')
         try {
           const payRes = await bookingService.createDepositPayment(res.bookingId)
-          const checkoutUrl = payRes?.checkoutUrl || payRes?.CheckoutUrl
-          if (checkoutUrl) {
-            window.location.href = checkoutUrl
-            return
+          if (payRes) {
+            const depositAmt = payRes.amount ?? payRes.Amount ?? 0
+            const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
+            if (depositAmt <= 0 || isPaid) {
+              toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động xác nhận giữ chỗ thành công.')
+              navigate('/customer/history')
+            } else {
+              navigate(`/customer/history?openQr=${res.bookingId}`)
+            }
+          } else {
+            navigate('/customer/history')
           }
         } catch (depositErr: any) {
-          console.error('Lỗi khi tạo link cọc PayOS:', depositErr)
-          toast.error(depositErr.response?.data?.message || 'Không thể chuyển tới cổng PayOS. Vui lòng kiểm tra lại trong lịch sử.')
-          setBookingRef('Mã lịch hẹn - ' + res.bookingId)
-          setCreatedBooking(res)
-          setIsSuccess(true)
+          toast.error(depositErr.response?.data?.message || 'Khởi tạo đơn thành công! Đang mở lịch sử đặt lịch.')
+          navigate('/customer/history')
         }
       }
     } catch (error: any) {
@@ -537,26 +552,31 @@ export default function CustomerBooking() {
 
                 <div className="bg-white p-5 rounded-2xl border border-orange-200/60 space-y-4">
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Vui lòng bấm nút bên dưới để mở trang thanh toán <strong>PayOS chính thức</strong>. Bạn có thể quét mã VietQR từ bất kỳ App Ngân Hàng hoặc Ví Điện Tử nào (MBBank, Vietcombank, Momo...) để hoàn tất khoản cọc <strong className="text-orange-600">{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong>.
+                    Vui lòng quét mã VietQR trên bảng thanh toán cọc bằng App Ngân Hàng hoặc Ví Điện Tử (MBBank, Vietcombank, Momo...) để hoàn tất khoản cọc <strong className="text-orange-600">{(createdBooking?.depositAmount || estimatedDeposit).toLocaleString('vi-VN')}đ</strong>.
                   </p>
 
-                  {depositPaymentUrl ? (
-                    <a
-                      href={depositPaymentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-4 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-black text-base rounded-2xl transition-all shadow-xl shadow-orange-500/25 flex items-center justify-center gap-2.5 cursor-pointer no-underline"
-                    >
-                      <CreditCard className="w-5 h-5" />
-                      <span>Thanh Toán Đặt Cọc Ngay Qua PayOS</span>
-                      <ExternalLink className="w-4 h-4 ml-1" />
-                    </a>
-                  ) : (
-                    <div className="py-4 px-4 bg-orange-50 border border-orange-200 rounded-2xl text-xs font-extrabold text-orange-600 flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Đang khởi tạo mã QR thanh toán PayOS...</span>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (createdBooking) {
+                        setDepositModalData({
+                          bookingId: createdBooking.bookingId,
+                          amount: createdBooking.depositAmount || estimatedDeposit,
+                          accountNumber: createdBooking.accountNumber || '',
+                          accountName: createdBooking.accountName || '',
+                          bin: createdBooking.bin || '',
+                          description: createdBooking.description || `Deposit for booking ${createdBooking.bookingId}`,
+                          qrCode: createdBooking.qrCode,
+                          qrImageUrl: createdBooking.qrImageUrl,
+                          checkoutUrl: createdBooking.checkoutUrl
+                        })
+                      }
+                    }}
+                    className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold text-sm rounded-2xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <QrCode className="w-5 h-5" />
+                    <span>Mở Bảng Mã QR Thanh Toán Cọc</span>
+                  </button>
                 </div>
 
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
@@ -1147,6 +1167,129 @@ export default function CustomerBooking() {
           </div>
         )}
 
+        {/* Modal Thanh Toán Cọc VietQR/PayOS */}
+        {depositModalData && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-orange-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-orange-500 text-white rounded-2xl shadow-md shadow-orange-500/20">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-900">Thanh Toán Tiền Cọc</h3>
+                    <p className="text-xs text-slate-500 font-medium">Mã lịch hẹn #{depositModalData.bookingId}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDepositModalData(null)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="p-3 bg-white border-2 border-orange-200 rounded-3xl shadow-lg relative group">
+                    {depositModalData.qrImageUrl ? (
+                      <img
+                        src={depositModalData.qrImageUrl}
+                        alt="Mã QR Chuyển Khoản PayOS"
+                        className="w-52 h-52 object-contain rounded-2xl"
+                      />
+                    ) : (
+                      <QRCodeSVG
+                        value={depositModalData.qrCode || depositModalData.checkoutUrl || ''}
+                        size={200}
+                        includeMargin={true}
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium mt-2.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                    Quét mã bằng App Ngân Hàng để chuyển khoản cọc
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 text-xs">
+                  {depositModalData.accountName && (
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                      <span className="text-slate-500 font-semibold">Chủ tài khoản:</span>
+                      <span className="font-extrabold text-slate-900 uppercase">{depositModalData.accountName}</span>
+                    </div>
+                  )}
+
+                  {depositModalData.accountNumber && (
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                      <span className="text-slate-500 font-semibold">Số tài khoản:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-orange-600 font-mono text-sm">{depositModalData.accountNumber}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(depositModalData.accountNumber)
+                            toast.success('Đã sao chép Số Tài Khoản!')
+                          }}
+                          className="p-1 hover:bg-slate-200 text-slate-600 rounded-md transition-colors cursor-pointer"
+                          title="Sao chép STK"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-200/80">
+                    <span className="text-slate-500 font-semibold">Số tiền cọc:</span>
+                    <span className="font-black text-rose-600 text-sm">
+                      {depositModalData.amount.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+
+                  {depositModalData.description && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-semibold">Nội dung chuyển khoản:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-slate-900 font-mono bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md">
+                          {depositModalData.description}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(depositModalData.description)
+                            toast.success('Đã sao chép Nội Dung!')
+                          }}
+                          className="p-1 hover:bg-slate-200 text-slate-600 rounded-md transition-colors cursor-pointer"
+                          title="Sao chép Nội Dung"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 leading-relaxed">
+                  ⚠️ <strong>Lưu ý:</strong> Quý khách vui lòng điền <strong>chính xác tuyệt đối</strong> nội dung chuyển khoản để hệ thống PayOS tự động xác nhận tiền cọc.
+                </p>
+
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepositModalData(null)
+                      navigate('/customer/history')
+                    }}
+                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm rounded-xl transition-all border border-slate-200 cursor-pointer"
+                  >
+                    Đóng (Xem Lịch Sử Đặt Lịch)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />
