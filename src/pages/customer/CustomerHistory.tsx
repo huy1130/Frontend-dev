@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   History,
   Calendar as CalendarIcon,
@@ -62,7 +62,55 @@ export default function CustomerHistory() {
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
   const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
   const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
+  const navigate = useNavigate()
   const [depositPayosUrl, setDepositPayosUrl] = useState<string>('')
+  const [successDepositBookingId, setSuccessDepositBookingId] = useState<number | null>(null)
+  const [isCheckingDeposit, setIsCheckingDeposit] = useState<boolean>(false)
+
+  // Polling to automatically detect when deposit is completed while QR modal is open
+  React.useEffect(() => {
+    if (!depositModalData?.bookingId) return
+
+    const interval = setInterval(async () => {
+      try {
+        const detailRes = await bookingService.getBookingDetail(depositModalData.bookingId)
+        const currentStatus = detailRes?.data?.status || detailRes?.data?.bookingStatus
+        if (currentStatus === 'Deposited') {
+          const bId = depositModalData.bookingId
+          setDepositModalData(null)
+          setSuccessDepositBookingId(bId)
+          fetchHistory()
+          navigate('/customer/history', { replace: true })
+          toast.success('🎉 Giao dịch thanh toán cọc đã được ghi nhận!')
+        }
+      } catch {
+        // silent catch
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [depositModalData?.bookingId, navigate])
+
+  const handleCheckDepositStatus = async (bId: number) => {
+    setIsCheckingDeposit(true)
+    try {
+      const detailRes = await bookingService.getBookingDetail(bId)
+      const currentStatus = detailRes?.data?.status || detailRes?.data?.bookingStatus
+      if (currentStatus === 'Deposited') {
+        setDepositModalData(null)
+        setSuccessDepositBookingId(bId)
+        fetchHistory()
+        navigate('/customer/history', { replace: true })
+        toast.success('🎉 Giao dịch thanh toán cọc đã được ghi nhận!')
+      } else {
+        toast.info('Hệ thống chưa nhận được giao dịch. Vui lòng kiểm tra lại sau khi hoàn tất chuyển khoản.')
+      }
+    } catch {
+      toast.error('Không thể kiểm tra trạng thái thanh toán.')
+    } finally {
+      setIsCheckingDeposit(false)
+    }
+  }
 
   // Automatic notification upon returning from PayOS payment or opening QR modal from booking
   const openQrParam = searchParams.get('openQr')
@@ -86,6 +134,7 @@ export default function CustomerHistory() {
               const depositAmt = payRes.amount ?? payRes.Amount ?? 0
               const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
               if (depositAmt <= 0 || isPaid) {
+                setSuccessDepositBookingId(bId)
                 toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động cập nhật trạng thái Đã Đặt Cọc.')
               } else {
                 setDepositModalData({
@@ -1328,16 +1377,71 @@ export default function CustomerHistory() {
                 ⚠️ <strong>Lưu ý:</strong> Quý khách vui lòng điền <strong>chính xác tuyệt đối</strong> nội dung chuyển khoản để hệ thống PayOS tự động xác nhận tiền cọc.
               </p>
 
-              <div className="pt-1">
+              <div className="pt-1 space-y-2">
                 <button
                   type="button"
-                  onClick={() => setDepositModalData(null)}
+                  onClick={() => handleCheckDepositStatus(depositModalData.bookingId)}
+                  disabled={isCheckingDeposit}
+                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold text-sm rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                >
+                  {isCheckingDeposit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Đang kiểm tra giao dịch...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                      <span>Tôi Đã Chuyển Khoản - Kiểm Tra Ngay</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDepositModalData(null)
+                    navigate('/customer/history', { replace: true })
+                  }}
                   className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm rounded-xl transition-all border border-slate-200 cursor-pointer"
                 >
-                  Đóng
+                  Đóng (Thanh Toán Sau)
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Thông Báo Thanh Toán Cọc Thành Công */}
+      {successDepositBookingId && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-8 text-center space-y-5 animate-in zoom-in-95 duration-200 border border-emerald-100">
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto border-2 border-emerald-200 shadow-lg shadow-emerald-500/20">
+              <CheckCircle2 className="w-10 h-10 text-emerald-600 animate-bounce" />
+            </div>
+
+            <div>
+              <span className="px-3.5 py-1 bg-emerald-100 text-emerald-800 rounded-full font-extrabold text-xs">
+                ✓ Giao Dịch Đã Được Ghi Nhận
+              </span>
+              <h3 className="text-2xl font-black text-slate-900 mt-3">
+                Thanh Toán Cọc Thành Công!
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                Khoản tiền cọc cho đơn hẹn <strong className="text-orange-600">#{successDepositBookingId}</strong> đã được hệ thống ghi nhận thành công. Lịch rửa xe của bạn đã được giữ chỗ ưu tiên!
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setSuccessDepositBookingId(null)
+                fetchHistory()
+              }}
+              className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold text-sm rounded-2xl transition-all shadow-md shadow-orange-500/20 cursor-pointer"
+            >
+              Xem Lịch Sử Đặt Lịch
+            </button>
           </div>
         </div>
       )}
