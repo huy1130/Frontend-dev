@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { QRCodeSVG } from 'qrcode.react'
 import { staffService, TodayBookingDto } from '../../services/staffService'
 import { bookingService } from '../../services/bookingService'
+import { incidentReportService } from '../../services/incidentReportService'
 import { broadcastPlateScan, subscribePlateScan, getLatestPlateScan, dismissPlateScan, PlateScanEventPayload } from '../../utils/plateNotification'
 import { formatDateTime } from '../../utils/date'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 
 export default function StaffAppointments() {
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
+  const [reportsMap, setReportsMap] = useState<Record<number, any>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null)
   const [bookingDetail, setBookingDetail] = useState<any>(null)
@@ -54,6 +57,21 @@ export default function StaffAppointments() {
   const fetchBookings = async () => {
     setIsLoading(true)
     try {
+      try {
+        const reportsRes = await incidentReportService.getAllReports()
+        const reportsList = reportsRes?.data || (Array.isArray(reportsRes) ? reportsRes : [])
+        const map: Record<number, any> = {}
+        if (Array.isArray(reportsList)) {
+          reportsList.forEach((r: any) => {
+            if (!map[r.bookingId] || r.status !== 'Rejected') {
+              map[r.bookingId] = r
+            }
+          })
+        }
+        setReportsMap(map)
+      } catch (e) {
+        console.warn('Could not fetch incident reports map', e)
+      }
       if (searchPhone.trim()) {
         const queryStr = searchPhone.trim()
         let response
@@ -348,6 +366,12 @@ export default function StaffAppointments() {
   }, [isScannerOpen])
 
   const handleOpenFinalPayment = async (booking: any) => {
+    const report = reportsMap[booking.bookingId]
+    if (report && report.status !== 'Rejected') {
+      toast.error(`Lịch hẹn #${booking.bookingId} đang có khiếu nại chưa xử lý xong. Vui lòng xử lý khiếu nại trước.`)
+      return
+    }
+
     setPaymentBooking(booking)
     setIsFinalPaymentModalOpen(true)
     setIsLoadingFinalPayment(true)
@@ -743,12 +767,21 @@ export default function StaffAppointments() {
                       </button>
                     )}
                     {booking.status === 'Washing' && (
-                      <button
-                        onClick={() => handleOpenFinalPayment(booking)}
-                        className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20 whitespace-nowrap"
-                      >
-                        <QrCode className="w-4 h-4" /> Thanh Toán Nốt
-                      </button>
+                      (reportsMap[booking.bookingId] && reportsMap[booking.bookingId].status !== 'Rejected') ? (
+                        <Link
+                          to="/admin/incidents"
+                          className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap cursor-pointer"
+                        >
+                          <AlertTriangle className="w-4 h-4" /> Xử Lý Khiếu Nại
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenFinalPayment(booking)}
+                          className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20 whitespace-nowrap"
+                        >
+                          <QrCode className="w-4 h-4" /> Thanh Toán Nốt
+                        </button>
+                      )
                     )}
                     {booking.status === 'Completed' && (
                       <button
