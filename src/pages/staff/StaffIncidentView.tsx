@@ -85,7 +85,7 @@ export default function StaffIncidentView() {
         </div>
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span className="text-xs font-bold text-amber-700">Chế độ Xem — Chỉ Admin/Manager được xử lý</span>
+          <span className="text-xs font-bold text-amber-700">Chế độ Xem — Chỉ Admin được xử lý</span>
         </div>
       </div>
 
@@ -107,9 +107,8 @@ export default function StaffIncidentView() {
               key={btn.key}
               type="button"
               onClick={() => setFilterStatus(btn.key)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                filterStatus === btn.key ? btn.activeClass : 'text-slate-600 hover:bg-slate-100'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === btn.key ? btn.activeClass : 'text-slate-600 hover:bg-slate-100'
+                }`}
             >
               {btn.label} ({btn.count})
             </button>
