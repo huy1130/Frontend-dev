@@ -3,6 +3,14 @@ export interface LoyaltySummaryDTO {
   currentTier: string;
   totalSpent: number;
   totalVisits: number;
+  nextTier?: string | null;
+  pointMultiplier?: number;
+  qualificationMode?: string;
+  qualifyingSpend?: number;
+  qualifyingVisits?: number;
+  spendRequiredForNextTier?: number | null;
+  visitsRequiredForNextTier?: number | null;
+  bookingWindowDays?: number;
 }
 
 export interface PointTransactionDTO {
