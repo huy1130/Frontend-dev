@@ -22,7 +22,8 @@ import {
   Loader2,
   Copy,
   ExternalLink,
-  QrCode
+  QrCode,
+  AlertTriangle
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
@@ -131,6 +132,24 @@ export default function CustomerBooking() {
   const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false)
   const [isDeposited, setIsDeposited] = useState<boolean>(false)
   const [isCheckingDeposit, setIsCheckingDeposit] = useState<boolean>(false)
+  const [isCancellingDeposit, setIsCancellingDeposit] = useState<boolean>(false)
+  const [confirmCancelBookingId, setConfirmCancelBookingId] = useState<number | null>(null)
+
+  const handleConfirmCancel = async (bookingId: number) => {
+    if (!bookingId) return
+    setIsCancellingDeposit(true)
+    try {
+      await bookingService.cancelBooking(bookingId)
+      toast.success(`Đơn đặt lịch #${bookingId} đã được chuyển sang trạng thái Đã Hủy.`)
+      setConfirmCancelBookingId(null)
+      setDepositModalData(null)
+      navigate('/customer/history')
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể hủy đơn đặt lịch. Vui lòng thử lại.')
+    } finally {
+      setIsCancellingDeposit(false)
+    }
+  }
 
   // Polling for deposit payment completion
   React.useEffect(() => {
@@ -1366,7 +1385,26 @@ export default function CustomerBooking() {
                   ⚠️ <strong>Lưu ý:</strong> Quý khách vui lòng điền <strong>chính xác tuyệt đối</strong> nội dung chuyển khoản để hệ thống PayOS tự động xác nhận tiền cọc.
                 </p>
 
-                <div className="pt-1">
+                <div className="pt-1 space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleCheckDepositStatus}
+                    disabled={isCheckingDeposit}
+                    className="w-full py-3 bg-orange-500 hover:bg-orange-600 active:scale-[0.99] text-white font-extrabold text-sm rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  >
+                    {isCheckingDeposit ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Đang kiểm tra giao dịch...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                        <span>Tôi Đã Chuyển Khoản - Kiểm Tra Ngay</span>
+                      </>
+                    )}
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -1375,9 +1413,78 @@ export default function CustomerBooking() {
                     }}
                     className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-sm rounded-xl transition-all border border-slate-200 cursor-pointer"
                   >
-                    Đóng (Xem Lịch Sử Đặt Lịch)
+                    Đóng (Thanh Toán Sau)
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isCancellingDeposit}
+                    onClick={() => setConfirmCancelBookingId(depositModalData.bookingId)}
+                    className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-sm rounded-xl transition-all border border-rose-200 hover:border-rose-300 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-70 font-semibold"
+                  >
+                    {isCancellingDeposit ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                        <span>Đang hủy đơn...</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4 text-rose-600" />
+                        <span>Hủy Đơn Lịch Hẹn Này</span>
+                      </>
+                    )}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Xác Nhận Hủy Lịch Hẹn */}
+        {confirmCancelBookingId && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-7 text-center space-y-5 animate-in zoom-in-95 duration-200 border border-slate-100">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto border-2 border-rose-200 text-rose-600 shadow-lg shadow-rose-500/10">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-black text-slate-900">
+                  Xác Nhận Hủy Lịch Hẹn
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  Bạn có chắc chắn muốn hủy đơn đặt lịch <strong className="text-orange-600">#{confirmCancelBookingId}</strong> này không?
+                  <span className="block mt-1.5 text-rose-600 font-semibold">
+                    ⚠️ Thao tác này sẽ hủy suất giữ chỗ và không thể hoàn tác sau khi xác nhận.
+                  </span>
+                </p>
+              </div>
+
+              <div className="pt-2 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  disabled={isCancellingDeposit}
+                  onClick={() => setConfirmCancelBookingId(null)}
+                  className="py-3 px-4 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all text-xs sm:text-sm cursor-pointer border border-slate-200"
+                >
+                  Quay Lại
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isCancellingDeposit}
+                  onClick={() => handleConfirmCancel(confirmCancelBookingId)}
+                  className="py-3 px-4 rounded-xl font-extrabold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all text-xs sm:text-sm cursor-pointer shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5 disabled:opacity-70"
+                >
+                  {isCancellingDeposit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Đang Hủy...</span>
+                    </>
+                  ) : (
+                    <span>Xác Nhận Hủy</span>
+                  )}
+                </button>
               </div>
             </div>
           </div>
