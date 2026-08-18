@@ -1036,10 +1036,7 @@ export default function StaffAppointments() {
                     <span className="text-slate-500 block mb-1">Trạng thái:</span>
                     <span className="font-semibold px-2 py-1 bg-slate-200 text-slate-700 rounded-md">{bookingDetail.status}</span>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block mb-1">Nhân viên phụ trách:</span>
-                    <span className="font-semibold text-slate-800">{bookingDetail.staffName || 'Chưa phân công'}</span>
-                  </div>
+
                 </div>
               </div>
 
@@ -1495,8 +1492,8 @@ export default function StaffAppointments() {
                     type="button"
                     onClick={() => setIsCustomerLeaving(true)}
                     className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${isCustomerLeaving
-                        ? 'border-orange-500 bg-orange-50/80 text-orange-700 shadow-sm'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                      ? 'border-orange-500 bg-orange-50/80 text-orange-700 shadow-sm'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                       }`}
                   >
                     <span className="flex items-center gap-1.5">
@@ -1509,8 +1506,8 @@ export default function StaffAppointments() {
                     type="button"
                     onClick={() => setIsCustomerLeaving(false)}
                     className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${!isCustomerLeaving
-                        ? 'border-blue-500 bg-blue-50/80 text-blue-700 shadow-sm'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                      ? 'border-blue-500 bg-blue-50/80 text-blue-700 shadow-sm'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                       }`}
                   >
                     <span className="flex items-center gap-1.5">
@@ -1681,8 +1678,8 @@ export default function StaffAppointments() {
                           type="button"
                           onClick={() => setPaymentMethod('cash')}
                           className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${paymentMethod === 'cash'
-                              ? 'bg-white text-emerald-700 shadow-sm'
-                              : 'text-slate-500 hover:text-slate-800'
+                            ? 'bg-white text-emerald-700 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
                           <Banknote className="w-4 h-4 text-emerald-600" />
@@ -1692,8 +1689,8 @@ export default function StaffAppointments() {
                           type="button"
                           onClick={() => setPaymentMethod('payos')}
                           className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'payos'
-                              ? 'bg-white text-purple-700 shadow-sm'
-                              : 'text-slate-500 hover:text-slate-800'
+                            ? 'bg-white text-purple-700 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
                           <QrCode className="w-4 h-4 text-purple-600" />
@@ -1763,8 +1760,8 @@ export default function StaffAppointments() {
                       {/* Tự Tính Tiền Thối */}
                       {tenderedVal > 0 && (
                         <div className={`p-3.5 rounded-2xl text-left border flex items-center justify-between transition-all ${changeVal >= 0
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
-                            : 'bg-rose-50 border-rose-200 text-rose-800'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
+                          : 'bg-rose-50 border-rose-200 text-rose-800'
                           }`}>
                           <span className="text-xs font-bold">
                             {changeVal >= 0 ? 'Tiền thối lại cho khách:' : 'Khách đưa còn thiếu:'}
@@ -1805,8 +1802,8 @@ export default function StaffAppointments() {
                         type="button"
                         onClick={() => setPaymentMethod('cash')}
                         className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'cash'
-                            ? 'bg-white text-emerald-700 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-white text-emerald-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
                         <Banknote className="w-4 h-4 text-emerald-600" />
@@ -1816,8 +1813,8 @@ export default function StaffAppointments() {
                         type="button"
                         onClick={() => setPaymentMethod('payos')}
                         className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'payos'
-                            ? 'bg-white text-purple-700 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-white text-purple-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
                         <QrCode className="w-4 h-4 text-purple-600" />
