@@ -981,6 +981,23 @@ export default function StaffAppointments() {
                     <span className="text-slate-500">Thành tiền:</span>
                     <span className="font-bold text-emerald-600 text-base">{(bookingDetail.finalPrice || 0).toLocaleString('vi-VN')} đ</span>
                   </div>
+                  {(bookingDetail.depositAmount != null && bookingDetail.depositAmount > 0) && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-500">Đã cọc:</span>
+                      <span className="font-semibold text-blue-600">{bookingDetail.depositAmount.toLocaleString('vi-VN')} đ</span>
+                    </div>
+                  )}
+                  {(bookingDetail.depositAmount != null && bookingDetail.depositAmount > 0) && (
+                    <div className="flex items-center justify-end gap-1.5 text-right">
+                      <span className="text-slate-500">Còn lại:</span>
+                      <span className="font-bold text-orange-600 text-base">
+                        {(
+                          bookingDetail.amountToPay ??
+                          Math.max(0, (bookingDetail.finalPrice || bookingDetail.originalPrice || 0) - (bookingDetail.depositAmount || 0))
+                        ).toLocaleString('vi-VN')} đ
+                      </span>
+                    </div>
+                  )}
                   {bookingDetail.promoCode && (
                     <div className="col-span-2">
                       <span className="text-slate-500 block mb-1">Mã khuyến mãi áp dụng:</span>
