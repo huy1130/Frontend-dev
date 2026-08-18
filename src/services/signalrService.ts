@@ -34,7 +34,7 @@ class SignalRService {
 
     try {
       this.connection = new signalR.HubConnectionBuilder()
-        .withUrl('/notificationHub', {
+        .withUrl(import.meta.env.VITE_SIGNALR_URL || '/notificationHub', {
           skipNegotiation: false,
           transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
         })
