@@ -526,7 +526,7 @@ export default function CustomerHistory() {
                     </div>
 
                     <div className="md:col-span-4 text-left md:text-right border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
-                      {item.status === 'Deposited' ? (
+                      {['deposited', 'confirmed', 'washing', 'inprogress', 'in-progress'].includes((item.status || '').toLowerCase()) ? (
                         <div>
                           <span className="text-[11px] text-slate-500 font-semibold block mb-0.5">Thanh toán còn lại</span>
                           <span className="text-xl font-extrabold text-orange-600">

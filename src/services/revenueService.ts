@@ -104,8 +104,11 @@ export function groupBookingsByDay(bookings: BookingResponseDTO[]): DailyRevenue
     } else if (isCancelled) {
       day.cancelledBookings++;
     } else {
-      // Pending | Confirmed | Deposited | Washing
-      day.depositRevenue += b.depositAmount ?? 0;
+      // Confirmed | Deposited | Washing (Paid deposits)
+      const isDeposited = ['deposited', 'confirmed', 'washing'].includes((b.status || '').toLowerCase());
+      if (isDeposited) {
+        day.depositRevenue += b.depositAmount ?? 0;
+      }
       day.inProgressBookings++;
     }
 

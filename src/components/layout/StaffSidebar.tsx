@@ -20,9 +20,8 @@ import {
 
 const menuItems = [
   { path: '/staff/appointments', name: 'Lịch Hẹn Khách', icon: CalendarDays },
-  { path: '/staff/payments', name: 'Quản Lý Thanh Toán', icon: CreditCard },
-  { path: '/staff/transactions', name: 'Lịch Sử Giao Dịch', icon: History },
   { path: '/staff/requests', name: 'Tạo Yêu Cầu', icon: CalendarPlus },
+  { path: '/staff/incidents', name: 'Báo Cáo Sự Cố', icon: ShieldAlert },
 ]
 
 export default function StaffSidebar() {

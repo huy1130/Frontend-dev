@@ -122,6 +122,15 @@ export const bookingService = {
     const url = date ? `/Staff/history?dateStr=${date}` : `/Staff/history`;
     return axiosClient.get(url);
   },
+
+  getBookingReport: (startDate?: string, endDate?: string, status?: string): Promise<any> => {
+    const params: string[] = [];
+    if (startDate) params.push(`startDate=${startDate}`);
+    if (endDate) params.push(`endDate=${endDate}`);
+    if (status) params.push(`status=${status}`);
+    const query = params.length > 0 ? `?${params.join('&')}` : '';
+    return axiosClient.get(`/Booking/report${query}`);
+  },
   
   updateBookingStatus: (bookingId: number, status: string): Promise<any> => {
     return axiosClient.put(`/Booking/${bookingId}/status?status=${status}`);

@@ -150,19 +150,28 @@ export default function Dashboard() {
   const pagedBars = dailyDataList.slice(chartPage * PAGE_SIZE, chartPage * PAGE_SIZE + PAGE_SIZE)
 
   const totals = useMemo(() => {
-    if (!reportData) return null
+    if (!dailyDataList || dailyDataList.length === 0) return null
+
+    const totalBookings = dailyDataList.reduce((acc, d) => acc + d.totalBookings, 0)
+    const completedBookings = dailyDataList.reduce((acc, d) => acc + d.completedBookings, 0)
+    const inProgressOrDepositedBookings = dailyDataList.reduce((acc, d) => acc + d.inProgressBookings, 0)
+    const cancelledBookings = dailyDataList.reduce((acc, d) => acc + d.cancelledBookings, 0)
     const discountAmount = dailyDataList.reduce((acc, d) => acc + d.discountAmount, 0)
+    const depositRevenue = dailyDataList.reduce((acc, d) => acc + d.depositRevenue, 0)
+    const completedRevenue = dailyDataList.reduce((acc, d) => acc + d.completedRevenue, 0)
+    const totalRevenue = dailyDataList.reduce((acc, d) => acc + d.totalRevenue, 0)
+
     return {
-      totalRevenue: reportData.totalRevenue,
-      completedRevenue: reportData.completedRevenue,
-      depositRevenue: reportData.depositRevenue,
-      totalBookings: reportData.totalBookings,
-      completedBookings: reportData.completedBookings,
-      cancelledBookings: reportData.cancelledBookings,
-      inProgressOrDepositedBookings: reportData.inProgressOrDepositedBookings,
+      totalBookings,
+      completedBookings,
+      inProgressOrDepositedBookings,
+      cancelledBookings,
       discountAmount,
+      depositRevenue,
+      completedRevenue,
+      totalRevenue,
     }
-  }, [reportData, dailyDataList])
+  }, [dailyDataList])
 
   const completionRate = totals && totals.totalBookings > 0
     ? ((totals.completedBookings / totals.totalBookings) * 100).toFixed(1)

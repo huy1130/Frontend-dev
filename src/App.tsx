@@ -19,6 +19,7 @@ import StaffAppointments from './pages/staff/StaffAppointments'
 import StaffPayments from './pages/staff/Payments'
 import StaffTransactions from './pages/staff/Transactions'
 import Requests from './pages/staff/Requests'
+import StaffIncidentView from './pages/staff/StaffIncidentView'
 
 import CustomerPortal from './pages/customer/CustomerPortal'
 import CustomerBooking from './pages/customer/CustomerBooking'
@@ -140,6 +141,7 @@ export default function App() {
           <Route path="payments" element={<StaffPayments />} />
           <Route path="transactions" element={<StaffTransactions />} />
           <Route path="requests" element={<Requests />} />
+          <Route path="incidents" element={<StaffIncidentView />} />
         </Route>
 
         <Route path="*" element={<HomePage />} />
