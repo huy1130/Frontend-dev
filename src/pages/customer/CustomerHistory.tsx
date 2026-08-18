@@ -855,7 +855,7 @@ export default function CustomerHistory() {
                           <span className="font-bold text-slate-900">{total.toLocaleString('vi-VN')}đ</span>
                         </div>
 
-                        {selectedBooking.status === 'Deposited' ? (
+                        {['deposited', 'confirmed', 'washing', 'inprogress', 'in-progress'].includes((selectedBooking.status || '').toLowerCase()) ? (
                           <>
                             <div className="flex justify-between items-center text-xs font-bold text-teal-700">
                               <span className="flex items-center gap-1.5">
