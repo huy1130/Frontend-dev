@@ -5,6 +5,7 @@ import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { loyaltyService } from '../../services/loyaltyService'
 import { PointTransactionDTO } from '../../types/loyalty'
+import { formatDateTime } from '../../utils/date'
 import { toast } from 'sonner'
 
 export default function CustomerRewards() {
@@ -302,7 +303,7 @@ export default function CustomerRewards() {
                                 <div>
                                   <h4 className="font-extrabold text-sm text-slate-900">{typeLabel}</h4>
                                   <p className="text-xs text-slate-500 mt-0.5">
-                                    {new Date(tx.createdAt).toLocaleString('vi-VN')}
+                                    {formatDateTime(tx.createdAt)}
                                   </p>
                                 </div>
                               </div>
