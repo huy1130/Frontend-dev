@@ -13,7 +13,6 @@ import AdminPayments from './pages/admin/Payments'
 import AdminTransactions from './pages/admin/Transactions'
 import Employees from './pages/admin/Employees'
 import IncidentManagement from './pages/admin/IncidentManagement'
-import SystemSettings from './pages/admin/SystemSettings'
 
 import StaffAppointments from './pages/staff/StaffAppointments'
 import StaffPayments from './pages/staff/Payments'
@@ -127,7 +126,6 @@ export default function App() {
           <Route path="transactions" element={<AdminTransactions />} />
           <Route path="employees" element={<Employees />} />
           <Route path="incidents" element={<IncidentManagement />} />
-          <Route path="settings" element={<Navigate to="/admin/payments?tab=settings" replace />} />
         </Route>
 
         {/* Staff Routes */}

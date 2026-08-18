@@ -18,6 +18,10 @@ import {
 import { toast } from 'sonner'
 import { bookingService, BookingResponseDTO } from '../../services/bookingService'
 
+function formatVND(amount: number): string {
+  return amount.toLocaleString('vi-VN') + ' đ'
+}
+
 function formatDateForInput(d: Date): string {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -200,7 +204,7 @@ export default function Transactions() {
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Doanh Thu Quyết Toán</p>
             <h3 className="text-2xl font-black text-emerald-600 mt-1">
-              {totalCompletedRevenue.toLocaleString('vi-VN')} <span className="text-xs font-bold text-emerald-700">đ</span>
+              {formatVND(totalCompletedRevenue)}
             </h3>
             <p className="text-[11px] text-slate-500 font-medium mt-0.5">Thực thu từ các đơn hoàn thành</p>
           </div>
@@ -213,7 +217,7 @@ export default function Transactions() {
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Số Đơn Hoàn Thành</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">
-              {completedBookings.length} <span className="text-xs font-bold text-slate-400">lượt</span>
+              {completedBookings.length} lượt
             </h3>
             <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Đã check-out thành công</p>
           </div>
@@ -226,7 +230,7 @@ export default function Transactions() {
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng Ưu Đãi / Chiết Khấu</p>
             <h3 className="text-2xl font-black text-rose-600 mt-1">
-              {totalDiscountGiven > 0 ? `-${totalDiscountGiven.toLocaleString('vi-VN')}` : '0'} <span className="text-xs font-bold text-rose-700">đ</span>
+              {totalDiscountGiven > 0 ? `-${formatVND(totalDiscountGiven)}` : formatVND(0)}
             </h3>
             <p className="text-[11px] text-slate-500 font-medium mt-0.5">Đã giảm qua Mã KM / Đổi thưởng</p>
           </div>
@@ -415,15 +419,15 @@ export default function Transactions() {
                       </td>
 
                       <td className="p-4 font-bold text-slate-600">
-                        {origPrice.toLocaleString('vi-VN')}đ
+                        {formatVND(origPrice)}
                       </td>
 
                       <td className="p-4 font-bold text-rose-500">
-                        {discount > 0 ? `-${discount.toLocaleString('vi-VN')}đ` : '—'}
+                        {discount > 0 ? `-${formatVND(discount)}` : '—'}
                       </td>
 
                       <td className="p-4 font-black text-emerald-600 text-sm">
-                        {finalPrice.toLocaleString('vi-VN')}đ
+                        {formatVND(finalPrice)}
                       </td>
 
                       <td className="p-4">
@@ -497,20 +501,20 @@ export default function Transactions() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Giá dịch vụ gốc:</span>
-                  <span className="font-extrabold text-slate-900">{(selectedBooking.originalPrice ?? 0).toLocaleString('vi-VN')}đ</span>
+                  <span className="font-extrabold text-slate-900">{formatVND(selectedBooking.originalPrice ?? 0)}</span>
                 </div>
 
                 {selectedBooking.depositAmount != null && selectedBooking.depositAmount > 0 && (
                   <div className="flex justify-between text-blue-700">
                     <span className="font-semibold">Tiền cọc đã thu trước qua PayOS:</span>
-                    <span className="font-extrabold">{selectedBooking.depositAmount.toLocaleString('vi-VN')}đ</span>
+                    <span className="font-extrabold">{formatVND(selectedBooking.depositAmount)}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between border-t border-emerald-200/80 pt-2.5 text-sm">
                   <span className="font-bold text-slate-900">Doanh Thu Quyết Toán (Thực thu):</span>
                   <span className="font-black text-emerald-600 text-base">
-                    {(selectedBooking.finalPrice ?? selectedBooking.originalPrice ?? 0).toLocaleString('vi-VN')}đ
+                    {formatVND(selectedBooking.finalPrice ?? selectedBooking.originalPrice ?? 0)}
                   </span>
                 </div>
               </div>
