@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { AlertTriangle, XCircle, Eye, Loader2, ShieldAlert, User, Camera, Search } from 'lucide-react'
 import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
 import { formatDateTime } from '../../utils/date'
@@ -20,6 +21,7 @@ const StatusBadge = ({ status }: { status?: string }) => {
 }
 
 export default function StaffIncidentView() {
+  const location = useLocation()
   const [reports, setReports] = useState<IncidentReportDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -43,7 +45,10 @@ export default function StaffIncidentView() {
 
   useEffect(() => {
     fetchReports()
-  }, [])
+    if (location.state?.bookingId) {
+      setSearchQuery(String(location.state.bookingId))
+    }
+  }, [location.state])
 
   const handleViewDetail = (report: IncidentReportDto) => {
     setSelectedReport(report)

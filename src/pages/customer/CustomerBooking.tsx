@@ -23,7 +23,8 @@ import {
   Copy,
   ExternalLink,
   QrCode,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
@@ -832,49 +833,69 @@ export default function CustomerBooking() {
               <div className="space-y-5">
                 <div>
                   <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mb-0.5">Danh Sách Dịch Vụ Hệ Thống</h3>
-                  <p className="text-slate-500 text-xs sm:text-sm">Bạn có thể chọn một hoặc kết hợp nhiều dịch vụ chăm sóc cho xe của mình.</p>
+                  <p className="text-slate-500 text-xs sm:text-sm">Chọn 1 dịch vụ chăm sóc phù hợp cho xe của bạn. Bạn có thể xem chi tiết trước khi quyết định.</p>
                 </div>
 
-                <div className="space-y-3">
-                  {isLoading ? (
-                    <div className="text-center p-4 text-orange-600 font-bold">Đang tải danh sách dịch vụ...</div>
-                  ) : availableServices.map((svc) => {
-                    const isSelected = selectedServiceId === svc.serviceId
-                    return (
-                      <div
-                        key={svc.serviceId}
-                        onClick={() => toggleService(svc.serviceId)}
-                        className={`p-4 rounded-xl border cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 ${isSelected
-                          ? 'bg-orange-50/80 border-orange-500 shadow-sm'
-                          : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                {isLoading ? (
+                  <div className="text-center p-6 text-orange-600 font-bold">Đang tải danh sách dịch vụ...</div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {availableServices.map((svc) => {
+                      const isSelected = selectedServiceId === svc.serviceId
+                      return (
+                        <div
+                          key={svc.serviceId}
+                          onClick={() => toggleService(svc.serviceId)}
+                          className={`relative rounded-2xl border-2 cursor-pointer transition-all duration-200 overflow-hidden group ${
+                            isSelected
+                              ? 'border-orange-500 bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/25 scale-[1.01]'
+                              : 'border-slate-200 bg-white hover:border-orange-300 hover:shadow-md hover:scale-[1.005]'
                           }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`w-5 h-5 rounded border mt-0.5 flex items-center justify-center transition-colors ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'
-                            }`}>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">{svc.serviceName}</h4>
+                        >
+                          {/* Selected ribbon */}
+                          {isSelected && (
+                            <div className="absolute top-3 right-3">
+                              <div className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center">
+                                <Zap className="w-3.5 h-3.5 text-white" />
+                              </div>
                             </div>
-                            <p className="text-xs text-slate-500 mb-1.5">{svc.description}</p>
+                          )}
+
+                          <div className="p-4 flex flex-col gap-2 h-full">
+                            {/* Service Name */}
+                            <h4 className={`font-extrabold text-sm sm:text-base leading-tight pr-8 ${
+                              isSelected ? 'text-white' : 'text-slate-900'
+                            }`}>{svc.serviceName}</h4>
+
+                            {/* Description */}
+                            <p className={`text-xs leading-relaxed flex-1 ${
+                              isSelected ? 'text-orange-100' : 'text-slate-500'
+                            }`}>{svc.description || 'Dịch vụ chất lượng cao'}</p>
+
+                            {/* Price + Detail */}
+                            <div className="flex items-center justify-between mt-1 pt-3 border-t ${
+                              isSelected ? 'border-white/20' : 'border-slate-100'
+                            }">
+                              <span className={`text-lg font-black ${
+                                isSelected ? 'text-white' : 'text-orange-600'
+                              }`}>{svc.price.toLocaleString('vi-VN')}đ</span>
+                              <button
+                                onClick={(e) => handleViewServiceDetail(e, svc.serviceId)}
+                                className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
+                                  isSelected
+                                    ? 'bg-white/20 text-white hover:bg-white/30'
+                                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                }`}
+                              >
+                                <Info className="w-3 h-3" /> Chi tiết
+                              </button>
+                            </div>
                           </div>
                         </div>
-
-                        <div className="text-left md:text-right pl-8 md:pl-0 flex flex-col items-start md:items-end gap-1.5 mt-2 md:mt-0">
-                          <p className="text-xl font-extrabold text-orange-600">{svc.price.toLocaleString('vi-VN')}đ</p>
-                          <button
-                            onClick={(e) => handleViewServiceDetail(e, svc.serviceId)}
-                            className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors"
-                          >
-                            <Info className="w-3.5 h-3.5" /> Xem chi tiết
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                      )
+                    })}
+                  </div>
+                )}
 
                 {/* Step 2 Actions */}
                 <div className="pt-5 border-t border-slate-200 flex justify-between items-center">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Search, Check, AlertCircle, Camera, Sparkles, Scan, FileText, PenTool, AlertTriangle, Copy, Banknote } from 'lucide-react'
 import { toast } from 'sonner'
 import { QRCodeSVG } from 'qrcode.react'
@@ -11,6 +11,7 @@ import { formatDateTime } from '../../utils/date'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 
 export default function StaffAppointments() {
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
   const [reportsMap, setReportsMap] = useState<Record<number, any>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -95,7 +96,7 @@ export default function StaffAppointments() {
               const todayRes = await staffService.getTodayBookings()
               const rawList = Array.isArray(todayRes) ? todayRes : (todayRes as any)?.data || []
               const cleanQuery = queryStr.replace(/[^A-Z0-9]/gi, '').toUpperCase()
-              const matched = rawList.filter((b: any) => 
+              const matched = rawList.filter((b: any) =>
                 (b.licensePlate || '').replace(/[^A-Z0-9]/gi, '').toUpperCase().includes(cleanQuery)
               )
               response = { data: matched }
@@ -235,7 +236,7 @@ export default function StaffAppointments() {
             const todayRes = await staffService.getTodayBookings()
             const rawList = Array.isArray(todayRes) ? todayRes : (todayRes as any)?.data || []
             const cleanDetected = detected.replace(/[^A-Z0-9]/gi, '').toUpperCase()
-            const matched = rawList.filter((b: any) => 
+            const matched = rawList.filter((b: any) =>
               (b.licensePlate || '').replace(/[^A-Z0-9]/gi, '').toUpperCase() === cleanDetected
             )
             if (matched.length > 0) {
@@ -824,7 +825,10 @@ export default function StaffAppointments() {
                       (reportsMap[booking.bookingId] && reportsMap[booking.bookingId].status !== 'Rejected') ? (
                         <button
                           type="button"
-                          onClick={() => toast.error(`Lịch hẹn #${booking.bookingId} đang có khiếu nại chưa xử lý. Vui lòng báo Admin xử lý khiếu nại trước khi thanh toán.`)}
+                          onClick={() => {
+                            toast.error(`Lịch hẹn #${booking.bookingId} đang có khiếu nại chưa xử lý`)
+                            navigate('/staff/incidents', { state: { bookingId: booking.bookingId } })
+                          }}
                           className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap cursor-pointer"
                         >
                           <AlertTriangle className="w-4 h-4" /> Xử Lý Khiếu Nại
@@ -1490,11 +1494,10 @@ export default function StaffAppointments() {
                   <button
                     type="button"
                     onClick={() => setIsCustomerLeaving(true)}
-                    className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${
-                      isCustomerLeaving
+                    className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${isCustomerLeaving
                         ? 'border-orange-500 bg-orange-50/80 text-orange-700 shadow-sm'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center gap-1.5">
                       <CarFront className="w-4 h-4" /> Khách gửi xe lại
@@ -1505,11 +1508,10 @@ export default function StaffAppointments() {
                   <button
                     type="button"
                     onClick={() => setIsCustomerLeaving(false)}
-                    className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${
-                      !isCustomerLeaving
+                    className={`p-3.5 rounded-xl border font-bold text-xs sm:text-sm text-left transition-all flex flex-col gap-1 cursor-pointer ${!isCustomerLeaving
                         ? 'border-blue-500 bg-blue-50/80 text-blue-700 shadow-sm'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center gap-1.5">
                       <User className="w-4 h-4" /> Khách ở lại chờ
@@ -1678,11 +1680,10 @@ export default function StaffAppointments() {
                         <button
                           type="button"
                           onClick={() => setPaymentMethod('cash')}
-                          className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                            paymentMethod === 'cash'
+                          className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${paymentMethod === 'cash'
                               ? 'bg-white text-emerald-700 shadow-sm'
                               : 'text-slate-500 hover:text-slate-800'
-                          }`}
+                            }`}
                         >
                           <Banknote className="w-4 h-4 text-emerald-600" />
                           <span>Tiền Mặt tại Quầy</span>
@@ -1690,11 +1691,10 @@ export default function StaffAppointments() {
                         <button
                           type="button"
                           onClick={() => setPaymentMethod('payos')}
-                          className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                            (paymentMethod as string) === 'payos'
+                          className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'payos'
                               ? 'bg-white text-purple-700 shadow-sm'
                               : 'text-slate-500 hover:text-slate-800'
-                          }`}
+                            }`}
                         >
                           <QrCode className="w-4 h-4 text-purple-600" />
                           <span>Mã QR PayOS</span>
@@ -1762,17 +1762,15 @@ export default function StaffAppointments() {
 
                       {/* Tự Tính Tiền Thối */}
                       {tenderedVal > 0 && (
-                        <div className={`p-3.5 rounded-2xl text-left border flex items-center justify-between transition-all ${
-                          changeVal >= 0
+                        <div className={`p-3.5 rounded-2xl text-left border flex items-center justify-between transition-all ${changeVal >= 0
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
                             : 'bg-rose-50 border-rose-200 text-rose-800'
-                        }`}>
+                          }`}>
                           <span className="text-xs font-bold">
                             {changeVal >= 0 ? 'Tiền thối lại cho khách:' : 'Khách đưa còn thiếu:'}
                           </span>
-                          <span className={`font-mono text-base font-black ${
-                            changeVal >= 0 ? 'text-emerald-700' : 'text-rose-600'
-                          }`}>
+                          <span className={`font-mono text-base font-black ${changeVal >= 0 ? 'text-emerald-700' : 'text-rose-600'
+                            }`}>
                             {Math.abs(changeVal).toLocaleString('vi-VN')}đ
                           </span>
                         </div>
@@ -1806,11 +1804,10 @@ export default function StaffAppointments() {
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('cash')}
-                        className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                          (paymentMethod as string) === 'cash'
+                        className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'cash'
                             ? 'bg-white text-emerald-700 shadow-sm'
                             : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                          }`}
                       >
                         <Banknote className="w-4 h-4 text-emerald-600" />
                         <span>Tiền Mặt tại Quầy</span>
@@ -1818,11 +1815,10 @@ export default function StaffAppointments() {
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('payos')}
-                        className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                          (paymentMethod as string) === 'payos'
+                        className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'payos'
                             ? 'bg-white text-purple-700 shadow-sm'
                             : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                          }`}
                       >
                         <QrCode className="w-4 h-4 text-purple-600" />
                         <span>Mã QR PayOS</span>
@@ -1921,7 +1917,7 @@ export default function StaffAppointments() {
                             />
                           )}
                         </div>
-                        
+
                         <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full animate-pulse">
                           <div className="w-2 h-2 rounded-full bg-purple-600 animate-ping"></div>
                           <span>Đang chờ khách quét mã QR để thanh toán...</span>
