@@ -29,6 +29,14 @@ export interface AvailableSlotDto {
     remainingBikeCapacity: number;
 }
 
+export interface UpdateTimeSlotDto {
+    startTime?: string;
+    endTime?: string;
+    carCapacity?: number;
+    bikeCapacity?: number;
+    isActive?: boolean;
+}
+
 export const timeSlotService = {
   getAllTimeSlots: (): Promise<TimeSlotDto[]> => {
     return axiosClient.get('/TimeSlots');
@@ -44,6 +52,10 @@ export const timeSlotService = {
 
   getTimeSlotById: (id: number): Promise<TimeSlotDto> => {
     return axiosClient.get(`/TimeSlots/${id}`);
+  },
+
+  updateTimeSlot: (id: number, data: UpdateTimeSlotDto): Promise<any> => {
+    return axiosClient.put(`/TimeSlots/${id}/status`, data);
   },
 
   toggleSlotStatus: (id: number, isActive: boolean): Promise<any> => {
