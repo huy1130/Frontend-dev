@@ -5,22 +5,28 @@ export const getLocalDateString = (d: Date) => {
   return `${year}-${month}-${day}`
 }
 
-export const formatDateTime = (dateStr?: string | null) => {
-  if (!dateStr) return 'N/A'
-  
-  let date = new Date(dateStr)
-  if (isNaN(date.getTime())) return dateStr
+export const parseApiDate = (dateInput?: string | Date | null): Date | null => {
+  if (!dateInput) return null
+  if (dateInput instanceof Date) return dateInput
 
-  // Kiểm tra nếu dateStr là chuỗi ISO không có định danh múi giờ (Z hay +HH:MM):
-  // Nếu ép sang UTC mà thời gian tạo không bị đẩy vào tương lai quá 1 giờ so với hiện tại,
-  // thì đó là thời gian UTC chuẩn. Ngược lại (bị nhảy sang tương lai như 21h đêm),
-  // chứng tỏ nó đã được lưu dưới dạng giờ địa phương (getdate() của SQL Server).
-  if (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateStr)) {
-    const utcDate = new Date(`${dateStr}Z`)
+  let date = new Date(dateInput)
+  if (isNaN(date.getTime())) return null
+
+  if (typeof dateInput === 'string' && dateInput.includes('T') && !dateInput.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateInput)) {
+    const utcDate = new Date(`${dateInput}Z`)
     if (!isNaN(utcDate.getTime()) && utcDate.getTime() <= Date.now() + 3600000) {
       date = utcDate
     }
   }
+
+  return date
+}
+
+export const formatDateTime = (dateStr?: string | null) => {
+  if (!dateStr) return 'N/A'
+  
+  const date = parseApiDate(dateStr)
+  if (!date) return dateStr
 
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')

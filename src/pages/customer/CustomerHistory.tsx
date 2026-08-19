@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   History,
@@ -33,9 +33,57 @@ import { bookingService, BookingResponseDTO } from '../../services/bookingServic
 import { promotionService } from '../../services/promotionService'
 import { loyaltyService } from '../../services/loyaltyService'
 import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
-import { formatDateTime } from '../../utils/date'
+import { formatDateTime, parseApiDate } from '../../utils/date'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 import { toast } from 'sonner'
+
+const isBookingExpired = (createdAt?: string | Date) => {
+  if (!createdAt) return false
+  const parsedDate = parseApiDate(createdAt)
+  if (!parsedDate) return false
+  return (parsedDate.getTime() + 10 * 60 * 1000) <= Date.now()
+}
+
+const PendingCountdown: React.FC<{ createdAt?: string | Date; onExpire?: () => void }> = ({ createdAt, onExpire }) => {
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!createdAt) return
+
+    const calculateTime = () => {
+      const parsedDate = parseApiDate(createdAt)
+      if (!parsedDate) return
+      const createdTime = parsedDate.getTime()
+      const expireTime = createdTime + 10 * 60 * 1000
+      const diff = Math.floor((expireTime - Date.now()) / 1000)
+      if (diff <= 0) {
+        setTimeLeft(0)
+        onExpire?.()
+      } else {
+        setTimeLeft(diff)
+      }
+    }
+
+    calculateTime()
+    const timer = setInterval(calculateTime, 1000)
+    return () => clearInterval(timer)
+  }, [createdAt, onExpire])
+
+  if (timeLeft === null) return null
+  if (timeLeft <= 0) {
+    return <span className="text-rose-600 font-extrabold text-[11px] ml-1">(Hết hạn cọc)</span>
+  }
+
+  const minutes = Math.floor(timeLeft / 60)
+  const seconds = timeLeft % 60
+  const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+
+  return (
+    <span className="text-amber-600 font-bold text-[11px] ml-1">
+      (Hạn cọc: {formatted})
+    </span>
+  )
+}
 
 export default function CustomerHistory() {
   const [searchParams] = useSearchParams()
@@ -59,7 +107,12 @@ export default function CustomerHistory() {
     qrCode?: string
     qrImageUrl?: string
     checkoutUrl?: string
+    createdAt?: string | Date
   } | null>(null)
+  const [, setTick] = useState(0)
+  const handleCountdownExpire = React.useCallback(() => {
+    setTick(t => t + 1)
+  }, [])
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false)
   const [depositBookingId, setDepositBookingId] = useState<number | null>(null)
   const [depositAmountValue, setDepositAmountValue] = useState<number>(0)
@@ -95,6 +148,8 @@ export default function CustomerHistory() {
       try {
         const detailRes = await bookingService.getBookingDetail(depositModalData.bookingId)
         const currentStatus = detailRes?.data?.status || detailRes?.data?.bookingStatus
+        const createdAt = detailRes?.data?.createdAt || depositModalData.createdAt
+
         if (currentStatus === 'Deposited') {
           const bId = depositModalData.bookingId
           setDepositModalData(null)
@@ -102,6 +157,10 @@ export default function CustomerHistory() {
           fetchHistory()
           navigate('/customer/history', { replace: true })
           toast.success('🎉 Giao dịch thanh toán cọc đã được ghi nhận!')
+        } else if (createdAt && isBookingExpired(createdAt)) {
+          setDepositModalData(null)
+          toast.error('⏱️ Mã QR cọc đã hết hạn thanh toán (quá 10 phút). Lịch hẹn đã bị dọn dẹp!')
+          fetchHistory()
         }
       } catch {
         // silent catch
@@ -109,7 +168,7 @@ export default function CustomerHistory() {
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [depositModalData?.bookingId, navigate])
+  }, [depositModalData?.bookingId, depositModalData?.createdAt, navigate])
 
   const handleCheckDepositStatus = async (bId: number) => {
     setIsCheckingDeposit(true)
@@ -148,6 +207,14 @@ export default function CustomerHistory() {
       if (!isNaN(bId)) {
         (async () => {
           try {
+            const detailRes = await bookingService.getBookingDetail(bId).catch(() => null)
+            const createdAt = detailRes?.data?.createdAt
+            if (createdAt && isBookingExpired(createdAt)) {
+              toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút). Vui lòng đặt lại lịch mới!')
+              fetchHistory()
+              return
+            }
+
             toast.info('Đang khởi tạo mã QR cọc PayOS...')
             const payRes = await bookingService.createDepositPayment(bId)
             if (payRes) {
@@ -166,12 +233,19 @@ export default function CustomerHistory() {
                   description: payRes.description || payRes.Description || `Deposit for booking ${bId}`,
                   qrCode: payRes.qrCode || payRes.QrCode,
                   qrImageUrl: payRes.qrImageUrl || payRes.QrImageUrl,
-                  checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl
+                  checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl,
+                  createdAt: createdAt
                 })
               }
             }
           } catch (err: any) {
-            toast.error('Không thể tạo mã QR thanh toán cọc.')
+            const errorMsg = err.response?.data?.message || err.message || ''
+            if (errorMsg.toLowerCase().includes('not found') || err.response?.status === 404 || err.response?.status === 400) {
+              toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
+              fetchHistory()
+            } else {
+              toast.error('Không thể tạo mã QR thanh toán cọc.')
+            }
           }
         })()
       }
@@ -425,7 +499,7 @@ export default function CustomerHistory() {
                   key={item.bookingId}
                   className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-300 transition-all shadow-md shadow-slate-200/40 space-y-3"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b border-slate-100 pb-3">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2.5">
                         <span className="text-xs font-mono font-extrabold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
@@ -455,52 +529,53 @@ export default function CustomerHistory() {
                       )}
                     </div>
 
-                    <div>
+                    <div className="shrink-0 self-start sm:self-auto">
                       {item.status === 'Pending' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-bold">
-                          <Clock className="w-3.5 h-3.5 text-blue-600" />
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-extrabold shadow-xs ${isBookingExpired(item.createdAt) ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                          <Clock className="w-3.5 h-3.5 shrink-0" />
                           <span>Chờ Xử Lý</span>
+                          <PendingCountdown createdAt={item.createdAt} onExpire={handleCountdownExpire} />
                         </span>
                       )}
                       {item.status === 'Deposited' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-300 text-[11px] font-extrabold shadow-xs">
-                          <CreditCard className="w-3.5 h-3.5 text-teal-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-300 text-[11px] font-extrabold shadow-xs">
+                          <CreditCard className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                           <span>Đã Đặt Cọc</span>
                         </span>
                       )}
                       {item.status === 'Confirmed' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-extrabold shadow-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                           <span>Đã Xác Nhận</span>
                         </span>
                       )}
                       {item.status === 'Washing' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-bold">
-                          <History className="w-3.5 h-3.5 text-orange-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-extrabold shadow-xs">
+                          <History className="w-3.5 h-3.5 text-orange-600 shrink-0" />
                           <span>Đang Rửa</span>
                         </span>
                       )}
                       {(item.status === 'Completed' || item.status === 'CheckedOut') && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold shadow-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           <span>Đã Hoàn Thành</span>
                         </span>
                       )}
                       {item.status === 'Cancelled' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold">
-                          <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold shadow-xs">
+                          <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                           <span>Đã Hủy</span>
                         </span>
                       )}
                       {item.status === 'NoShow' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
-                          <AlertCircle className="w-3.5 h-3.5 text-slate-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-extrabold shadow-xs">
+                          <AlertCircle className="w-3.5 h-3.5 text-slate-600 shrink-0" />
                           <span>Không Đến</span>
                         </span>
                       )}
                       {item.status === 'Processed' && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold">
-                          <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold shadow-xs">
+                          <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                           <span>Đã xử lý khiếu nại</span>
                         </span>
                       )}
@@ -547,10 +622,15 @@ export default function CustomerHistory() {
                           </span>
                         </div>
                       )}
-                      <div className="mt-2.5 flex flex-wrap gap-2 md:justify-end">
-                        {item.status === 'Pending' && (
+                      <div className="mt-3 flex items-center gap-2 md:justify-end flex-wrap">
+                        {item.status === 'Pending' && !isBookingExpired(item.createdAt) && (
                           <button
                             onClick={async () => {
+                              if (isBookingExpired(item.createdAt)) {
+                                toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút). Vui lòng đặt lại lịch mới!')
+                                fetchHistory()
+                                return
+                              }
                               try {
                                 toast.info('Đang khởi tạo mã QR cọc PayOS...')
                                 const payRes = await bookingService.createDepositPayment(item.bookingId)
@@ -570,15 +650,22 @@ export default function CustomerHistory() {
                                       description: payRes.description || payRes.Description || `Deposit for booking ${item.bookingId}`,
                                       qrCode: payRes.qrCode || payRes.QrCode,
                                       qrImageUrl: payRes.qrImageUrl || payRes.QrImageUrl,
-                                      checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl
+                                      checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl,
+                                      createdAt: item.createdAt
                                     })
                                   }
                                 }
                               } catch (err: any) {
-                                toast.error(err.response?.data?.message || 'Không thể tạo link cọc PayOS')
+                                const errorMsg = err.response?.data?.message || err.message || ''
+                                if (errorMsg.toLowerCase().includes('not found') || err.response?.status === 404 || err.response?.status === 400) {
+                                  toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
+                                  fetchHistory()
+                                } else {
+                                  toast.error(errorMsg || 'Không thể tạo link cọc PayOS')
+                                }
                               }
                             }}
-                            className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+                            className="px-3.5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
                           >
                             <CreditCard className="w-3.5 h-3.5" />
                             <span>Thanh Toán Cọc PayOS</span>
@@ -587,7 +674,7 @@ export default function CustomerHistory() {
                         <button
                           onClick={() => handleViewDetail(item)}
                           disabled={isLoadingDetail && loadingDetailBookingId === item.bookingId}
-                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors border border-slate-200 cursor-pointer flex items-center gap-1.5 disabled:opacity-70"
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold rounded-xl transition-colors border border-slate-200/80 cursor-pointer flex items-center gap-1.5 disabled:opacity-70 shrink-0"
                         >
                           {isLoadingDetail && loadingDetailBookingId === item.bookingId ? (
                             <>
@@ -1347,6 +1434,21 @@ export default function CustomerHistory() {
             </div>
 
             <div className="p-6 space-y-5">
+              {depositModalData.createdAt && (
+                <div className="bg-rose-50 border border-rose-200/80 rounded-2xl p-3 text-center text-xs font-extrabold text-rose-700 flex items-center justify-center gap-1.5">
+                  <Clock className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>Thời gian thanh toán còn lại: </span>
+                  <PendingCountdown
+                    createdAt={depositModalData.createdAt}
+                    onExpire={() => {
+                      setDepositModalData(null)
+                      toast.error('⏱️ Mã QR cọc đã hết hạn thanh toán (quá 10 phút). Lịch hẹn đã bị dọn dẹp!')
+                      fetchHistory()
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="flex flex-col items-center justify-center">
                 <div className="p-3 bg-white border-2 border-orange-200 rounded-3xl shadow-lg relative group">
                   {depositModalData.qrImageUrl ? (
