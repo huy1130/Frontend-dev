@@ -6,6 +6,7 @@ import {
   XCircle,
   Loader2,
   AlertCircle,
+  AlertTriangle,
   Plus
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -20,6 +21,13 @@ export default function TimeSlotManagement() {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    slot: TimeSlotDto | null;
+  }>({
+    isOpen: false,
+    slot: null
+  })
   const defaultSlot: CreateTimeSlotDto = {
     startTime: '08:00:00',
     endTime: '10:00:00',
@@ -107,18 +115,29 @@ export default function TimeSlotManagement() {
 
   const [togglingSlotId, setTogglingSlotId] = useState<number | null>(null)
 
-  const handleToggleStatus = async (slotId: number, currentStatus: boolean) => {
+  const handleToggleStatus = (slot: TimeSlotDto) => {
+    setConfirmModal({
+      isOpen: true,
+      slot
+    })
+  }
+
+  const confirmToggleStatus = async () => {
+    if (!confirmModal.slot) return
+    const targetSlot = confirmModal.slot
+    const currentStatus = targetSlot.isActive !== false
+    const nextStatus = !currentStatus
     try {
-      setTogglingSlotId(slotId)
-      const nextStatus = !currentStatus
-      await timeSlotService.toggleSlotStatus(slotId, nextStatus)
+      setTogglingSlotId(targetSlot.slotId)
+      await timeSlotService.toggleSlotStatus(targetSlot.slotId, nextStatus)
       toast.success(nextStatus ? 'Đã kích hoạt khung giờ!' : 'Đã tạm ngưng khung giờ!')
-      setTimeSlots(prev => prev.map(s => s.slotId === slotId ? { ...s, isActive: nextStatus } : s))
+      setTimeSlots(prev => prev.map(s => s.slotId === targetSlot.slotId ? { ...s, isActive: nextStatus } : s))
     } catch (err: any) {
       console.error(err)
       toast.error(err.response?.data?.message || 'Có lỗi xảy ra khi đổi trạng thái khung giờ')
     } finally {
       setTogglingSlotId(null)
+      setConfirmModal({ isOpen: false, slot: null })
     }
   }
 
@@ -206,7 +225,7 @@ export default function TimeSlotManagement() {
                   <button
                     type="button"
                     disabled={togglingSlotId === slot.slotId}
-                    onClick={() => handleToggleStatus(slot.slotId, slot.isActive !== false)}
+                    onClick={() => handleToggleStatus(slot)}
                     title={slot.isActive !== false ? 'Bấm để Tạm Ngưng' : 'Bấm để Kích Hoạt'}
                     className={`text-xs font-bold px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                       slot.isActive !== false
@@ -367,6 +386,65 @@ export default function TimeSlotManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Toggle Status Modal */}
+      {confirmModal.isOpen && confirmModal.slot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-5 border border-slate-100">
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-2xl ${confirmModal.slot.isActive !== false ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-800">
+                  Xác nhận thay đổi trạng thái
+                </h3>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  Khung giờ: <span className="font-bold text-slate-700">{formatTime(confirmModal.slot.startTime)} - {formatTime(confirmModal.slot.endTime)}</span>
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              {confirmModal.slot.isActive !== false ? (
+                <span>Bạn có chắc chắn muốn <strong className="text-amber-600">TẠM NGƯNG</strong> khung giờ này không? Khách hàng sẽ không thể đặt lịch vào ca này nữa.</span>
+              ) : (
+                <span>Bạn có chắc chắn muốn <strong className="text-emerald-600">KÍCH HOẠT</strong> lại khung giờ này không?</span>
+              )}
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={togglingSlotId === confirmModal.slot.slotId}
+                onClick={() => setConfirmModal({ isOpen: false, slot: null })}
+                className="px-5 py-2.5 rounded-xl font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-50"
+              >
+                Hủy Bỏ
+              </button>
+              <button
+                type="button"
+                disabled={togglingSlotId === confirmModal.slot.slotId}
+                onClick={confirmToggleStatus}
+                className={`flex items-center gap-2 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md disabled:opacity-50 ${
+                  confirmModal.slot.isActive !== false
+                    ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
+                    : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                }`}
+              >
+                {togglingSlotId === confirmModal.slot.slotId ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  <span>Xác Nhận</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
