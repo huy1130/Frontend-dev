@@ -174,7 +174,7 @@ export default function NavBar() {
                   )}
                 </div>
               </>
-            ) : userRole && ['admin', 'manager', 'staff'].includes(userRole.toLowerCase()) ? (
+            ) : userRole && ['admin', 'staff'].includes(userRole.toLowerCase()) ? (
               <Link
                 to={userRole.toLowerCase() === 'staff' ? '/staff/appointments' : '/admin'}
                 onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
@@ -297,7 +297,7 @@ export default function NavBar() {
                   <span>Đăng xuất</span>
                 </button>
               </>
-            ) : userRole && ['admin', 'manager', 'staff'].includes(userRole.toLowerCase()) ? (
+            ) : userRole && ['admin', 'staff'].includes(userRole.toLowerCase()) ? (
               <Link
                 to={userRole.toLowerCase() === 'staff' ? '/staff/appointments' : '/admin'}
                 onClick={() => setMobileMenuOpen(false)}

@@ -7,7 +7,6 @@ import Register from './pages/Register'
 import AdminLayout from './components/layout/AdminLayout'
 import StaffLayout from './components/layout/StaffLayout'
 import Dashboard from './pages/admin/Dashboard'
-import Reports from './pages/admin/Reports'
 import AdminAppointments from './pages/admin/AdminAppointments'
 import AdminPayments from './pages/admin/Payments'
 import AdminTransactions from './pages/admin/Transactions'
@@ -65,6 +64,17 @@ function ScrollToTop() {
   return null
 }
 
+function FallbackRedirect() {
+  const userRole = (sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || '').toLowerCase()
+  if (userRole === 'admin') {
+    return <Navigate to="/admin" replace />
+  }
+  if (userRole === 'staff') {
+    return <Navigate to="/staff/appointments" replace />
+  }
+  return <Navigate to="/" replace />
+}
+
 export default function App() {
   return (
     <Router>
@@ -110,7 +120,7 @@ export default function App() {
 
         {/* Admin Routes */}
         <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
+          <ProtectedRoute allowedRoles={['admin']}>
             <AdminLayout />
           </ProtectedRoute>
         }>
@@ -120,12 +130,12 @@ export default function App() {
           <Route path="promotions" element={<PromotionManagement />} />
           <Route path="rewards" element={<RewardManagement />} />
           <Route path="tiers" element={<TierManagement />} />
-          <Route path="reports" element={<Reports />} />
           <Route path="appointments" element={<AdminAppointments />} />
           <Route path="payments" element={<AdminPayments />} />
           <Route path="transactions" element={<AdminTransactions />} />
           <Route path="employees" element={<Employees />} />
           <Route path="incidents" element={<IncidentManagement />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </Route>
 
         {/* Staff Routes */}
@@ -140,9 +150,10 @@ export default function App() {
           <Route path="transactions" element={<StaffTransactions />} />
           <Route path="requests" element={<Requests />} />
           <Route path="incidents" element={<StaffIncidentView />} />
+          <Route path="*" element={<Navigate to="/staff/appointments" replace />} />
         </Route>
 
-        <Route path="*" element={<HomePage />} />
+        <Route path="*" element={<FallbackRedirect />} />
       </Routes>
     </Router>
   )

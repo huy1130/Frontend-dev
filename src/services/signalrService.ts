@@ -104,7 +104,7 @@ class SignalRService {
 
         // Check current role or route (Only show blue SignalR toast to Staff users to prevent duplicate toasts for Admin)
         const userRole = (sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || '').toLowerCase();
-        const isAdmin = userRole === 'admin' || userRole === 'manager' || window.location.pathname.startsWith('/admin');
+        const isAdmin = userRole === 'admin' || window.location.pathname.startsWith('/admin');
 
         if (!isAdmin) {
           const details: string[] = [];
