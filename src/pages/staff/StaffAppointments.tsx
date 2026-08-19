@@ -321,7 +321,9 @@ export default function StaffAppointments() {
   const handleClearSearch = () => {
     setSearchPhone('')
   }
-
+  //------Khi bấm mở camera scanner (isScannerOpen = true), thư viện Html5QrcodeScanner sẽ được nạp động (dynamic import).
+  //------Scanner truy cập camera thiết bị, quét ở tần số 10 FPS trong khung quét 250x250px.
+  //------Ngay khi đọc thành công mã QR, hàm callback nhả ra chuỗi decodedText và gửi tới API backend
   const handleScanSuccess = async (qrCode: string) => {
     setIsScannerOpen(false)
     setIsLoading(true)

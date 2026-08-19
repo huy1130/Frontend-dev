@@ -194,6 +194,9 @@ export default function AdminAppointments() {
     // But since state update is async, better to do it via useEffect or just call it directly after resetting
   }
 
+
+
+  //------------------------------gọi api tìm booking bằng mã qr----------------------
   const handleScanSuccess = async (qrCode: string) => {
     setIsScannerOpen(false)
     setIsLoading(true)
@@ -213,6 +216,10 @@ export default function AdminAppointments() {
   }
 
   // Effect to initialize QR Scanner when modal opens
+
+  //------Khi bấm mở camera scanner (isScannerOpen = true), thư viện Html5QrcodeScanner sẽ được nạp động (dynamic import).
+  //------Scanner truy cập camera thiết bị, quét ở tần số 10 FPS trong khung quét 250x250px.
+  //------Ngay khi đọc thành công mã QR, hàm callback nhả ra chuỗi decodedText và gửi tới API backend.
   useEffect(() => {
     if (isScannerOpen) {
       let scanner: any = null;
@@ -1405,8 +1412,8 @@ export default function AdminAppointments() {
                           type="button"
                           onClick={() => setPaymentMethod('cash')}
                           className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${paymentMethod === 'cash'
-                              ? 'bg-white text-emerald-700 shadow-sm'
-                              : 'text-slate-500 hover:text-slate-800'
+                            ? 'bg-white text-emerald-700 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
                           <Banknote className="w-4 h-4 text-emerald-600" />
@@ -1416,8 +1423,8 @@ export default function AdminAppointments() {
                           type="button"
                           onClick={() => setPaymentMethod('payos')}
                           className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'payos'
-                              ? 'bg-white text-purple-700 shadow-sm'
-                              : 'text-slate-500 hover:text-slate-800'
+                            ? 'bg-white text-purple-700 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
                           <QrCode className="w-4 h-4 text-purple-600" />
@@ -1487,8 +1494,8 @@ export default function AdminAppointments() {
                       {/* Tự Tính Tiền Thối */}
                       {tenderedVal > 0 && (
                         <div className={`p-3.5 rounded-2xl text-left border flex items-center justify-between transition-all ${changeVal >= 0
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
-                            : 'bg-rose-50 border-rose-200 text-rose-800'
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-900'
+                          : 'bg-rose-50 border-rose-200 text-rose-800'
                           }`}>
                           <span className="text-xs font-bold">
                             {changeVal >= 0 ? 'Tiền thối lại cho khách:' : 'Khách đưa còn thiếu:'}
@@ -1529,8 +1536,8 @@ export default function AdminAppointments() {
                         type="button"
                         onClick={() => setPaymentMethod('cash')}
                         className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${(paymentMethod as string) === 'cash'
-                            ? 'bg-white text-emerald-700 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-white text-emerald-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
                         <Banknote className="w-4 h-4 text-emerald-600" />
@@ -1540,8 +1547,8 @@ export default function AdminAppointments() {
                         type="button"
                         onClick={() => setPaymentMethod('payos')}
                         className={`flex-1 py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${paymentMethod === 'payos'
-                            ? 'bg-white text-purple-700 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-800'
+                          ? 'bg-white text-purple-700 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
                         <QrCode className="w-4 h-4 text-purple-600" />
