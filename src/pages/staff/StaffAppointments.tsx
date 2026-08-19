@@ -633,6 +633,32 @@ export default function StaffAppointments() {
     { key: 'CheckedOut', label: 'Hoàn thành' }
   ]
 
+  const renderBookingStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'Pending':
+        return <span className="font-bold px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-xs">Chờ Xử Lý</span>
+      case 'Deposited':
+        return <span className="font-bold px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md text-xs">Đã Đặt Cọc</span>
+      case 'Confirmed':
+        return <span className="font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md text-xs">Đã Xác Nhận</span>
+      case 'Washing':
+        return <span className="font-bold px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-md text-xs">Đang Rửa</span>
+      case 'Completed':
+        return <span className="font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md text-xs">Đã Hoàn Thành</span>
+      case 'CheckedOut':
+        return <span className="font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-md text-xs">Đã Bàn Giao Xe</span>
+      case 'Cancelled':
+        return <span className="font-bold px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md text-xs">Đã Hủy</span>
+      case 'NoShow':
+      case 'No-Show':
+        return <span className="font-bold px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 rounded-md text-xs">Khách Không Đến</span>
+      case 'Processed':
+        return <span className="font-bold px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md text-xs">Đã Xử Lý Khiếu Nại</span>
+      default:
+        return <span className="font-bold px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-xs">{status}</span>
+    }
+  }
+
   const handleViewDetail = async (bookingId: number) => {
     try {
       const res = await bookingService.getBookingDetail(bookingId);
@@ -752,7 +778,8 @@ export default function StaffAppointments() {
           {bookings.map(booking => {
             const currentStepIndex = getStepIndex(booking.status)
             const isCancelled = booking.status === 'Cancelled'
-            const isNoShow = booking.status === 'No-Show'
+            const isNoShow = booking.status === 'No-Show' || booking.status === 'NoShow'
+            const isProcessed = booking.status === 'Processed'
 
             return (
               <div key={booking.bookingId} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
@@ -859,10 +886,10 @@ export default function StaffAppointments() {
                 </div>
 
                 {/* Progress Bar */}
-                {isCancelled || isNoShow ? (
+                {isCancelled || isNoShow || isProcessed ? (
                   <div className="py-4 px-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-center mt-2">
                     <p className="text-rose-600 font-bold flex items-center gap-2">
-                      Đã hủy ({booking.status})
+                      {isProcessed ? 'Đã xử lý khiếu nại' : isNoShow ? 'Khách không đến (No-Show)' : 'Lịch hẹn đã hủy'}
                     </p>
                   </div>
                 ) : (
@@ -1034,7 +1061,7 @@ export default function StaffAppointments() {
                   </div>
                   <div>
                     <span className="text-slate-500 block mb-1">Trạng thái:</span>
-                    <span className="font-semibold px-2 py-1 bg-slate-200 text-slate-700 rounded-md">{bookingDetail.status}</span>
+                    {renderBookingStatusBadge(bookingDetail.status)}
                   </div>
 
                 </div>
@@ -1122,7 +1149,7 @@ export default function StaffAppointments() {
                     <div>
                       <span className="text-slate-500 block text-xs mb-0.5">Trạng thái phiếu:</span>
                       <span className="font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded text-xs">
-                        {bookingDetail.parkingReceipt.status}
+                        {bookingDetail.parkingReceipt.status === 'Active' ? 'Đang có hiệu lực' : bookingDetail.parkingReceipt.status === 'Returned' ? 'Đã hoàn thành' : bookingDetail.parkingReceipt.status}
                       </span>
                     </div>
                   </div>

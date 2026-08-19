@@ -325,7 +325,7 @@ export default function CustomerHistory() {
     if (filterStatus === 'all') return true
     if (filterStatus === 'Completed') return item.status === 'Completed' || item.status === 'CheckedOut'
     if (filterStatus === 'Pending') return item.status === 'Pending' || item.status === 'Confirmed' || item.status === 'Washing'
-    if (filterStatus === 'Cancelled') return item.status === 'Cancelled' || item.status === 'NoShow'
+    if (filterStatus === 'Cancelled') return item.status === 'Cancelled' || item.status === 'NoShow' || item.status === 'Processed'
     return item.status === filterStatus
   })
 
@@ -405,7 +405,7 @@ export default function CustomerHistory() {
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
           >
-            Đã Hủy ({historyData.filter(i => ['Cancelled', 'NoShow'].includes(i.status)).length})
+            Đã Hủy ({historyData.filter(i => ['Cancelled', 'NoShow', 'Processed'].includes(i.status)).length})
           </button>
         </div>
 
@@ -496,6 +496,12 @@ export default function CustomerHistory() {
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
                           <AlertCircle className="w-3.5 h-3.5 text-slate-600" />
                           <span>Không Đến</span>
+                        </span>
+                      )}
+                      {item.status === 'Processed' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold">
+                          <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Đã xử lý khiếu nại</span>
                         </span>
                       )}
                     </div>
@@ -755,8 +761,8 @@ export default function CustomerHistory() {
                       <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Trạng Thái</p>
                       <p className={`text-sm font-bold ${['Completed', 'CheckedOut'].includes(selectedBooking.status) ? 'text-emerald-600'
                         : selectedBooking.status === 'Deposited' ? 'text-teal-600'
-                        : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600'
-                          : 'text-rose-600'
+                          : ['Pending', 'Confirmed', 'Washing'].includes(selectedBooking.status) ? 'text-blue-600'
+                            : 'text-rose-600'
                         }`}>
                         {selectedBooking.status === 'Completed' || selectedBooking.status === 'CheckedOut' ? 'Đã Hoàn Thành'
                           : selectedBooking.status === 'Deposited' ? 'Đã Đặt Cọc'
@@ -764,7 +770,8 @@ export default function CustomerHistory() {
                               : selectedBooking.status === 'Confirmed' ? 'Đã Xác Nhận'
                                 : selectedBooking.status === 'Washing' ? 'Đang Rửa'
                                   : selectedBooking.status === 'NoShow' ? 'Không Đến'
-                                    : 'Đã Hủy'}
+                                    : selectedBooking.status === 'Processed' ? 'Đã xử lý khiếu nại'
+                                      : 'Đã Hủy'}
                       </p>
                     </div>
                     <div>
@@ -1002,165 +1009,192 @@ export default function CustomerHistory() {
               )}
 
               {/* TAB 4: BÁO CÁO SỰ CỐ / KHIẾU NẠI */}
-              {activeModalTab === 'report' && (
-                <div className="space-y-4 animate-in fade-in duration-150">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Lịch Sử Báo Cáo Cho Đơn Lịch Này</p>
-                      <p className="text-[11px] text-slate-400 font-medium">Theo dõi tiến độ xử lý khiếu nại và phản hồi từ Gara</p>
+              {activeModalTab === 'report' && (() => {
+                const bookingReports = myReports.filter(r => r.bookingId === selectedBooking.bookingId)
+                const hasExistingReport = bookingReports.length > 0
+                const isWashing = selectedBooking.status === 'Washing'
+
+                return (
+                  <div className="space-y-4 animate-in fade-in duration-150">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                      <div>
+                        <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">Lịch Sử Báo Cáo Cho Đơn Lịch Này</p>
+                        <p className="text-[11px] text-slate-500 font-medium">Theo dõi tiến độ xử lý khiếu nại và phản hồi từ Gara</p>
+                      </div>
+
+                      {hasExistingReport ? (
+                        <span className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold shrink-0 self-start sm:self-auto flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-rose-600" />
+                          <span>Đã gửi khiếu nại (1/1)</span>
+                        </span>
+                      ) : !isWashing ? (
+                        <span title="Chỉ có thể tạo báo cáo khi xe đang thực hiện rửa tại gara (Trạng thái Washing)" className="px-3 py-1.5 bg-slate-200/70 text-slate-600 rounded-xl text-[11px] font-bold shrink-0 self-start sm:self-auto flex items-center gap-1.5 cursor-not-allowed">
+                          <AlertCircle className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Chỉ báo cáo khi bạn đến nhận xe</span>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsCreateReportModalOpen(true)}
+                          className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] shrink-0"
+                        >
+                          <PlusCircle className="w-4 h-4" />
+                          <span>Gửi Báo Cáo Sự Cố</span>
+                        </button>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsCreateReportModalOpen(true)}
-                      className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover:scale-[1.02]"
-                    >
-                      <PlusCircle className="w-4 h-4" />
-                      <span>Gửi Báo Cáo Sự Cố</span>
-                    </button>
-                  </div>
 
-                  {myReports.filter(r => r.bookingId === selectedBooking.bookingId).length > 0 ? (
-                    <div className="space-y-4">
-                      {myReports.filter(r => r.bookingId === selectedBooking.bookingId).map((report) => {
-                        const images = [
-                          { url: report.image1ApiPath || (report.image1 ? `/IncidentReport/${report.reportId}/images/1` : null), label: 'Bằng chứng 1' },
-                          { url: report.image2ApiPath || (report.image2 ? `/IncidentReport/${report.reportId}/images/2` : null), label: 'Bằng chứng 2' },
-                        ].filter((item): item is { url: string; label: string } => Boolean(item.url))
+                    {bookingReports.length > 0 ? (
+                      <div className="space-y-4">
+                        {myReports.filter(r => r.bookingId === selectedBooking.bookingId).map((report) => {
+                          const images = [
+                            { url: report.image1ApiPath || (report.image1 ? `/IncidentReport/${report.reportId}/images/1` : null), label: 'Bằng chứng 1' },
+                            { url: report.image2ApiPath || (report.image2 ? `/IncidentReport/${report.reportId}/images/2` : null), label: 'Bằng chứng 2' },
+                          ].filter((item): item is { url: string; label: string } => Boolean(item.url))
 
-                        return (
-                          <div key={report.reportId} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                            {/* Card Header: Code, Date & Status */}
-                            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
-                              <div>
-                                <span className="font-extrabold text-slate-900 text-xs block">Mã Khiếu Nại #REP-{report.reportId}</span>
-                                {report.createdAt && (
-                                  <span className="text-[10px] text-slate-400 font-medium block">Ngày gửi: {formatDateTime(report.createdAt)}</span>
-                                )}
-                              </div>
-                              {report.status === 'Pending' && (
-                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center gap-1">
-                                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                                  Chờ Tiếp Nhận
-                                </span>
-                              )}
-                              {report.status === 'InReview' && (
-                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200/80 flex items-center gap-1">
-                                  <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
-                                  Đang Xem Xét
-                                </span>
-                              )}
-                              {report.status === 'Resolved' && (
-                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                  Đã Giải Quyết
-                                </span>
-                              )}
-                              {report.status === 'Rejected' && (
-                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200/80 flex items-center gap-1">
-                                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                                  Từ Chối
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Customer Note */}
-                            <div className="text-xs text-slate-700 font-medium bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 whitespace-pre-wrap">
-                              <span className="font-bold text-slate-900 block mb-1">Nội dung báo cáo sự cố xe:</span>
-                              {report.customerNote}
-                            </div>
-
-                            {/* Images Gallery */}
-                            {images.length > 0 && (
-                              <div>
-                                <p className="text-[11px] font-bold text-slate-600 mb-1.5">Ảnh bằng chứng đi kèm:</p>
-                                <div className="flex items-center gap-2.5">
-                                  {images.map((item, idx) => (
-                                    <div
-                                      key={idx}
-                                      onClick={() => setPreviewImage(item.url)}
-                                      className="relative w-24 h-18 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-xs cursor-pointer"
-                                    >
-                                      <AuthenticatedImage
-                                        src={item.url}
-                                        alt={item.label}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                      />
-                                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-                                        <Eye className="w-4 h-4" />
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Admin / Manager Response Box */}
-                            {report.managerNote ? (
-                              <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${report.status === 'Resolved'
-                                ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
-                                : report.status === 'Rejected'
-                                  ? 'bg-rose-50/90 border-rose-200 text-rose-950'
-                                  : 'bg-blue-50/90 border-blue-200 text-blue-950'
-                                }`}>
-                                <div className="flex items-center justify-between">
-                                  <span className={`font-extrabold flex items-center gap-1.5 ${report.status === 'Resolved' ? 'text-emerald-900' : report.status === 'Rejected' ? 'text-rose-900' : 'text-blue-900'
-                                    }`}>
-                                    <span>💬 Phản Hồi Từ Quản Lý Gara:</span>
-                                  </span>
-                                  {report.resolvedAt && (
-                                    <span className="text-[10px] font-semibold text-slate-500">
-                                      {formatDateTime(report.resolvedAt)}
-                                    </span>
+                          return (
+                            <div key={report.reportId} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                              {/* Card Header: Code, Date & Status */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                                <div>
+                                  <span className="font-extrabold text-slate-900 text-xs block">Mã Khiếu Nại #REP-{report.reportId}</span>
+                                  {report.createdAt && (
+                                    <span className="text-[10px] text-slate-400 font-medium block">Ngày gửi: {formatDateTime(report.createdAt)}</span>
                                   )}
                                 </div>
-
-                                <p className="font-medium whitespace-pre-wrap leading-relaxed">{report.managerNote}</p>
-
-                                {(report.managerContactPhone || report.managerContactEmail) && (
-                                  <div className="pt-2 border-t border-slate-200/50 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-600">
-                                    <span>Liên hệ hỗ trợ:</span>
-                                    {report.managerContactPhone && (
-                                      <span className="text-slate-800 font-bold">📞 {report.managerContactPhone}</span>
-                                    )}
-                                    {report.managerContactEmail && (
-                                      <span className="text-slate-800 font-bold">✉️ {report.managerContactEmail}</span>
-                                    )}
-                                  </div>
+                                {report.status === 'Pending' && (
+                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200/80 flex items-center gap-1">
+                                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                    Chờ Tiếp Nhận
+                                  </span>
+                                )}
+                                {report.status === 'InReview' && (
+                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200/80 flex items-center gap-1">
+                                    <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                                    Đang Xem Xét
+                                  </span>
+                                )}
+                                {report.status === 'Resolved' && (
+                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200/80 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    Đã Giải Quyết
+                                  </span>
+                                )}
+                                {report.status === 'Rejected' && (
+                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200/80 flex items-center gap-1">
+                                    <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                    Từ Chối
+                                  </span>
                                 )}
                               </div>
-                            ) : (
-                              report.status === 'Pending' && (
-                                <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 text-xs text-amber-800 font-medium flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                                  <span>Báo cáo sự cố đang chờ Ban quản lý gara tiếp nhận và phản hồi.</span>
+
+                              {/* Customer Note */}
+                              <div className="text-xs text-slate-700 font-medium bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 whitespace-pre-wrap">
+                                <span className="font-bold text-slate-900 block mb-1">Nội dung báo cáo sự cố xe:</span>
+                                {report.customerNote}
+                              </div>
+
+                              {/* Images Gallery */}
+                              {images.length > 0 && (
+                                <div>
+                                  <p className="text-[11px] font-bold text-slate-600 mb-1.5">Ảnh bằng chứng đi kèm:</p>
+                                  <div className="flex items-center gap-2.5">
+                                    {images.map((item, idx) => (
+                                      <div
+                                        key={idx}
+                                        onClick={() => setPreviewImage(item.url)}
+                                        className="relative w-24 h-18 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 group shadow-xs cursor-pointer"
+                                      >
+                                        <AuthenticatedImage
+                                          src={item.url}
+                                          alt={item.label}
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                        />
+                                        <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                                          <Eye className="w-4 h-4" />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
-                              )
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
-                      <ShieldAlert className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-slate-700 font-bold text-sm mb-1">Chưa Có Báo Cáo Sự Cố Nào</p>
-                      <p className="text-slate-500 text-xs">Nếu xe của bạn gặp vấn đề sau khi rửa, hãy bấm nút "Gửi Báo Cáo Sự Cố" để được bộ phận quản lý hỗ trợ xử lý.</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                              )}
+
+                              {/* Admin / Manager Response Box */}
+                              {report.managerNote ? (
+                                <div className={`p-3.5 rounded-xl border text-xs space-y-1.5 transition-all ${report.status === 'Resolved'
+                                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
+                                  : report.status === 'Rejected'
+                                    ? 'bg-rose-50/90 border-rose-200 text-rose-950'
+                                    : 'bg-blue-50/90 border-blue-200 text-blue-950'
+                                  }`}>
+                                  <div className="flex items-center justify-between">
+                                    <span className={`font-extrabold flex items-center gap-1.5 ${report.status === 'Resolved' ? 'text-emerald-900' : report.status === 'Rejected' ? 'text-rose-900' : 'text-blue-900'
+                                      }`}>
+                                      <span>💬 Phản Hồi Từ Quản Lý Gara:</span>
+                                    </span>
+                                    {report.resolvedAt && (
+                                      <span className="text-[10px] font-semibold text-slate-500">
+                                        {formatDateTime(report.resolvedAt)}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="font-medium whitespace-pre-wrap leading-relaxed">{report.managerNote}</p>
+
+                                  {(report.managerContactPhone || report.managerContactEmail) && (
+                                    <div className="pt-2 border-t border-slate-200/50 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-600">
+                                      <span>Liên hệ hỗ trợ:</span>
+                                      {report.managerContactPhone && (
+                                        <span className="text-slate-800 font-bold">📞 {report.managerContactPhone}</span>
+                                      )}
+                                      {report.managerContactEmail && (
+                                        <span className="text-slate-800 font-bold">✉️ {report.managerContactEmail}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                report.status === 'Pending' && (
+                                  <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60 text-xs text-amber-800 font-medium flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                                    <span>Báo cáo sự cố đang chờ Ban quản lý gara tiếp nhận và phản hồi.</span>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
+                        <ShieldAlert className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                        <p className="text-slate-700 font-bold text-sm mb-1">Chưa Có Báo Cáo Sự Cố Nào</p>
+                        <p className="text-slate-500 text-xs max-w-md mx-auto">
+                          {!isWashing
+                            ? 'Báo cáo sự cố chỉ có thể được tạo khi xe đang ở trạng thái rửa tại gara lúc bạn đến nhận xe.'
+                            : 'Nếu xe của bạn gặp vấn đề khi nhận xe tại gara, hãy bấm nút "Gửi Báo Cáo Sự Cố" ở trên để gửi khiếu nại.'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Footer Modal */}
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setIsCreateReportModalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold transition-colors text-xs cursor-pointer flex items-center gap-1.5 border border-rose-200"
-              >
-                <ShieldAlert className="w-4 h-4 text-rose-600" />
-                <span>Báo Cáo Sự Cố Xe</span>
-              </button>
+              {selectedBooking.status === 'Washing' && !myReports.some(r => r.bookingId === selectedBooking.bookingId) ? (
+                <button
+                  type="button"
+                  onClick={() => setIsCreateReportModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold transition-colors text-xs cursor-pointer flex items-center gap-1.5 border border-rose-200"
+                >
+                  <ShieldAlert className="w-4 h-4 text-rose-600" />
+                  <span>Báo Cáo Sự Cố Xe</span>
+                </button>
+              ) : (
+                <div></div>
+              )}
               <button
                 type="button"
                 onClick={() => setSelectedBooking(null)}

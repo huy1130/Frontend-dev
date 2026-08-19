@@ -91,7 +91,7 @@ export function groupBookingsByDay(bookings: BookingResponseDTO[]): DailyRevenue
 
     const day = map.get(dateStr)!;
     const isCompleted = b.status === 'Completed' || b.status === 'CheckedOut';
-    const isCancelled = b.status === 'Cancelled' || b.status === 'NoShow';
+    const isCancelled = b.status === 'Cancelled' || b.status === 'NoShow' || b.status === 'Processed';
 
     day.totalBookings++;
 

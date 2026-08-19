@@ -218,11 +218,11 @@ export default function CustomerBooking() {
           loyaltyService.getSummary().catch(() => null),
           systemParameterService.getSystemParameter().catch(() => null)
         ])
-        
+
         if (sysParamRes) {
           setSystemParams(sysParamRes)
         }
-        
+
         if (carsRes.success) {
           setMyCars(carsRes.data)
           if (carsRes.data.length > 0) setSelectedCarId(carsRes.data[0].vehicleId)
@@ -491,11 +491,10 @@ export default function CustomerBooking() {
 
         {/* SUCCESS CONFIRMATION & PAYMENT SCREEN */}
         {isSuccess ? (
-          <div className={`bg-white border rounded-3xl p-6 sm:p-10 text-center max-w-4xl mx-auto shadow-2xl space-y-6 transition-all ${
-            isDeposited || createdBooking?.status === 'Deposited'
+          <div className={`bg-white border rounded-3xl p-6 sm:p-10 text-center max-w-4xl mx-auto shadow-2xl space-y-6 transition-all ${isDeposited || createdBooking?.status === 'Deposited'
               ? 'border-emerald-200 shadow-emerald-500/10'
               : 'border-orange-200 shadow-orange-500/10'
-          }`}>
+            }`}>
 
             {/* HEADER ICON & TITLE */}
             {isDeposited || createdBooking?.status === 'Deposited' ? (
@@ -816,9 +815,8 @@ export default function CustomerBooking() {
                       }
                       setCurrentStep(2)
                     }}
-                    className={`px-6 py-3.5 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md text-sm ${
-                      selectedSlotId === 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
-                    }`}
+                    className={`px-6 py-3.5 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md text-sm ${selectedSlotId === 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
+                      }`}
                   >
                     <span>Tiếp Tục: Chọn Dịch Vụ</span>
                     <ArrowRight className="w-4 h-4" />
@@ -846,11 +844,10 @@ export default function CustomerBooking() {
                         <div
                           key={svc.serviceId}
                           onClick={() => toggleService(svc.serviceId)}
-                          className={`relative rounded-2xl border-2 cursor-pointer transition-all duration-200 overflow-hidden group ${
-                            isSelected
+                          className={`relative rounded-2xl border-2 cursor-pointer transition-all duration-200 overflow-hidden group ${isSelected
                               ? 'border-orange-500 bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/25 scale-[1.01]'
                               : 'border-slate-200 bg-white hover:border-orange-300 hover:shadow-md hover:scale-[1.005]'
-                          }`}
+                            }`}
                         >
                           {/* Selected ribbon */}
                           {isSelected && (
@@ -863,29 +860,25 @@ export default function CustomerBooking() {
 
                           <div className="p-4 flex flex-col gap-2 h-full">
                             {/* Service Name */}
-                            <h4 className={`font-extrabold text-sm sm:text-base leading-tight pr-8 ${
-                              isSelected ? 'text-white' : 'text-slate-900'
-                            }`}>{svc.serviceName}</h4>
+                            <h4 className={`font-extrabold text-sm sm:text-base leading-tight pr-8 ${isSelected ? 'text-white' : 'text-slate-900'
+                              }`}>{svc.serviceName}</h4>
 
                             {/* Description */}
-                            <p className={`text-xs leading-relaxed flex-1 ${
-                              isSelected ? 'text-orange-100' : 'text-slate-500'
-                            }`}>{svc.description || 'Dịch vụ chất lượng cao'}</p>
+                            <p className={`text-xs leading-relaxed flex-1 ${isSelected ? 'text-orange-100' : 'text-slate-500'
+                              }`}>{svc.description || 'Dịch vụ chất lượng cao'}</p>
 
                             {/* Price + Detail */}
                             <div className="flex items-center justify-between mt-1 pt-3 border-t ${
                               isSelected ? 'border-white/20' : 'border-slate-100'
                             }">
-                              <span className={`text-lg font-black ${
-                                isSelected ? 'text-white' : 'text-orange-600'
-                              }`}>{svc.price.toLocaleString('vi-VN')}đ</span>
+                              <span className={`text-lg font-black ${isSelected ? 'text-white' : 'text-orange-600'
+                                }`}>{svc.price.toLocaleString('vi-VN')}đ</span>
                               <button
                                 onClick={(e) => handleViewServiceDetail(e, svc.serviceId)}
-                                className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${
-                                  isSelected
+                                className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg transition-colors ${isSelected
                                     ? 'bg-white/20 text-white hover:bg-white/30'
                                     : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                                }`}
+                                  }`}
                               >
                                 <Info className="w-3 h-3" /> Chi tiết
                               </button>
@@ -915,9 +908,8 @@ export default function CustomerBooking() {
                       }
                       setCurrentStep(3)
                     }}
-                    className={`px-6 py-3.5 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md text-sm ${
-                      selectedServiceId === 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
-                    }`}
+                    className={`px-6 py-3.5 text-white font-extrabold rounded-xl transition-all flex items-center gap-2 shadow-md text-sm ${selectedServiceId === 0 ? 'bg-slate-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-500/20'
+                      }`}
                   >
                     <span>Tiếp Tục: Xác Nhận & Ưu Đãi</span>
                     <ArrowRight className="w-4 h-4" />
@@ -971,9 +963,8 @@ export default function CustomerBooking() {
                     <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/5 border-2 border-orange-400/80 rounded-2xl p-4 transition-all shadow-sm">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${
-                            isAutoPromoMode ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-200 text-slate-600'
-                          }`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shrink-0 ${isAutoPromoMode ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-slate-200 text-slate-600'
+                            }`}>
                             <Sparkles className="w-5 h-5" />
                           </div>
                           <div>
@@ -1008,11 +999,10 @@ export default function CustomerBooking() {
                             setAppliedPromoId(0)
                             setAppliedRedemptionId(0)
                           }}
-                          className={`text-xs font-extrabold px-3.5 py-2 rounded-xl border shrink-0 transition-all cursor-pointer ${
-                            isAutoPromoMode
+                          className={`text-xs font-extrabold px-3.5 py-2 rounded-xl border shrink-0 transition-all cursor-pointer ${isAutoPromoMode
                               ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20'
                               : 'bg-white hover:bg-orange-50 text-orange-600 border-orange-300'
-                          }`}
+                            }`}
                         >
                           {isAutoPromoMode ? '✓ Đang bật' : 'Bật Tự Động'}
                         </button>
@@ -1056,8 +1046,7 @@ export default function CustomerBooking() {
                                   setAppliedRedemptionId(redemption.redemptionId);
                                 }
                               }}
-                              className={`relative w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
-                                isApplied
+                              className={`relative w-full p-3.5 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${isApplied
                                   ? 'bg-orange-50 border-orange-500 shadow-sm cursor-pointer'
                                   : 'bg-slate-50 border-slate-200 hover:border-slate-300 cursor-pointer'
                                 }`}
@@ -1074,9 +1063,9 @@ export default function CustomerBooking() {
                                 <div>
                                   <h5 className="font-bold text-slate-900 text-xs sm:text-sm">{redemption.rewardName}</h5>
                                   <p className="text-[11px] text-slate-500">
-                                    {redemption.rewardType === 'FreeWash' ? 'Miễn phí dịch vụ chính' : 
-                                     redemption.rewardType === 'AddOn' ? 'Tặng kèm dịch vụ phụ' : 
-                                     'Giảm giá'}
+                                    {redemption.rewardType === 'FreeWash' ? 'Miễn phí dịch vụ chính' :
+                                      redemption.rewardType === 'AddOn' ? 'Tặng kèm dịch vụ phụ' :
+                                        'Giảm giá'}
                                   </p>
                                 </div>
                               </div>
@@ -1103,6 +1092,10 @@ export default function CustomerBooking() {
                         {availablePromos.length === 0 ? (
                           <div className="text-center p-3 text-slate-500 text-sm">Hiện không có mã khuyến mãi nào khả dụng.</div>
                         ) : availablePromos.map((promo) => {
+                          //điều kiện áp dụng promotion có gắn serviceId ( adonn/freewash
+                          // kiểm tra xem dịch vụ của promotion có trùng với service của booking nếu trùng disable
+                          // !promo.serviceId : áp dụng cho tất cả dịch vụ
+                          // promo.serviceId === selectedServiceId : áp dụng cho dịch vụ cụ thể
                           const isApplicable = !promo.serviceId || promo.serviceId === selectedServiceId
                           const isApplied = appliedPromoId === promo.promotionId && isApplicable
                           const isBest = autoBestPromo?.promotionId === promo.promotionId && isApplicable
@@ -1201,9 +1194,9 @@ export default function CustomerBooking() {
                             <span className="shrink-0">Phần thưởng áp dụng:</span>
                             <span className="whitespace-nowrap font-bold text-right">
                               {(selectedRedemption.rewardType === 'FreeWash' || selectedRedemption.rewardType === 'AddOn') && selectedRedemption.serviceId === selectedServiceId ? `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ (Miễn phí)` :
-                               selectedRedemption.rewardType === 'FreeWash' ? 'Miễn phí 100%' :
-                               selectedRedemption.rewardType === 'AddOn' ? 'Tặng kèm' :
-                               `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ`}
+                                selectedRedemption.rewardType === 'FreeWash' ? 'Miễn phí 100%' :
+                                  selectedRedemption.rewardType === 'AddOn' ? 'Tặng kèm' :
+                                    `-${redemptionDiscountValue.toLocaleString('vi-VN')}đ`}
                             </span>
                           </div>
                         )}

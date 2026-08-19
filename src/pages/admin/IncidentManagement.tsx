@@ -96,45 +96,40 @@ export default function IncidentManagement() {
           <button
             type="button"
             onClick={() => setFilterStatus('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              filterStatus === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-            }`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+              }`}
           >
             Tất Cả ({reports.length})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('Pending')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              filterStatus === 'Pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
-            }`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'Pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
+              }`}
           >
             Chờ Xử Lý ({reports.filter((r) => r.status === 'Pending').length})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('InReview')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              filterStatus === 'InReview' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
-            }`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'InReview' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+              }`}
           >
             Đang Xem Xét ({reports.filter((r) => r.status === 'InReview').length})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('Resolved')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              filterStatus === 'Resolved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-            }`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'Resolved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+              }`}
           >
             Đã Giải Quyết ({reports.filter((r) => r.status === 'Resolved').length})
           </button>
           <button
             type="button"
             onClick={() => setFilterStatus('Rejected')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              filterStatus === 'Rejected' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'
-            }`}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'Rejected' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'
+              }`}
           >
             Từ Chối ({reports.filter((r) => r.status === 'Rejected').length})
           </button>
@@ -206,13 +201,24 @@ export default function IncidentManagement() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenResolveModal(report)}
-                        className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
-                      >
-                        Xử Lý Khiếu Nại
-                      </button>
+                      {report.status === 'Resolved' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenResolveModal(report)}
+                          className="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ml-auto"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Xem Chi Tiết</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenResolveModal(report)}
+                          className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                        >
+                          Xử Lý Khiếu Nại
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -292,42 +298,50 @@ export default function IncidentManagement() {
                 )}
               </div>
 
+              {/* Banner khi báo cáo đã được Giải Quyết */}
+              {selectedReport.status === 'Resolved' && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-xs font-bold text-emerald-800">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>Báo cáo sự cố này đã được Giải Quyết thành công </span>
+                </div>
+              )}
+
               {/* Lựa chọn trạng thái giải quyết */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Trạng Thái Xử Lý:</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
+                    disabled={selectedReport.status === 'Resolved'}
                     onClick={() => setResolveStatus('InReview')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer border ${
-                      resolveStatus === 'InReview'
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'InReview'
                         ? 'bg-blue-50 text-blue-700 border-blue-500 shadow-sm'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                      } ${selectedReport.status === 'Resolved' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Đang Xem Xét
                   </button>
 
                   <button
                     type="button"
+                    disabled={selectedReport.status === 'Resolved'}
                     onClick={() => setResolveStatus('Resolved')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer border ${
-                      resolveStatus === 'Resolved'
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Resolved'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-500 shadow-sm'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                      } ${selectedReport.status === 'Resolved' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Đã Giải Quyết
                   </button>
 
                   <button
                     type="button"
+                    disabled={selectedReport.status === 'Resolved'}
                     onClick={() => setResolveStatus('Rejected')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer border ${
-                      resolveStatus === 'Rejected'
+                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Rejected'
                         ? 'bg-rose-50 text-rose-700 border-rose-500 shadow-sm'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                      } ${selectedReport.status === 'Resolved' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Từ Chối
                   </button>
@@ -342,36 +356,50 @@ export default function IncidentManagement() {
                 <textarea
                   rows={3}
                   value={managerNote}
+                  disabled={selectedReport.status === 'Resolved'}
                   onChange={(e) => setManagerNote(e.target.value)}
                   placeholder="Nhập phương án giải quyết, lý do chấp nhận/từ chối hoặc thông tin liên hệ bồi thường..."
-                  className="w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 bg-slate-50 focus:bg-white transition-all"
+                  className={`w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 bg-slate-50 transition-all ${selectedReport.status === 'Resolved' ? 'bg-slate-100/80 text-slate-600 cursor-not-allowed' : 'focus:bg-white'
+                    }`}
                   required
                 />
               </div>
 
               {/* Action Buttons */}
               <div className="pt-2 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsResolveModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-xs"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-md flex items-center gap-2 cursor-pointer text-xs disabled:opacity-70"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang lưu...</span>
-                    </>
-                  ) : (
-                    <span>Lưu & Cập Nhật Khiếu Nại</span>
-                  )}
-                </button>
+                {selectedReport.status === 'Resolved' ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsResolveModalOpen(false)}
+                    className="px-5 py-2.5 rounded-xl font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 transition-colors cursor-pointer text-xs"
+                  >
+                    Đóng
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsResolveModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-xs"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-5 py-2.5 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-md flex items-center gap-2 cursor-pointer text-xs disabled:opacity-70"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Đang lưu...</span>
+                        </>
+                      ) : (
+                        <span>Lưu & Cập Nhật Khiếu Nại</span>
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           </div>
