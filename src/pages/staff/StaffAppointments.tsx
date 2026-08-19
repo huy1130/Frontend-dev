@@ -485,18 +485,58 @@ export default function StaffAppointments() {
     return () => clearInterval(interval);
   }, [isFinalPaymentModalOpen, paymentBooking]);
 
-  const handleStatusUpdate = async (bookingId: number, currentStatus: string) => {
+  const [confirmActionModal, setConfirmActionModal] = useState<{
+    bookingId: number;
+    customerName?: string;
+    licensePlate?: string;
+    actionType: 'confirm' | 'checkout';
+    title: string;
+    message: string;
+  } | null>(null)
+
+  const handleStatusUpdate = async (bookingId: number, currentStatus: string, customerName?: string, licensePlate?: string) => {
+    if (currentStatus === 'Pending' || currentStatus === 'Deposited') {
+      setConfirmActionModal({
+        bookingId,
+        customerName,
+        licensePlate,
+        actionType: 'confirm',
+        title: 'Xác Nhận Đặt Lịch Hẹn',
+        message: `Bạn có chắc chắn muốn xác nhận đơn đặt lịch #${bookingId} của khách hàng ${customerName || ''} (${licensePlate || ''}) không?`
+      })
+      return
+    }
+
+    if (currentStatus === 'Confirmed') {
+      setCheckInBookingId(bookingId)
+      setIsCheckInModalOpen(true)
+      return
+    }
+
+    if (currentStatus === 'Completed') {
+      setConfirmActionModal({
+        bookingId,
+        customerName,
+        licensePlate,
+        actionType: 'checkout',
+        title: 'Xác Nhận Bàn Giao Xe',
+        message: `Bạn có chắc chắn muốn hoàn tất bàn giao xe đơn #${bookingId} cho khách hàng ${customerName || ''} (${licensePlate || ''}) không?`
+      })
+      return
+    }
+  }
+
+  const handleExecuteConfirmedAction = async () => {
+    if (!confirmActionModal) return
+    const { bookingId, actionType } = confirmActionModal
+    setConfirmActionModal(null)
     try {
-      if (currentStatus === 'Pending' || currentStatus === 'Deposited') {
+      if (actionType === 'confirm') {
         await staffService.confirmBooking(bookingId)
-        toast.success('Đã xác nhận lịch hẹn!')
-      } else if (currentStatus === 'Confirmed') {
-        setCheckInBookingId(bookingId)
-        setIsCheckInModalOpen(true)
-        return // Wait for modal submission
-      } else if (currentStatus === 'Completed') {
+        toast.success(`🎉 Đã xác nhận thành công đơn đặt lịch #${bookingId}!`)
+      } else if (actionType === 'checkout') {
         await staffService.checkOutBooking(bookingId)
-        toast.success('Giao xe thành công!')
+        toast.success(`🚗 Đã bàn giao xe thành công cho đơn #${bookingId}!`)
       }
       fetchBookings()
     } catch (err: any) {
@@ -834,16 +874,16 @@ export default function StaffAppointments() {
 
                     {(booking.status === 'Pending' || booking.status === 'Deposited') && (
                       <button
-                        onClick={() => handleStatusUpdate(booking.bookingId, booking.status)}
-                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap"
+                        onClick={() => handleStatusUpdate(booking.bookingId, booking.status, booking.customerName, booking.licensePlate)}
+                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Xác nhận
                       </button>
                     )}
                     {booking.status === 'Confirmed' && (
                       <button
-                        onClick={() => handleStatusUpdate(booking.bookingId, 'Confirmed')}
-                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/20 whitespace-nowrap"
+                        onClick={() => handleStatusUpdate(booking.bookingId, 'Confirmed', booking.customerName, booking.licensePlate)}
+                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-blue-500 hover:bg-blue-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <PlayCircle className="w-4 h-4" /> Check-in Xe
                       </button>
@@ -863,7 +903,7 @@ export default function StaffAppointments() {
                       ) : (
                         <button
                           onClick={() => handleOpenFinalPayment(booking)}
-                          className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20 whitespace-nowrap"
+                          className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20 whitespace-nowrap cursor-pointer"
                         >
                           <QrCode className="w-4 h-4" /> Thanh Toán Nốt
                         </button>
@@ -871,8 +911,8 @@ export default function StaffAppointments() {
                     )}
                     {booking.status === 'Completed' && (
                       <button
-                        onClick={() => handleStatusUpdate(booking.bookingId, 'Completed')}
-                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap"
+                        onClick={() => handleStatusUpdate(booking.bookingId, 'Completed', booking.customerName, booking.licensePlate)}
+                        className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" /> Bàn Giao Xe
                       </button>
@@ -1974,6 +2014,45 @@ export default function StaffAppointments() {
                 className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm rounded-xl transition-colors cursor-pointer"
               >
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirm Thao Tác Xác Nhận / Bàn Giao */}
+      {confirmActionModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-7 text-center space-y-5 animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto border-2 border-orange-200 text-orange-600 shadow-lg shadow-orange-500/10">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+
+            <div>
+              <h3 className="text-xl font-black text-slate-900">
+                {confirmActionModal.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed font-medium">
+                {confirmActionModal.message}
+              </p>
+            </div>
+
+            <div className="pt-2 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmActionModal(null)}
+                className="py-3 px-4 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all text-xs sm:text-sm cursor-pointer border border-slate-200"
+              >
+                Hủy
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExecuteConfirmedAction}
+                className="py-3 px-4 rounded-xl font-extrabold text-white bg-orange-500 hover:bg-orange-600 active:scale-[0.98] transition-all text-xs sm:text-sm cursor-pointer shadow-md shadow-orange-500/20 flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Xác Nhận Ngay</span>
               </button>
             </div>
           </div>
