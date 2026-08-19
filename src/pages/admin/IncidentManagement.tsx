@@ -201,13 +201,13 @@ export default function IncidentManagement() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {report.status === 'Resolved' ? (
+                      {['Resolved', 'Rejected'].includes(report.status || '') ? (
                         <button
                           type="button"
                           onClick={() => handleOpenResolveModal(report)}
-                          className="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ml-auto"
+                          className="px-3.5 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ml-auto"
                         >
-                          <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                          <Eye className="w-3.5 h-3.5 text-slate-600" />
                           <span>Xem Chi Tiết</span>
                         </button>
                       ) : (
@@ -298,11 +298,17 @@ export default function IncidentManagement() {
                 )}
               </div>
 
-              {/* Banner khi báo cáo đã được Giải Quyết */}
+              {/* Banner khi báo cáo đã hoàn tất xử lý (Resolved hoặc Rejected) */}
               {selectedReport.status === 'Resolved' && (
                 <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2.5 text-xs font-bold text-emerald-800">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span>Báo cáo sự cố này đã được Giải Quyết thành công </span>
+                  <span>Báo cáo sự cố này đã được Giải Quyết thành công.</span>
+                </div>
+              )}
+              {selectedReport.status === 'Rejected' && (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-xs font-bold text-rose-800">
+                  <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  <span>Báo cáo sự cố này đã bị Từ Chối xử lý.</span>
                 </div>
               )}
 
@@ -312,36 +318,36 @@ export default function IncidentManagement() {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    disabled={selectedReport.status === 'Resolved'}
+                    disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                     onClick={() => setResolveStatus('InReview')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'InReview'
                         ? 'bg-blue-50 text-blue-700 border-blue-500 shadow-sm'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      } ${selectedReport.status === 'Resolved' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                      } ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Đang Xem Xét
                   </button>
 
                   <button
                     type="button"
-                    disabled={selectedReport.status === 'Resolved'}
+                    disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                     onClick={() => setResolveStatus('Resolved')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Resolved'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-500 shadow-sm'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      } ${selectedReport.status === 'Resolved' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                      } ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Đã Giải Quyết
                   </button>
 
                   <button
                     type="button"
-                    disabled={selectedReport.status === 'Resolved'}
+                    disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                     onClick={() => setResolveStatus('Rejected')}
                     className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Rejected'
                         ? 'bg-rose-50 text-rose-700 border-rose-500 shadow-sm'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      } ${selectedReport.status === 'Resolved' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                      } ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     Từ Chối
                   </button>
@@ -356,10 +362,10 @@ export default function IncidentManagement() {
                 <textarea
                   rows={3}
                   value={managerNote}
-                  disabled={selectedReport.status === 'Resolved'}
+                  disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                   onChange={(e) => setManagerNote(e.target.value)}
                   placeholder="Nhập phương án giải quyết, lý do chấp nhận/từ chối hoặc thông tin liên hệ bồi thường..."
-                  className={`w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 bg-slate-50 transition-all ${selectedReport.status === 'Resolved' ? 'bg-slate-100/80 text-slate-600 cursor-not-allowed' : 'focus:bg-white'
+                  className={`w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 bg-slate-50 transition-all ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'bg-slate-100/80 text-slate-600 cursor-not-allowed' : 'focus:bg-white'
                     }`}
                   required
                 />
@@ -367,7 +373,7 @@ export default function IncidentManagement() {
 
               {/* Action Buttons */}
               <div className="pt-2 flex justify-end gap-3">
-                {selectedReport.status === 'Resolved' ? (
+                {['Resolved', 'Rejected'].includes(selectedReport.status || '') ? (
                   <button
                     type="button"
                     onClick={() => setIsResolveModalOpen(false)}
