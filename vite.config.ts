@@ -14,12 +14,12 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5280',
+        target: 'https://api.hybridwash.io.vn',
         changeOrigin: true,
         secure: false, // In case of local self-signed SSL certificate
       },
       '/notificationHub': {
-        target: 'http://localhost:5280',
+        target: 'https://api.hybridwash.io.vn',
         ws: true,
         changeOrigin: true,
         secure: false,

@@ -1403,7 +1403,7 @@ export default function StaffAppointments() {
               const matchedBk = realtimeAlert.bookingId ? bookings.find(b => b.bookingId === realtimeAlert.bookingId) : undefined
               const serviceToShow = (realtimeAlert.serviceName && realtimeAlert.serviceName !== 'Dịch vụ rửa xe')
                 ? realtimeAlert.serviceName
-                : (matchedBk?.serviceName || (realtimeAlert.bookingId ? 'Rửa Xe Cơ bản' : 'N/A'))
+                : (matchedBk?.serviceName || (realtimeAlert.bookingId ? 'Rửa Xe Cơ bản' : ''))
               return (
                 <div className="flex items-center justify-between">
                   <span className="text-slate-300 font-medium">Dịch vụ:</span>
