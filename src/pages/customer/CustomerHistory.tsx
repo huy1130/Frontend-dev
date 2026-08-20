@@ -41,7 +41,7 @@ const isBookingExpired = (createdAt?: string | Date) => {
   if (!createdAt) return false
   const parsedDate = parseApiDate(createdAt)
   if (!parsedDate) return false
-  return (parsedDate.getTime() + 1 * 60 * 1000) <= Date.now()
+  return (parsedDate.getTime() + 10 * 60 * 1000) <= Date.now()
 }
 
 const PendingCountdown: React.FC<{ createdAt?: string | Date; onExpire?: () => void }> = ({ createdAt, onExpire }) => {
@@ -54,7 +54,7 @@ const PendingCountdown: React.FC<{ createdAt?: string | Date; onExpire?: () => v
       const parsedDate = parseApiDate(createdAt)
       if (!parsedDate) return
       const createdTime = parsedDate.getTime()
-      const expireTime = createdTime + 1 * 60 * 1000
+      const expireTime = createdTime + 10 * 60 * 1000
       const diff = Math.floor((expireTime - Date.now()) / 1000)
       if (diff <= 0) {
         setTimeLeft(0)
@@ -159,7 +159,7 @@ export default function CustomerHistory() {
           toast.success('🎉 Giao dịch thanh toán cọc đã được ghi nhận!')
         } else if (createdAt && isBookingExpired(createdAt)) {
           setDepositModalData(null)
-          toast.error('⏱️ Mã QR cọc đã hết hạn thanh toán (quá 1 phút). Lịch hẹn đã bị dọn dẹp!')
+          toast.error('⏱️ Mã QR cọc đã hết hạn thanh toán (quá 10 phút). Lịch hẹn đã bị dọn dẹp!')
           fetchHistory()
         }
       } catch {
@@ -210,7 +210,7 @@ export default function CustomerHistory() {
             const detailRes = await bookingService.getBookingDetail(bId).catch(() => null)
             const createdAt = detailRes?.data?.createdAt
             if (createdAt && isBookingExpired(createdAt)) {
-              toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 1 phút). Vui lòng đặt lại lịch mới!')
+              toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút). Vui lòng đặt lại lịch mới!')
               fetchHistory()
               return
             }
@@ -241,7 +241,7 @@ export default function CustomerHistory() {
           } catch (err: any) {
             const errorMsg = err.response?.data?.message || err.message || ''
             if (errorMsg.toLowerCase().includes('not found') || err.response?.status === 404 || err.response?.status === 400) {
-              toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 1 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
+              toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
               fetchHistory()
             } else {
               toast.error('Không thể tạo mã QR thanh toán cọc.')
@@ -627,7 +627,7 @@ export default function CustomerHistory() {
                           <button
                             onClick={async () => {
                               if (isBookingExpired(item.createdAt)) {
-                                toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 1 phút). Vui lòng đặt lại lịch mới!')
+                                toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút). Vui lòng đặt lại lịch mới!')
                                 fetchHistory()
                                 return
                               }
@@ -658,7 +658,7 @@ export default function CustomerHistory() {
                               } catch (err: any) {
                                 const errorMsg = err.response?.data?.message || err.message || ''
                                 if (errorMsg.toLowerCase().includes('not found') || err.response?.status === 404 || err.response?.status === 400) {
-                                  toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 1 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
+                                  toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
                                   fetchHistory()
                                 } else {
                                   toast.error(errorMsg || 'Không thể tạo link cọc PayOS')
@@ -1442,7 +1442,7 @@ export default function CustomerHistory() {
                     createdAt={depositModalData.createdAt}
                     onExpire={() => {
                       setDepositModalData(null)
-                      toast.error('⏱️ Mã QR cọc đã hết hạn thanh toán (quá 1 phút). Lịch hẹn đã bị dọn dẹp!')
+                      toast.error('⏱️ Mã QR cọc đã hết hạn thanh toán (quá 10 phút). Lịch hẹn đã bị dọn dẹp!')
                       fetchHistory()
                     }}
                   />
