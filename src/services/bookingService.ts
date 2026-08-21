@@ -78,8 +78,14 @@ export interface BookingResponseDTO {
     status: string;
     incidentImage1?: string | null;
     incidentImage2?: string | null;
+    incidentImage3?: string | null;
+    incidentImage4?: string | null;
+    incidentImage5?: string | null;
     incidentImage1ApiPath?: string | null;
     incidentImage2ApiPath?: string | null;
+    incidentImage3ApiPath?: string | null;
+    incidentImage4ApiPath?: string | null;
+    incidentImage5ApiPath?: string | null;
     staffNote?: string | null;
     parkingReceipt?: ParkingReceiptDTO | null;
     createdAt?: string;

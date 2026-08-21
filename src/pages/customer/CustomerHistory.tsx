@@ -778,7 +778,7 @@ export default function CustomerHistory() {
               >
                 <Car className="w-3.5 h-3.5" />
                 <span>Tình Trạng Xe</span>
-                {(selectedBooking.staffNote || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
+                {(selectedBooking.staffNote || selectedBooking.incidentImage1 || selectedBooking.incidentImage2 || selectedBooking.incidentImage3 || selectedBooking.incidentImage4 || selectedBooking.incidentImage5) && (
                   <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                 )}
               </button>
@@ -989,7 +989,7 @@ export default function CustomerHistory() {
               {/* TAB 2: TÌNH TRẠNG XE LÚC NHẬN */}
               {activeModalTab === 'condition' && (
                 <div className="space-y-4 animate-in fade-in duration-150">
-                  {(selectedBooking.staffNote || selectedBooking.incidentImage1ApiPath || selectedBooking.incidentImage2ApiPath || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) ? (
+                  {(selectedBooking.staffNote || selectedBooking.incidentImage1ApiPath || selectedBooking.incidentImage2ApiPath || selectedBooking.incidentImage3ApiPath || selectedBooking.incidentImage4ApiPath || selectedBooking.incidentImage5ApiPath || selectedBooking.incidentImage1 || selectedBooking.incidentImage2 || selectedBooking.incidentImage3 || selectedBooking.incidentImage4 || selectedBooking.incidentImage5) ? (
                     <div className="space-y-3">
                       {selectedBooking.staffNote && (
                         <div>
@@ -1000,9 +1000,9 @@ export default function CustomerHistory() {
                         </div>
                       )}
 
-                      {(selectedBooking.incidentImage1ApiPath || selectedBooking.incidentImage2ApiPath || selectedBooking.incidentImage1 || selectedBooking.incidentImage2) && (
+                      {(selectedBooking.incidentImage1ApiPath || selectedBooking.incidentImage2ApiPath || selectedBooking.incidentImage3ApiPath || selectedBooking.incidentImage4ApiPath || selectedBooking.incidentImage5ApiPath || selectedBooking.incidentImage1 || selectedBooking.incidentImage2 || selectedBooking.incidentImage3 || selectedBooking.incidentImage4 || selectedBooking.incidentImage5) && (
                         <div>
-                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ảnh Chụp Thực Trạng Xe Khi Nhận (2 Góc)</p>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Ảnh Chụp Thực Trạng Xe Khi Nhận</p>
                           <div className="grid grid-cols-2 gap-3">
                             {(() => {
                               const images: string[] = []
@@ -1011,6 +1011,15 @@ export default function CustomerHistory() {
 
                               if (selectedBooking.incidentImage2ApiPath) images.push(selectedBooking.incidentImage2ApiPath)
                               else if (selectedBooking.incidentImage2) images.push(selectedBooking.incidentImage2)
+
+                              if (selectedBooking.incidentImage3ApiPath) images.push(selectedBooking.incidentImage3ApiPath)
+                              else if (selectedBooking.incidentImage3) images.push(selectedBooking.incidentImage3)
+
+                              if (selectedBooking.incidentImage4ApiPath) images.push(selectedBooking.incidentImage4ApiPath)
+                              else if (selectedBooking.incidentImage4) images.push(selectedBooking.incidentImage4)
+
+                              if (selectedBooking.incidentImage5ApiPath) images.push(selectedBooking.incidentImage5ApiPath)
+                              else if (selectedBooking.incidentImage5) images.push(selectedBooking.incidentImage5)
 
                               return images.map((imgSrc: string, idx: number) => (
                                 <button

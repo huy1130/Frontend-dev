@@ -68,10 +68,12 @@ class SignalRService {
             // Sort candidates descending by bookingId so newest bookings appear first
             candidates.sort((a: any, b: any) => (b.bookingId || b.id || 0) - (a.bookingId || a.id || 0));
 
-            // Prioritize ACTIVE bookings (Deposited, Confirmed, Pending, Washing) over completed/cancelled ones
-            const activeStatuses = ['Deposited', 'Confirmed', 'Pending', 'Washing', 'Washed'];
-            const activeBooking = candidates.find((b: any) => activeStatuses.includes(b.status));
-            const selected = activeBooking || candidates[0];
+            // Prioritize pending check-in bookings (Deposited, Confirmed, Pending) over in-progress or completed ones
+            const pendingStatuses = ['Deposited', 'Confirmed', 'Pending'];
+            const inProgressStatuses = ['Washing'];
+            const pendingBooking = candidates.find((b: any) => pendingStatuses.includes(b.status));
+            const inProgressBooking = candidates.find((b: any) => inProgressStatuses.includes(b.status));
+            const selected = pendingBooking || inProgressBooking || [...candidates].sort((a: any, b: any) => (b.bookingId || b.id || 0) - (a.bookingId || a.id || 0))[0];
 
             bookingId = (selected as any).bookingId;
             customerName = (selected as any).customerName;
@@ -80,10 +82,11 @@ class SignalRService {
             const byPlateRes = await bookingService.getBookingByLicensePlate(plate);
             const list = byPlateRes?.data || (Array.isArray(byPlateRes) ? byPlateRes : []);
             if (Array.isArray(list) && list.length > 0) {
-              list.sort((a: any, b: any) => (b.bookingId || b.id || 0) - (a.bookingId || a.id || 0));
-              const activeStatuses = ['Deposited', 'Confirmed', 'Pending', 'Washing', 'Washed'];
-              const activeBooking = list.find((b: any) => activeStatuses.includes(b.status));
-              const selected = activeBooking || list[0];
+              const pendingStatuses = ['Deposited', 'Confirmed', 'Pending'];
+              const inProgressStatuses = ['Washing'];
+              const pendingBooking = list.find((b: any) => pendingStatuses.includes(b.status));
+              const inProgressBooking = list.find((b: any) => inProgressStatuses.includes(b.status));
+              const selected = pendingBooking || inProgressBooking || [...list].sort((a: any, b: any) => (b.bookingId || b.id || 0) - (a.bookingId || a.id || 0))[0];
 
               bookingId = selected.bookingId;
               customerName = selected.customerName;
@@ -102,11 +105,11 @@ class SignalRService {
           serviceName
         });
 
-        // Check current role or route (Only show blue SignalR toast to Staff users to prevent duplicate toasts for Admin)
+        // Check current role or route (Only show camera scan toast to Staff users)
         const userRole = (sessionStorage.getItem('userRole') || localStorage.getItem('userRole') || '').toLowerCase();
-        const isAdmin = userRole === 'admin' || window.location.pathname.startsWith('/admin');
+        const isStaff = userRole === 'staff' || window.location.pathname.startsWith('/staff');
 
-        if (!isAdmin) {
+        if (isStaff) {
           const details: string[] = [];
           if (bookingId) details.push(`Mã hẹn: #${bookingId}`);
           if (customerName) details.push(`Khách hàng: ${customerName}`);

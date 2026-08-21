@@ -23,6 +23,9 @@ export default function AdminAppointments() {
   const [checkInBookingId, setCheckInBookingId] = useState<number | null>(null)
   const [incidentImage1, setIncidentImage1] = useState<File | null>(null)
   const [incidentImage2, setIncidentImage2] = useState<File | null>(null)
+  const [incidentImage3, setIncidentImage3] = useState<File | null>(null)
+  const [incidentImage4, setIncidentImage4] = useState<File | null>(null)
+  const [incidentImage5, setIncidentImage5] = useState<File | null>(null)
   const [staffNote, setStaffNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -400,6 +403,9 @@ export default function AdminAppointments() {
       formData.append('BookingId', checkInBookingId.toString())
       if (incidentImage1) formData.append('IncidentImage1', incidentImage1)
       if (incidentImage2) formData.append('IncidentImage2', incidentImage2)
+      if (incidentImage3) formData.append('IncidentImage3', incidentImage3)
+      if (incidentImage4) formData.append('IncidentImage4', incidentImage4)
+      if (incidentImage5) formData.append('IncidentImage5', incidentImage5)
       formData.append('StaffNote', staffNote)
 
       await staffService.checkInBooking(formData)
@@ -409,6 +415,9 @@ export default function AdminAppointments() {
       // Reset form
       setIncidentImage1(null)
       setIncidentImage2(null)
+      setIncidentImage3(null)
+      setIncidentImage4(null)
+      setIncidentImage5(null)
       setStaffNote('')
       setCheckInBookingId(null)
 
@@ -996,7 +1005,7 @@ export default function AdminAppointments() {
               </div>
 
               {/* Thông tin kiểm tra xe (Nếu có) */}
-              {(bookingDetail.staffNote || bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
+              {(bookingDetail.staffNote || bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || bookingDetail.incidentImage3 || bookingDetail.incidentImage4 || bookingDetail.incidentImage5 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                   <h4 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-orange-500" /> Tình trạng xe lúc nhận
@@ -1011,7 +1020,7 @@ export default function AdminAppointments() {
                     </div>
                   )}
 
-                  {(bookingDetail.incidentImage1ApiPath || bookingDetail.incidentImage2ApiPath || bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
+                  {(bookingDetail.incidentImage1ApiPath || bookingDetail.incidentImage2ApiPath || bookingDetail.incidentImage3ApiPath || bookingDetail.incidentImage4ApiPath || bookingDetail.incidentImage5ApiPath || bookingDetail.incidentImage1 || bookingDetail.incidentImage2 || bookingDetail.incidentImage3 || bookingDetail.incidentImage4 || bookingDetail.incidentImage5 || (bookingDetail.incidentImageUrls && bookingDetail.incidentImageUrls.length > 0)) && (
                     <div>
                       <span className="text-slate-500 block mb-2 text-sm">Ảnh chụp thực trạng: (Bấm vào để xem lớn)</span>
                       <div className="grid grid-cols-2 gap-3">
@@ -1022,6 +1031,15 @@ export default function AdminAppointments() {
 
                           if (bookingDetail.incidentImage2ApiPath) images.push(bookingDetail.incidentImage2ApiPath)
                           else if (bookingDetail.incidentImage2) images.push(bookingDetail.incidentImage2)
+
+                          if (bookingDetail.incidentImage3ApiPath) images.push(bookingDetail.incidentImage3ApiPath)
+                          else if (bookingDetail.incidentImage3) images.push(bookingDetail.incidentImage3)
+
+                          if (bookingDetail.incidentImage4ApiPath) images.push(bookingDetail.incidentImage4ApiPath)
+                          else if (bookingDetail.incidentImage4) images.push(bookingDetail.incidentImage4)
+
+                          if (bookingDetail.incidentImage5ApiPath) images.push(bookingDetail.incidentImage5ApiPath)
+                          else if (bookingDetail.incidentImage5) images.push(bookingDetail.incidentImage5)
 
                           if (images.length === 0 && bookingDetail.incidentImageUrls) {
                             images.push(...bookingDetail.incidentImageUrls.filter(Boolean))
@@ -1139,10 +1157,11 @@ export default function AdminAppointments() {
           </div>
         </div>
       )}
+
       {/* Check-in Form Modal */}
       {isCheckInModalOpen && checkInBookingId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden my-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden my-auto">
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
               <h3 className="text-lg font-bold text-slate-800">Kiểm Tra Nhận Xe #{checkInBookingId}</h3>
               <button
@@ -1153,37 +1172,79 @@ export default function AdminAppointments() {
               </button>
             </div>
 
-            <form onSubmit={handleCheckInSubmit} className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 1 (tùy chọn)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => setIncidentImage1(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
-                />
+            <form onSubmit={handleCheckInSubmit} className="p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-xs leading-relaxed font-medium flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-amber-900 mb-0.5">Lưu ý kiểm tra xe trước khi rửa:</p>
+                  <p>Nếu tình trạng xe có vấn đề (vết xước, móp méo, hư hỏng...), nhân viên phải kiểm tra kỹ, chụp ảnh lại và xác nhận với khách hàng trước khi tiến hành dịch vụ.</p>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ảnh tình trạng 2 (tùy chọn)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => setIncidentImage2(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
-                />
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Ảnh thực trạng xe (Tối đa 5 góc)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {[
+                    { label: '1. Phía trước', state: incidentImage1, setter: setIncidentImage1 },
+                    { label: '2. Phía sau', state: incidentImage2, setter: setIncidentImage2 },
+                    { label: '3. Sườn trái', state: incidentImage3, setter: setIncidentImage3 },
+                    { label: '4. Sườn phải', state: incidentImage4, setter: setIncidentImage4 },
+                    { label: '5. Phía trên / Khác', state: incidentImage5, setter: setIncidentImage5 },
+                  ].map((item, index) => (
+                    <div key={index} className="relative group">
+                      <label className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 border-dashed cursor-pointer transition-all h-20 text-center relative overflow-hidden ${item.state ? 'border-orange-500 bg-orange-50/30' : 'border-slate-200 hover:border-orange-400 bg-slate-50/50 hover:bg-orange-50/20'}`}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(e) => item.setter(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                        {item.state ? (
+                          <div className="w-full h-full relative">
+                            <img
+                              src={URL.createObjectURL(item.state)}
+                              alt={item.label}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-end justify-center p-1 rounded-lg">
+                              <span className="text-[10px] font-semibold text-white truncate drop-shadow">{item.label}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-slate-500 gap-1">
+                            <Camera className="w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors" />
+                            <span className="text-[11px] font-bold text-slate-600 line-clamp-1">{item.label}</span>
+                          </div>
+                        )}
+                      </label>
+                      {item.state && (
+                        <button
+                          type="button"
+                          onClick={() => item.setter(null)}
+                          className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-1 shadow-md hover:bg-rose-600 transition-all z-10"
+                          title="Xóa ảnh"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">Ghi chú tình trạng xe <span className="text-rose-500">*</span></label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5">
+                  Ghi chú tình trạng xe <span className="text-rose-500">*</span>
+                </label>
                 <textarea
                   required
                   value={staffNote}
                   onChange={(e) => setStaffNote(e.target.value)}
                   placeholder="Vd: Xe có vết xước nhỏ ở cánh cửa phải..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all resize-none h-24 text-slate-700 font-medium text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all resize-none h-20 text-slate-700 font-medium text-sm"
                 ></textarea>
               </div>
 
