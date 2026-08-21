@@ -265,6 +265,9 @@ export default function CustomerHistory() {
   const [reportNote, setReportNote] = useState('')
   const [reportImage1, setReportImage1] = useState<File | null>(null)
   const [reportImage2, setReportImage2] = useState<File | null>(null)
+  const [reportImage3, setReportImage3] = useState<File | null>(null)
+  const [reportImage4, setReportImage4] = useState<File | null>(null)
+  const [reportImage5, setReportImage5] = useState<File | null>(null)
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
 
@@ -379,6 +382,9 @@ export default function CustomerHistory() {
       formData.append('CustomerNote', reportNote.trim())
       if (reportImage1) formData.append('Image1', reportImage1)
       if (reportImage2) formData.append('Image2', reportImage2)
+      if (reportImage3) formData.append('Image3', reportImage3)
+      if (reportImage4) formData.append('Image4', reportImage4)
+      if (reportImage5) formData.append('Image5', reportImage5)
 
       await incidentReportService.createReport(formData)
       toast.success('Gửi báo cáo sự cố thành công! Quản lý gara sẽ phản hồi sớm nhất.')
@@ -386,6 +392,9 @@ export default function CustomerHistory() {
       setReportNote('')
       setReportImage1(null)
       setReportImage2(null)
+      setReportImage3(null)
+      setReportImage4(null)
+      setReportImage5(null)
       fetchMyReports()
     } catch (err: any) {
       console.error('Error submitting report:', err)
@@ -1146,6 +1155,9 @@ export default function CustomerHistory() {
                           const images = [
                             { url: report.image1ApiPath || (report.image1 ? `/IncidentReport/${report.reportId}/images/1` : null), label: 'Bằng chứng 1' },
                             { url: report.image2ApiPath || (report.image2 ? `/IncidentReport/${report.reportId}/images/2` : null), label: 'Bằng chứng 2' },
+                            { url: report.image3ApiPath || (report.image3 ? `/IncidentReport/${report.reportId}/images/3` : null), label: 'Bằng chứng 3' },
+                            { url: report.image4ApiPath || (report.image4 ? `/IncidentReport/${report.reportId}/images/4` : null), label: 'Bằng chứng 4' },
+                            { url: report.image5ApiPath || (report.image5 ? `/IncidentReport/${report.reportId}/images/5` : null), label: 'Bằng chứng 5' },
                           ].filter((item): item is { url: string; label: string } => Boolean(item.url))
 
                           return (
@@ -1343,34 +1355,54 @@ export default function CustomerHistory() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Tải Ảnh Bằng Chứng (Tối đa 2 ảnh):
+                  Tải Ảnh Bằng Chứng (Tối đa 5 ảnh tùy chọn):
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
-                    <Camera className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-                    <span className="block text-[11px] font-bold text-slate-600 truncate mb-1">
-                      {reportImage1 ? reportImage1.name : 'Ảnh bằng chứng 1'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setReportImage1(e.target.files?.[0] || null)}
-                      className="text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer"
-                    />
-                  </div>
-
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
-                    <Camera className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-                    <span className="block text-[11px] font-bold text-slate-600 truncate mb-1">
-                      {reportImage2 ? reportImage2.name : 'Ảnh bằng chứng 2'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setReportImage2(e.target.files?.[0] || null)}
-                      className="text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer"
-                    />
-                  </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {[
+                    { label: 'Bằng chứng 1', state: reportImage1, setter: setReportImage1 },
+                    { label: 'Bằng chứng 2', state: reportImage2, setter: setReportImage2 },
+                    { label: 'Bằng chứng 3', state: reportImage3, setter: setReportImage3 },
+                    { label: 'Bằng chứng 4', state: reportImage4, setter: setReportImage4 },
+                    { label: 'Bằng chứng 5', state: reportImage5, setter: setReportImage5 },
+                  ].map((item, index) => (
+                    <div key={index} className="relative group">
+                      <label className={`flex flex-col items-center justify-center p-2 rounded-xl border-2 border-dashed cursor-pointer transition-all h-20 text-center relative overflow-hidden ${item.state ? 'border-rose-500 bg-rose-50/30' : 'border-slate-200 hover:border-rose-400 bg-slate-50 hover:bg-rose-50/20'}`}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => item.setter(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                        {item.state ? (
+                          <div className="w-full h-full relative">
+                            <img
+                              src={URL.createObjectURL(item.state)}
+                              alt={item.label}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-end justify-center p-1 rounded-lg">
+                              <span className="text-[10px] font-semibold text-white truncate drop-shadow">{item.label}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-slate-500 gap-1">
+                            <Camera className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors" />
+                            <span className="text-[11px] font-bold text-slate-600 line-clamp-1">{item.label}</span>
+                          </div>
+                        )}
+                      </label>
+                      {item.state && (
+                        <button
+                          type="button"
+                          onClick={() => item.setter(null)}
+                          className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-1 shadow-md hover:bg-rose-600 transition-all z-10"
+                          title="Xóa ảnh"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 

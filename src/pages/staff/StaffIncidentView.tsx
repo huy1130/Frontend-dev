@@ -224,13 +224,13 @@ export default function StaffIncidentView() {
                   {selectedReport.customerNote}
                 </p>
 
-                {(selectedReport.image1ApiPath || selectedReport.image2ApiPath || selectedReport.image1 || selectedReport.image2) && (
+                {(selectedReport.image1ApiPath || selectedReport.image2ApiPath || selectedReport.image3ApiPath || selectedReport.image4ApiPath || selectedReport.image5ApiPath || selectedReport.image1 || selectedReport.image2 || selectedReport.image3 || selectedReport.image4 || selectedReport.image5) && (
                   <div className="pt-3 border-t border-slate-200">
                     <p className="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                       <Camera className="w-4 h-4 text-orange-600" />
                       <span>Ảnh Bằng Chứng Khách Hàng Gửi:</span>
                     </p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {[
                         {
                           url: selectedReport.image1ApiPath || (selectedReport.image1 ? `/IncidentReport/${selectedReport.reportId}/images/1` : null),
@@ -239,6 +239,18 @@ export default function StaffIncidentView() {
                         {
                           url: selectedReport.image2ApiPath || (selectedReport.image2 ? `/IncidentReport/${selectedReport.reportId}/images/2` : null),
                           label: 'Ảnh bằng chứng 2',
+                        },
+                        {
+                          url: selectedReport.image3ApiPath || (selectedReport.image3 ? `/IncidentReport/${selectedReport.reportId}/images/3` : null),
+                          label: 'Ảnh bằng chứng 3',
+                        },
+                        {
+                          url: selectedReport.image4ApiPath || (selectedReport.image4 ? `/IncidentReport/${selectedReport.reportId}/images/4` : null),
+                          label: 'Ảnh bằng chứng 4',
+                        },
+                        {
+                          url: selectedReport.image5ApiPath || (selectedReport.image5 ? `/IncidentReport/${selectedReport.reportId}/images/5` : null),
+                          label: 'Ảnh bằng chứng 5',
                         },
                       ].map((item, idx) => item.url ? (
                         <button
