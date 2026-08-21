@@ -185,7 +185,8 @@ export default function IncidentManagement() {
                         </span>
                       )}
                       {report.status === 'InReview' && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
                           Đang Xem Xét
                         </span>
                       )}

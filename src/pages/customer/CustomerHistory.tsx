@@ -1177,8 +1177,8 @@ export default function CustomerHistory() {
                                   </span>
                                 )}
                                 {report.status === 'InReview' && (
-                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200/80 flex items-center gap-1">
-                                    <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200/80 flex items-center gap-1.5">
+                                    <Eye className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
                                     Đang Xem Xét
                                   </span>
                                 )}

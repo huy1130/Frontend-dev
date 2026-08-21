@@ -10,7 +10,7 @@ const StatusBadge = ({ status }: { status?: string }) => {
     case 'Pending':
       return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Chờ Xử Lý</span>
     case 'InReview':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200">Đang Xem Xét</span>
+      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5 text-blue-600 animate-pulse" /> Đang Xem Xét</span>
     case 'Resolved':
       return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Đã Giải Quyết</span>
     case 'Rejected':
