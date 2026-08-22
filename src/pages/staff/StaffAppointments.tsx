@@ -10,6 +10,13 @@ import { broadcastPlateScan, subscribePlateScan, getLatestPlateScan, dismissPlat
 import { formatDateTime } from '../../utils/date'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 
+const isBookingExpired = (createdAt?: string | Date) => {
+  if (!createdAt) return false
+  const createdTime = new Date(createdAt).getTime()
+  const diffInMinutes = (Date.now() - createdTime) / (1000 * 60)
+  return diffInMinutes > 10
+}
+
 export default function StaffAppointments() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
@@ -117,11 +124,13 @@ export default function StaffAppointments() {
             const toPay = b.amountToPay ?? Math.max(0, final - deposit)
             return {
               bookingId: b.bookingId,
+              customerId: b.customerId ?? null,
               customerName: b.customerName || 'Khách vãng lai',
               customerPhone: b.customerPhone || 'N/A',
               licensePlate: b.licensePlate || 'N/A',
               vehicleType: b.vehicleType || 'N/A',
               status: b.status,
+              paymentStatus: b.paymentStatus || 'Unpaid',
               slotId: b.slotId,
               serviceId: b.serviceId,
               serviceName: b.serviceName,
@@ -131,7 +140,8 @@ export default function StaffAppointments() {
               originalPrice: orig,
               finalPrice: final,
               depositAmount: deposit,
-              amountToPay: toPay
+              amountToPay: toPay,
+              createdAt: b.createdAt
             }
           })
           setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
@@ -265,17 +275,20 @@ export default function StaffAppointments() {
 
           const mapped: TodayBookingDto[] = foundBookings.map((b: any) => ({
             bookingId: b.bookingId,
+            customerId: b.customerId ?? null,
             customerName: b.customerName || 'Khách vãng lai',
             customerPhone: b.customerPhone || 'N/A',
             licensePlate: b.licensePlate || detected,
             vehicleType: b.vehicleType || 'N/A',
             status: b.status,
+            paymentStatus: b.paymentStatus || 'Unpaid',
             slotId: b.slotId,
             serviceId: b.serviceId,
             serviceName: b.serviceName || realServiceName,
             bookingDate: b.bookingDate,
             startTime: b.startTime,
-            endTime: b.endTime
+            endTime: b.endTime,
+            createdAt: b.createdAt
           }))
           setBookings(mapped)
           toast.success(`🎉 Nhận diện thành công biển số ${firstBooking.licensePlate || detected}! Mã đơn #${firstBooking.bookingId}.`)
@@ -439,8 +452,8 @@ export default function StaffAppointments() {
 
     setIsSubmittingCash(true)
     try {
-      await bookingService.updateBookingStatus(paymentBooking.bookingId, 'Completed')
-      toast.success('🎉 Đã xác nhận thu tiền mặt và hoàn tất đơn hàng!')
+      await staffService.checkOutBooking(paymentBooking.bookingId)
+      toast.success('🎉 Đã xác nhận thu tiền mặt và hoàn tất bàn giao xe!')
       setIsFinalPaymentModalOpen(false)
       setPaymentBooking(null)
       setFinalPaymentUrl(null)
@@ -462,7 +475,12 @@ export default function StaffAppointments() {
       try {
         const detailRes = await bookingService.getBookingDetail(paymentBooking.bookingId);
         const detailObj = detailRes?.data || detailRes;
-        if (detailObj && (detailObj.status === 'Completed' || detailObj.status === 'CheckedOut')) {
+        // BE mới: sau khi thanh toán final qua PayOS, paymentStatus = 'Paid'
+        // Không còn dựa vào status='Completed' nữa
+        if (detailObj && (
+          detailObj.paymentStatus === 'Paid' ||
+          detailObj.status === 'CheckedOut'
+        )) {
           toast.success('🎉 Khách hàng đã thanh toán thành công qua PayOS!');
           setIsFinalPaymentModalOpen(false);
           setPaymentBooking(null);
@@ -486,7 +504,7 @@ export default function StaffAppointments() {
     message: string;
   } | null>(null)
 
-  const handleStatusUpdate = async (bookingId: number, currentStatus: string, customerName?: string, licensePlate?: string) => {
+  const handleStatusUpdate = async (bookingId: number, currentStatus: string, customerName?: string, licensePlate?: string, paymentStatus?: string) => {
     if (currentStatus === 'Pending' || currentStatus === 'Deposited') {
       setConfirmActionModal({
         bookingId,
@@ -502,6 +520,27 @@ export default function StaffAppointments() {
     if (currentStatus === 'Confirmed') {
       setCheckInBookingId(bookingId)
       setIsCheckInModalOpen(true)
+      return
+    }
+
+    // BE mới: luồng Washing → CheckOut
+    // Nếu paymentStatus đã là 'Paid' (walk-in guest đã thu tiền mặt) → cho check-out luôn
+    // Nếu chưa Paid → mở modal thu tiền/PayOS
+    if (currentStatus === 'Washing') {
+      if (paymentStatus === 'Paid') {
+        setConfirmActionModal({
+          bookingId,
+          customerName,
+          licensePlate,
+          actionType: 'checkout',
+          title: 'Xác Nhận Bàn Giao Xe',
+          message: `Đơn #${bookingId} đã thanh toán đủ. Bạn có muốn hoàn tất bàn giao xe cho ${customerName || ''} (${licensePlate || ''}) không?`
+        })
+      } else {
+        // Chưa thanh toán → mở modal thu tiền
+        const bookingObj = bookings.find(b => b.bookingId === bookingId)
+        if (bookingObj) handleOpenFinalPayment(bookingObj)
+      }
       return
     }
 
@@ -710,13 +749,13 @@ export default function StaffAppointments() {
     }
   }
 
-  const getStepIndex = (status: string) => {
+  const getStepIndex = (status: string, paymentStatus?: string) => {
     switch (status) {
       case 'Pending': return -1;
       case 'Deposited': return -1;
       case 'Confirmed': return 0;
       case 'Checkin': return 1;
-      case 'Washing': return 2;
+      case 'Washing': return paymentStatus === 'Paid' ? 3 : 2;
       case 'Completed': return 3;
       case 'CheckedOut': return 4;
       default: return -1;
@@ -814,7 +853,7 @@ export default function StaffAppointments() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {bookings.map(booking => {
-            const currentStepIndex = getStepIndex(booking.status)
+            const currentStepIndex = getStepIndex(booking.status, booking.paymentStatus)
             const isCancelled = booking.status === 'Cancelled'
             const isNoShow = booking.status === 'No-Show' || booking.status === 'NoShow'
             const isProcessed = booking.status === 'Processed'
@@ -858,6 +897,23 @@ export default function StaffAppointments() {
                         <Phone className="w-4 h-4 text-slate-400" />
                         {booking.customerPhone}
                       </div>
+
+                      {/* Badge trạng thái thanh toán — chỉ hiện khi có thông tin có giá trị */}
+                      {booking.paymentStatus === 'PartiallyPaid' && (
+                        <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold rounded-md">
+                          💳 Đã cọc
+                        </span>
+                      )}
+                      {booking.paymentStatus === 'Paid' && (
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded-md">
+                          ✅ Đã TT đủ
+                        </span>
+                      )}
+                      {booking.paymentStatus === 'Failed' && (
+                        <span className="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-md">
+                          ❌ TT thất bại
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -872,7 +928,28 @@ export default function StaffAppointments() {
 
                     {(booking.status === 'Pending' || booking.status === 'Deposited') && (
                       <button
-                        onClick={() => handleStatusUpdate(booking.bookingId, booking.status, booking.customerName, booking.licensePlate)}
+                        onClick={async () => {
+                          try {
+                            const detailRes = await bookingService.getBookingDetail(booking.bookingId)
+                            const detail = detailRes?.data || detailRes
+                            const isSystemCustomer = !!(detail?.customerId || detail?.CustomerId)
+                            if (isSystemCustomer) {
+                              if (booking.status === 'Pending' && isBookingExpired(booking.createdAt)) {
+                                toast.error('⏱️ Lịch hẹn này của Khách hệ thống đã quá hạn 10 phút cọc và không thể xác nhận!')
+                                fetchBookings()
+                                return
+                              }
+                              const pStatus = detail?.paymentStatus || detail?.PaymentStatus || booking.paymentStatus
+                              if (pStatus !== 'PartiallyPaid' && pStatus !== 'Paid') {
+                                toast.error('⚠️ Đơn hàng của Khách hệ thống chưa thanh toán cọc. Khách phải cọc mới có thể xác nhận!')
+                                return
+                              }
+                            }
+                          } catch (err) {
+                            console.error('Error fetching detail before confirm:', err)
+                          }
+                          handleStatusUpdate(booking.bookingId, booking.status, booking.customerName, booking.licensePlate)
+                        }}
                         className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Xác nhận
@@ -898,6 +975,13 @@ export default function StaffAppointments() {
                         >
                           <AlertTriangle className="w-4 h-4" /> Xử Lý Khiếu Nại
                         </button>
+                      ) : booking.paymentStatus === 'Paid' ? (
+                        <button
+                          onClick={() => handleStatusUpdate(booking.bookingId, 'Washing', booking.customerName, booking.licensePlate, 'Paid')}
+                          className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4" /> Bàn Giao Xe
+                        </button>
                       ) : (
                         <button
                           onClick={() => handleOpenFinalPayment(booking)}
@@ -909,7 +993,7 @@ export default function StaffAppointments() {
                     )}
                     {booking.status === 'Completed' && (
                       <button
-                        onClick={() => handleStatusUpdate(booking.bookingId, 'Completed', booking.customerName, booking.licensePlate)}
+                        onClick={() => handleStatusUpdate(booking.bookingId, 'Completed', booking.customerName, booking.licensePlate, booking.paymentStatus)}
                         className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" /> Bàn Giao Xe
@@ -1052,8 +1136,12 @@ export default function StaffAppointments() {
                   </div>
                   {(bookingDetail.depositAmount != null && bookingDetail.depositAmount > 0) && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-slate-500">Đã cọc:</span>
-                      <span className="font-semibold text-blue-600">{bookingDetail.depositAmount.toLocaleString('vi-VN')} đ</span>
+                      <span className="text-slate-500">
+                        {bookingDetail.paymentStatus === 'Unpaid' ? 'Cọc yêu cầu:' : 'Đã cọc:'}
+                      </span>
+                      <span className={`font-semibold ${bookingDetail.paymentStatus === 'Unpaid' ? 'text-slate-500' : 'text-blue-600'}`}>
+                        {bookingDetail.depositAmount.toLocaleString('vi-VN')} đ
+                      </span>
                     </div>
                   )}
                   {(bookingDetail.depositAmount != null && bookingDetail.depositAmount > 0) && (

@@ -76,6 +76,9 @@ export interface BookingResponseDTO {
     addOns?: BookingAddOnDTO[];
     qrCode?: string;
     status: string;
+    // BE mới: trạng thái thanh toán độc lập với booking status
+    // Giá trị: 'Unpaid' | 'PartiallyPaid' | 'Paid' | 'Failed'
+    paymentStatus: string;
     incidentImage1?: string | null;
     incidentImage2?: string | null;
     incidentImage3?: string | null;
@@ -166,7 +169,20 @@ export const bookingService = {
 
   checkDepositStatus: async (bookingId: number): Promise<boolean> => {
     const res = await axiosClient.get(`/Booking/${bookingId}`);
-    const status = res?.data?.status || res?.status;
-    return status === 'Deposited' || status === 'Confirmed' || status === 'Washing' || status === 'Completed';
+    const data = res?.data;
+    const status = data?.status;
+    const paymentStatus = data?.paymentStatus;
+    // BE mới: kiểm tra cả paymentStatus lẫn booking status
+    // paymentStatus 'Paid'/'PartiallyPaid' = đã cọc thành công
+    // status 'Deposited'/'Confirmed'/'Washing'/'Completed'/'CheckedOut' = các bước sau cọc
+    return (
+      paymentStatus === 'Paid' ||
+      paymentStatus === 'PartiallyPaid' ||
+      status === 'Deposited' ||
+      status === 'Confirmed' ||
+      status === 'Washing' ||
+      status === 'Completed' ||
+      status === 'CheckedOut'
+    );
   }
 };

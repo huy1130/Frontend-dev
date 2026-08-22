@@ -2,11 +2,13 @@ import axiosClient from '../api/axiosClient'
 
 export interface TodayBookingDto {
   bookingId: number
+  customerId?: number | null
   customerName: string
   customerPhone: string
   licensePlate: string
   vehicleType: string
   status: string
+  paymentStatus?: string
   slotId: number
   serviceId: number
   serviceName?: string
@@ -17,6 +19,7 @@ export interface TodayBookingDto {
   finalPrice?: number
   depositAmount?: number
   amountToPay?: number
+  createdAt?: string | Date
 }
 
 export interface IssueReceiptRequestDTO {

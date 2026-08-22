@@ -150,9 +150,17 @@ export default function CustomerHistory() {
       try {
         const detailRes = await bookingService.getBookingDetail(depositModalData.bookingId)
         const currentStatus = detailRes?.data?.status || detailRes?.data?.bookingStatus
+        // BE mới: sau khi cọc thành công, paymentStatus sẽ là 'Paid' hoặc 'PartiallyPaid'
+        // và booking status sẽ chuyển sang 'Deposited'. Kiểm tra cả 2 để không bỏ sót edge case.
+        const currentPaymentStatus = detailRes?.data?.paymentStatus
         const createdAt = detailRes?.data?.createdAt || depositModalData.createdAt
 
-        if (currentStatus === 'Deposited') {
+        const isDepositDone =
+          currentStatus === 'Deposited' ||
+          currentPaymentStatus === 'Paid' ||
+          currentPaymentStatus === 'PartiallyPaid'
+
+        if (isDepositDone) {
           const bId = depositModalData.bookingId
           setDepositModalData(null)
           setSuccessDepositBookingId(bId)
@@ -177,7 +185,14 @@ export default function CustomerHistory() {
     try {
       const detailRes = await bookingService.getBookingDetail(bId)
       const currentStatus = detailRes?.data?.status || detailRes?.data?.bookingStatus
-      if (currentStatus === 'Deposited') {
+      // BE mới: kiểm tra paymentStatus thay vì chỉ dựa vào booking status
+      const currentPaymentStatus = detailRes?.data?.paymentStatus
+      const isDepositDone =
+        currentStatus === 'Deposited' ||
+        currentPaymentStatus === 'Paid' ||
+        currentPaymentStatus === 'PartiallyPaid'
+
+      if (isDepositDone) {
         setDepositModalData(null)
         setSuccessDepositBookingId(bId)
         fetchHistory()
@@ -511,218 +526,253 @@ export default function CustomerHistory() {
             </div>
           ) : (
             <>
-              {currentData.map((item) => (
-                <div
-                  key={item.bookingId}
-                  className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-orange-300 transition-all shadow-md shadow-slate-200/40 space-y-3"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xs font-mono font-extrabold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-200">
-                          Mã lịch hẹn -{item.bookingId}
+              {currentData.map((item) => {
+                const isBike = (item.vehicleType || '').toLowerCase().includes('bike') || (item.vehicleType || '').toLowerCase().includes('xe máy');
+                const depositVal = item.depositAmount ?? (isBike ? 20000 : Math.round((item.finalPrice ?? 0) * 0.2));
+                const remainingVal = Math.max(0, (item.finalPrice ?? 0) - depositVal);
+                const isOngoingStatus = ['deposited', 'confirmed', 'washing', 'inprogress', 'in-progress'].includes((item.status || '').toLowerCase());
+
+                return (
+                  <div
+                    key={item.bookingId}
+                    className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 hover:border-orange-300 hover:shadow-lg transition-all shadow-sm space-y-4"
+                  >
+                    {/* Header Row */}
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 pb-3">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                          Đơn #{item.bookingId}
                         </span>
-                        <div className="flex items-center gap-1.5 text-slate-600 text-xs font-semibold">
-                          <CalendarIcon className="w-3.5 h-3.5 text-orange-600" />
+                        <div className="flex items-center gap-1.5 text-slate-500 text-xs font-medium">
+                          <CalendarIcon className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                           <span>{item.bookingDate ? new Date(item.bookingDate).toLocaleDateString('vi-VN') : ''} • {item.startTime?.substring(0, 5)}</span>
                         </div>
+
+                        {/* Promo / Reward Tags */}
+                        {(item.appliedReward || item.redemptionId) && (
+                          <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 inline-flex items-center gap-1">
+                            <Tag className="w-3 h-3 text-amber-600 shrink-0" />
+                            <span>{item.appliedReward?.serviceName || item.appliedReward?.rewardName || (item.redemptionId ? redemptionsMap[item.redemptionId] : null) || 'Đổi thưởng'}</span>
+                          </span>
+                        )}
+                        {(item.promotionId || item.promoCode || (item as any).promotionName) && (
+                          <span className="text-[11px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 inline-flex items-center gap-1">
+                            <Tag className="w-3 h-3 text-rose-600 shrink-0" />
+                            <span>{item.promoCode || (item.promotionId ? promotionsMap[item.promotionId] : null) || (item as any).promotionName || 'Khuyến mãi'}</span>
+                          </span>
+                        )}
                       </div>
 
-                      {(item.appliedReward || item.redemptionId || item.promotionId || item.promoCode || (item as any).promotionName) && (
-                        <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                          {(item.appliedReward || item.redemptionId) && (
-                            <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
-                              <Tag className="w-3 h-3 text-amber-600" />
-                              🎁 {item.appliedReward?.serviceName || item.appliedReward?.rewardName || (item.redemptionId ? redemptionsMap[item.redemptionId] : null) || 'Đổi thưởng'}
-                            </span>
-                          )}
-                          {(item.promotionId || item.promoCode || (item as any).promotionName) && (
-                            <span className="text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 flex items-center gap-1">
-                              <Tag className="w-3 h-3 text-rose-600" />
-                              🏷️ {item.promoCode || (item.promotionId ? promotionsMap[item.promotionId] : null) || (item as any).promotionName || 'Khuyến mãi'}
-                            </span>
+                      {/* Status Badges */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {item.status === 'Pending' && (
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-extrabold ${isBookingExpired(item.createdAt) ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                            <Clock className="w-3.5 h-3.5 shrink-0" />
+                            <span>Chờ Xử Lý</span>
+                            <PendingCountdown createdAt={item.createdAt} onExpire={handleCountdownExpire} />
+                          </span>
+                        )}
+                        {item.status === 'Deposited' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-300 text-[11px] font-extrabold">
+                            <CreditCard className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                            <span>Đã Đặt Cọc</span>
+                          </span>
+                        )}
+                        {item.status === 'Confirmed' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-extrabold">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            <span>Đã Xác Nhận</span>
+                          </span>
+                        )}
+                        {item.status === 'Washing' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-extrabold">
+                            <History className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                            <span>Đang Rửa</span>
+                          </span>
+                        )}
+                        {(item.status === 'Completed' || item.status === 'CheckedOut') && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>Đã Hoàn Thành</span>
+                          </span>
+                        )}
+                        {item.status === 'RefundPending' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[11px] font-extrabold">
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-spin" />
+                            <span>Chờ Hoàn Cọc</span>
+                          </span>
+                        )}
+                        {item.status === 'Cancelled' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold">
+                            <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                            <span>Đã Hủy</span>
+                          </span>
+                        )}
+                        {item.status === 'NoShow' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-extrabold">
+                            <AlertCircle className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                            <span>Không Đến</span>
+                          </span>
+                        )}
+                        {item.status === 'Processed' && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold">
+                            <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                            <span>Đã xử lý khiếu nại</span>
+                          </span>
+                        )}
+
+                        {/* Extra Payment Status Badge (only when relevant and distinct) */}
+                        {item.status === 'Pending' && item.paymentStatus === 'Unpaid' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-[11px] font-semibold">
+                            Chưa cọc
+                          </span>
+                        )}
+                        {item.paymentStatus === 'Paid' && !['Completed', 'CheckedOut', 'Cancelled', 'NoShow', 'Processed'].includes(item.status) && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                            ✅ Đã thanh toán đủ
+                          </span>
+                        )}
+                        {item.paymentStatus === 'Failed' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold">
+                            ❌ TT Thất bại
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Content Body Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start sm:items-center">
+                      {/* Left: Services & Vehicle Info */}
+                      <div className="md:col-span-7 space-y-2.5">
+                        <div>
+                          <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Dịch vụ đã đăng ký</p>
+                          <div className="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                            <span>{item.serviceName}</span>
+                          </div>
+                          {item.addOns && item.addOns.length > 0 && (
+                            <ul className="mt-1 space-y-0.5 text-xs font-semibold text-orange-600">
+                              {item.addOns.map(addon => (
+                                <li key={addon.bookingAddOnId} className="flex items-center gap-1.5">
+                                  <span>+ {addon.serviceName}</span>
+                                  {addon.finalPrice === 0 && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.2 rounded font-bold">Miễn phí</span>}
+                                </li>
+                              ))}
+                            </ul>
                           )}
                         </div>
-                      )}
-                    </div>
 
-                    <div className="shrink-0 self-start sm:self-auto">
-                      {item.status === 'Pending' && (
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-extrabold shadow-xs ${isBookingExpired(item.createdAt) ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                          <Clock className="w-3.5 h-3.5 shrink-0" />
-                          <span>Chờ Xử Lý</span>
-                          <PendingCountdown createdAt={item.createdAt} onExpire={handleCountdownExpire} />
-                        </span>
-                      )}
-                      {item.status === 'Deposited' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-300 text-[11px] font-extrabold shadow-xs">
-                          <CreditCard className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                          <span>Đã Đặt Cọc</span>
-                        </span>
-                      )}
-                      {item.status === 'Confirmed' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-extrabold shadow-xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                          <span>Đã Xác Nhận</span>
-                        </span>
-                      )}
-                      {item.status === 'Washing' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-[11px] font-extrabold shadow-xs">
-                          <History className="w-3.5 h-3.5 text-orange-600 shrink-0" />
-                          <span>Đang Rửa</span>
-                        </span>
-                      )}
-                      {(item.status === 'Completed' || item.status === 'CheckedOut') && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-extrabold shadow-xs">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Đã Hoàn Thành</span>
-                        </span>
-                      )}
-                      {item.status === 'RefundPending' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[11px] font-extrabold shadow-xs">
-                          <RotateCcw className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-spin" />
-                          <span>Chờ Hoàn Cọc</span>
-                        </span>
-                      )}
-                      {item.status === 'Cancelled' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold shadow-xs">
-                          <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                          <span>Đã Hủy</span>
-                        </span>
-                      )}
-                      {item.status === 'NoShow' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-extrabold shadow-xs">
-                          <AlertCircle className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                          <span>Không Đến</span>
-                        </span>
-                      )}
-                      {item.status === 'Processed' && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold shadow-xs">
-                          <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                          <span>Đã xử lý khiếu nại</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                    <div className="md:col-span-8 space-y-2">
-                      <div className="flex items-start gap-2.5">
-                        <Car className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-[11px] text-slate-500 font-medium mb-0.5">Dịch vụ đã đăng ký:</p>
-                          <ul className="list-disc pl-4 space-y-0.5 text-xs sm:text-sm font-bold text-slate-900">
-                            <li>{item.serviceName}</li>
-                            {item.addOns && item.addOns.length > 0 && item.addOns.map(addon => (
-                              <li key={addon.bookingAddOnId} className="text-orange-600 flex items-center gap-1">
-                                <span>+ {addon.serviceName}</span>
-                                {addon.finalPrice === 0 && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 rounded-sm">Miễn phí</span>}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 pt-1">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{item.licensePlate} - {item.vehicleType}</span>
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-4 text-left md:text-right border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
-                      {['deposited', 'confirmed', 'washing', 'inprogress', 'in-progress'].includes((item.status || '').toLowerCase()) ? (
-                        <div>
-                          <span className="text-[11px] text-slate-500 font-semibold block mb-0.5">Thanh toán còn lại</span>
-                          <span className="text-xl font-extrabold text-orange-600">
-                            {Math.max(0, (item.finalPrice ?? 0) - (item.depositAmount ?? ((item.vehicleType || '').toLowerCase().includes('bike') ? 20000 : Math.round((item.finalPrice ?? 0) * 0.2)))).toLocaleString('vi-VN')}đ
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200/80">
+                            <Car className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                            <span>{item.licensePlate}</span>
+                            <span className="text-slate-400 font-normal">•</span>
+                            <span className="text-slate-600 font-medium capitalize">{item.vehicleType}</span>
                           </span>
                         </div>
-                      ) : (
-                        <div>
-                          <span className="text-[11px] text-slate-500 block mb-0.5 font-medium">Tổng tiền thanh toán</span>
-                          <span className="text-xl font-extrabold text-orange-600">
-                            {item.finalPrice?.toLocaleString('vi-VN')}đ
-                          </span>
-                        </div>
-                      )}
-                      <div className="mt-3 flex items-center gap-2 md:justify-end flex-wrap">
-                        {item.status === 'Pending' && !isBookingExpired(item.createdAt) && (
-                          <button
-                            onClick={async () => {
-                              if (isBookingExpired(item.createdAt)) {
-                                toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút). Vui lòng đặt lại lịch mới!')
-                                fetchHistory()
-                                return
-                              }
-                              try {
-                                toast.info('Đang khởi tạo mã QR cọc PayOS...')
-                                const payRes = await bookingService.createDepositPayment(item.bookingId)
-                                if (payRes) {
-                                  const depositAmt = payRes.amount ?? payRes.Amount ?? 0
-                                  const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
-                                  if (depositAmt <= 0 || isPaid) {
-                                    toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động cập nhật trạng thái Đã Đặt Cọc.')
+                      </div>
+
+                      {/* Right: Price Callout & Action Buttons */}
+                      <div className="md:col-span-5 flex flex-col items-start md:items-end justify-between border-t md:border-t-0 border-slate-100 pt-3 md:pt-0">
+                        {isOngoingStatus ? (
+                          <div className="text-left md:text-right">
+                            <span className="text-[11px] text-slate-500 font-semibold block mb-0.5">Thanh toán còn lại</span>
+                            <span className="text-xl sm:text-2xl font-extrabold text-orange-600 tracking-tight">
+                              {remainingVal.toLocaleString('vi-VN')}đ
+                            </span>
+                            {depositVal > 0 && (
+                              <span className="block text-[11px] text-slate-400 font-medium mt-0.5">
+                                (Tổng: {item.finalPrice?.toLocaleString('vi-VN')}đ • Đã cọc: {depositVal.toLocaleString('vi-VN')}đ)
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-left md:text-right">
+                            <span className="text-[11px] text-slate-500 font-semibold block mb-0.5">Tổng tiền thanh toán</span>
+                            <span className="text-xl sm:text-2xl font-extrabold text-orange-600 tracking-tight">
+                              {item.finalPrice?.toLocaleString('vi-VN')}đ
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Action Buttons Row */}
+                        <div className="mt-3.5 flex flex-wrap items-center gap-2 w-full md:w-auto justify-start md:justify-end">
+                          {item.status === 'Pending' && !isBookingExpired(item.createdAt) && (
+                            <button
+                              onClick={async () => {
+                                if (isBookingExpired(item.createdAt)) {
+                                  toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút). Vui lòng đặt lại lịch mới!')
+                                  fetchHistory()
+                                  return
+                                }
+                                try {
+                                  toast.info('Đang khởi tạo mã QR cọc PayOS...')
+                                  const payRes = await bookingService.createDepositPayment(item.bookingId)
+                                  if (payRes) {
+                                    const depositAmt = payRes.amount ?? payRes.Amount ?? 0
+                                    const isPaid = payRes.status === 'PAID' || payRes.Status === 'PAID'
+                                    if (depositAmt <= 0 || isPaid) {
+                                      toast.success('🎉 Đơn hàng được miễn phí 100% cọc (0đ)! Đã tự động cập nhật trạng thái Đã Đặt Cọc.')
+                                      fetchHistory()
+                                    } else {
+                                      setDepositModalData({
+                                        bookingId: item.bookingId,
+                                        amount: depositAmt,
+                                        accountNumber: payRes.accountNumber || payRes.AccountNumber || '',
+                                        accountName: payRes.accountName || payRes.AccountName || '',
+                                        bin: payRes.bin || payRes.Bin || '',
+                                        description: payRes.description || payRes.Description || `Deposit for booking ${item.bookingId}`,
+                                        qrCode: payRes.qrCode || payRes.QrCode,
+                                        qrImageUrl: payRes.qrImageUrl || payRes.QrImageUrl,
+                                        checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl,
+                                        createdAt: item.createdAt
+                                      })
+                                    }
+                                  }
+                                } catch (err: any) {
+                                  const errorMsg = err.response?.data?.message || err.message || ''
+                                  if (errorMsg.toLowerCase().includes('not found') || err.response?.status === 404 || err.response?.status === 400) {
+                                    toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
                                     fetchHistory()
                                   } else {
-                                    setDepositModalData({
-                                      bookingId: item.bookingId,
-                                      amount: depositAmt,
-                                      accountNumber: payRes.accountNumber || payRes.AccountNumber || '',
-                                      accountName: payRes.accountName || payRes.AccountName || '',
-                                      bin: payRes.bin || payRes.Bin || '',
-                                      description: payRes.description || payRes.Description || `Deposit for booking ${item.bookingId}`,
-                                      qrCode: payRes.qrCode || payRes.QrCode,
-                                      qrImageUrl: payRes.qrImageUrl || payRes.QrImageUrl,
-                                      checkoutUrl: payRes.checkoutUrl || payRes.CheckoutUrl,
-                                      createdAt: item.createdAt
-                                    })
+                                    toast.error(errorMsg || 'Không thể tạo link cọc PayOS')
                                   }
                                 }
-                              } catch (err: any) {
-                                const errorMsg = err.response?.data?.message || err.message || ''
-                                if (errorMsg.toLowerCase().includes('not found') || err.response?.status === 404 || err.response?.status === 400) {
-                                  toast.error('⏱️ Lịch hẹn này đã hết hạn thanh toán cọc (quá 10 phút) và đã được tự động dọn dẹp. Vui lòng đặt lại lịch mới!')
-                                  fetchHistory()
-                                } else {
-                                  toast.error(errorMsg || 'Không thể tạo link cọc PayOS')
-                                }
-                              }
-                            }}
-                            className="px-3.5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-extrabold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
-                          >
-                            <CreditCard className="w-3.5 h-3.5" />
-                            <span>Thanh Toán Cọc PayOS</span>
-                          </button>
-                        )}
-                        {(item.status === 'Pending' || item.status === 'Deposited') && (
-                          <button
-                            onClick={() => setConfirmCancelBookingId(item.bookingId)}
-                            className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold rounded-xl transition-all border border-rose-200 hover:border-rose-300 cursor-pointer flex items-center gap-1.5 shrink-0"
-                          >
-                            <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                            <span>Hủy Lịch</span>
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleViewDetail(item)}
-                          disabled={isLoadingDetail && loadingDetailBookingId === item.bookingId}
-                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold rounded-xl transition-colors border border-slate-200/80 cursor-pointer flex items-center gap-1.5 disabled:opacity-70 shrink-0"
-                        >
-                          {isLoadingDetail && loadingDetailBookingId === item.bookingId ? (
-                            <>
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-500" />
-                              <span>Đang tải...</span>
-                            </>
-                          ) : (
-                            <span>Xem Chi Tiết</span>
+                              }}
+                              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-orange-500/20 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                            >
+                              <CreditCard className="w-3.5 h-3.5" />
+                              <span>Thanh Toán Cọc PayOS</span>
+                            </button>
                           )}
-                        </button>
+                          {(item.status === 'Pending' || item.status === 'Deposited') && (
+                            <button
+                              onClick={() => setConfirmCancelBookingId(item.bookingId)}
+                              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold rounded-xl transition-all border border-rose-200 hover:border-rose-300 cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                            >
+                              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Hủy Lịch</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleViewDetail(item)}
+                            disabled={isLoadingDetail && loadingDetailBookingId === item.bookingId}
+                            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold rounded-xl transition-colors border border-slate-200/80 cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-70 shrink-0"
+                          >
+                            {isLoadingDetail && loadingDetailBookingId === item.bookingId ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-500" />
+                                <span>Đang tải...</span>
+                              </>
+                            ) : (
+                              <span>Xem Chi Tiết</span>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                </div>
-              ))}
+                )
+              })}
 
               {/* Pagination UI */}
               {totalPages > 1 && (

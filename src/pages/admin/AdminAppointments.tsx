@@ -10,6 +10,13 @@ import { getLocalDateString, formatDateTime } from '../../utils/date'
 import { broadcastPlateScan } from '../../utils/plateNotification'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 
+const isBookingExpired = (createdAt?: string | Date) => {
+  if (!createdAt) return false
+  const createdTime = new Date(createdAt).getTime()
+  const diffInMinutes = (Date.now() - createdTime) / (1000 * 60)
+  return diffInMinutes > 10
+}
+
 export default function AdminAppointments() {
   const [bookings, setBookings] = useState<TodayBookingDto[]>([])
   const [reportsMap, setReportsMap] = useState<Record<number, any>>({})
@@ -87,11 +94,13 @@ export default function AdminAppointments() {
             const toPay = b.amountToPay ?? Math.max(0, final - deposit)
             return {
               bookingId: b.bookingId,
+              customerId: b.customerId ?? null,
               customerName: b.customerName || 'Khách vãng lai',
               customerPhone: b.customerPhone || 'N/A',
               licensePlate: b.licensePlate || 'N/A',
               vehicleType: b.vehicleType || 'N/A',
               status: b.status,
+              paymentStatus: b.paymentStatus || 'Unpaid',
               slotId: b.slotId,
               serviceId: b.serviceId,
               serviceName: b.serviceName,
@@ -101,7 +110,8 @@ export default function AdminAppointments() {
               originalPrice: orig,
               finalPrice: final,
               depositAmount: deposit,
-              amountToPay: toPay
+              amountToPay: toPay,
+              createdAt: b.createdAt
             }
           })
           setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
@@ -123,11 +133,13 @@ export default function AdminAppointments() {
             const toPay = b.amountToPay ?? Math.max(0, final - deposit)
             return {
               bookingId: b.bookingId,
+              customerId: b.customerId ?? null,
               customerName: b.customerName || 'Khách vãng lai',
               customerPhone: b.customerPhone || 'N/A',
               licensePlate: b.licensePlate || 'N/A',
               vehicleType: b.vehicleType || 'N/A',
               status: b.status,
+              paymentStatus: b.paymentStatus || 'Unpaid',
               slotId: b.slotId,
               serviceId: b.serviceId,
               serviceName: b.serviceName,
@@ -137,7 +149,8 @@ export default function AdminAppointments() {
               originalPrice: orig,
               finalPrice: final,
               depositAmount: deposit,
-              amountToPay: toPay
+              amountToPay: toPay,
+              createdAt: b.createdAt
             }
           })
           setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
@@ -305,8 +318,8 @@ export default function AdminAppointments() {
 
     setIsSubmittingCash(true)
     try {
-      await bookingService.updateBookingStatus(paymentBooking.bookingId, 'Completed')
-      toast.success('🎉 Đã xác nhận thu tiền mặt và hoàn tất đơn hàng!')
+      await staffService.checkOutBooking(paymentBooking.bookingId)
+      toast.success('🎉 Đã xác nhận thu tiền mặt và hoàn tất bàn giao xe!')
       setIsFinalPaymentModalOpen(false)
       setPaymentBooking(null)
       setFinalPaymentUrl(null)
@@ -328,7 +341,7 @@ export default function AdminAppointments() {
       try {
         const detailRes = await bookingService.getBookingDetail(paymentBooking.bookingId);
         const detailObj = detailRes?.data || detailRes;
-        if (detailObj && (detailObj.status === 'Completed' || detailObj.status === 'CheckedOut')) {
+        if (detailObj && (detailObj.paymentStatus === 'Paid' || detailObj.status === 'CheckedOut')) {
           toast.success('🎉 Khách hàng đã thanh toán thành công qua PayOS!');
           setIsFinalPaymentModalOpen(false);
           setPaymentBooking(null);
@@ -526,17 +539,20 @@ export default function AdminAppointments() {
 
           const mapped: TodayBookingDto[] = foundBookings.map((b: any) => ({
             bookingId: b.bookingId,
+            customerId: b.customerId ?? null,
             customerName: b.customerName || 'Khách vãng lai',
             customerPhone: b.customerPhone || 'N/A',
             licensePlate: b.licensePlate || detected,
             vehicleType: b.vehicleType || 'N/A',
             status: b.status,
+            paymentStatus: b.paymentStatus || 'Unpaid',
             slotId: b.slotId,
             serviceId: b.serviceId,
             serviceName: b.serviceName || realServiceName,
             bookingDate: b.bookingDate,
             startTime: b.startTime,
-            endTime: b.endTime
+            endTime: b.endTime,
+            createdAt: b.createdAt
           }))
           setBookings(mapped)
           toast.success(`🎉 Nhận diện thành công biển số ${firstBooking.licensePlate || detected}! Mã đơn #${firstBooking.bookingId}. Đã phát thông báo tới Staff.`)
@@ -571,13 +587,13 @@ export default function AdminAppointments() {
     }
   }
 
-  const getStepIndex = (status: string) => {
+  const getStepIndex = (status: string, paymentStatus?: string) => {
     switch (status) {
       case 'Pending': return -1;
       case 'Deposited': return -1;
       case 'Confirmed': return 0;
       case 'Checkin': return 1;
-      case 'Washing': return 2;
+      case 'Washing': return paymentStatus === 'Paid' ? 3 : 2;
       case 'Completed': return 3;
       case 'CheckedOut': return 4;
       default: return -1;
@@ -674,7 +690,7 @@ export default function AdminAppointments() {
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {bookings.map(booking => {
-            const currentStepIndex = getStepIndex(booking.status)
+            const currentStepIndex = getStepIndex(booking.status, booking.paymentStatus)
             const isCancelled = booking.status === 'Cancelled'
             const isNoShow = booking.status === 'No-Show' || booking.status === 'NoShow'
             const isProcessed = booking.status === 'Processed'
@@ -718,6 +734,23 @@ export default function AdminAppointments() {
                         <Phone className="w-4 h-4 text-slate-400" />
                         {booking.customerPhone}
                       </div>
+
+                      {/* Badge trạng thái thanh toán — chỉ hiện khi có thông tin có giá trị */}
+                      {booking.paymentStatus === 'PartiallyPaid' && (
+                        <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold rounded-md">
+                          💳 Đã cọc
+                        </span>
+                      )}
+                      {booking.paymentStatus === 'Paid' && (
+                        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded-md">
+                          ✅ Đã TT đủ
+                        </span>
+                      )}
+                      {booking.paymentStatus === 'Failed' && (
+                        <span className="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-md">
+                          ❌ TT thất bại
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -732,15 +765,36 @@ export default function AdminAppointments() {
 
                     {(booking.status === 'Pending' || booking.status === 'Deposited') && (
                       <button
-                        onClick={() => setConfirmActionModal({
-                          bookingId: booking.bookingId,
-                          customerName: booking.customerName,
-                          licensePlate: booking.licensePlate,
-                          adminStatus: 'Confirmed',
-                          successMsg: `🎉 Đã xác nhận thành công đơn đặt lịch #${booking.bookingId}!`,
-                          title: 'Xác Nhận Đặt Lịch Hẹn',
-                          message: `Bạn có chắc chắn muốn xác nhận đơn đặt lịch #${booking.bookingId} của khách hàng ${booking.customerName || ''} (${booking.licensePlate || ''}) không?`
-                        })}
+                        onClick={async () => {
+                          try {
+                            const detailRes = await bookingService.getBookingDetail(booking.bookingId)
+                            const detail = detailRes?.data || detailRes
+                            const isSystemCustomer = !!(detail?.customerId || detail?.CustomerId)
+                            if (isSystemCustomer) {
+                              if (booking.status === 'Pending' && isBookingExpired(booking.createdAt)) {
+                                toast.error('⏱️ Lịch hẹn này của Khách hệ thống đã quá hạn 10 phút cọc và không thể xác nhận!')
+                                fetchBookings()
+                                return
+                              }
+                              const pStatus = detail?.paymentStatus || detail?.PaymentStatus || booking.paymentStatus
+                              if (pStatus !== 'PartiallyPaid' && pStatus !== 'Paid') {
+                                toast.error('⚠️ Đơn hàng của Khách hệ thống chưa thanh toán cọc. Khách phải cọc mới có thể xác nhận!')
+                                return
+                              }
+                            }
+                          } catch (err) {
+                            console.error('Error fetching detail before confirm:', err)
+                          }
+                          setConfirmActionModal({
+                            bookingId: booking.bookingId,
+                            customerName: booking.customerName,
+                            licensePlate: booking.licensePlate,
+                            adminStatus: 'Confirmed',
+                            successMsg: `🎉 Đã xác nhận thành công đơn đặt lịch #${booking.bookingId}!`,
+                            title: 'Xác Nhận Đặt Lịch Hẹn',
+                            message: `Bạn có chắc chắn muốn xác nhận đơn đặt lịch #${booking.bookingId} của khách hàng ${booking.customerName || ''} (${booking.licensePlate || ''}) không?`
+                          })
+                        }}
                         className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Xác nhận
@@ -781,7 +835,24 @@ export default function AdminAppointments() {
                         >
                           <AlertTriangle className="w-4 h-4" /> Xử Lý Khiếu Nại
                         </Link>
+                      ) : booking.paymentStatus === 'Paid' ? (
+                        // Đã thanh toán đủ → cho bàn giao xe luôn
+                        <button
+                          onClick={() => setConfirmActionModal({
+                            bookingId: booking.bookingId,
+                            customerName: booking.customerName,
+                            licensePlate: booking.licensePlate,
+                            adminStatus: 'CheckedOut',
+                            successMsg: `🚗 Đã bàn giao xe thành công cho đơn #${booking.bookingId}!`,
+                            title: 'Xác Nhận Bàn Giao Xe',
+                            message: `Đơn #${booking.bookingId} đã thanh toán đủ. Bạn có muốn hoàn tất bàn giao xe cho ${booking.customerName || ''} (${booking.licensePlate || ''}) không?`
+                          })}
+                          className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 whitespace-nowrap cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4" /> Bàn Giao Xe
+                        </button>
                       ) : (
+                        // Chưa thanh toán → mở modal thu tiền
                         <button
                           onClick={() => handleOpenFinalPayment(booking)}
                           className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-600/20 whitespace-nowrap cursor-pointer"
@@ -943,8 +1014,13 @@ export default function AdminAppointments() {
                   </div>
                   {(bookingDetail.depositAmount != null && bookingDetail.depositAmount > 0) && (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-slate-500">Đã cọc:</span>
-                      <span className="font-semibold text-blue-600">{bookingDetail.depositAmount.toLocaleString('vi-VN')} đ</span>
+                      <span className="text-slate-500">
+                        {/* paymentStatus Unpaid = chưa cọc → hiện "Cọc yêu cầu", ngược lại đã cọc rồi */}
+                        {bookingDetail.paymentStatus === 'Unpaid' ? 'Cọc yêu cầu:' : 'Đã cọc:'}
+                      </span>
+                      <span className={`font-semibold ${bookingDetail.paymentStatus === 'Unpaid' ? 'text-slate-500' : 'text-blue-600'}`}>
+                        {bookingDetail.depositAmount.toLocaleString('vi-VN')} đ
+                      </span>
                     </div>
                   )}
                   {(bookingDetail.depositAmount != null && bookingDetail.depositAmount > 0) && (
