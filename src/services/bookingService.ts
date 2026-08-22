@@ -162,5 +162,11 @@ export const bookingService = {
     const rUrl = returnUrl || `${origin}/customer/history?bookingId=${bookingId}&status=success`;
     const cUrl = cancelUrl || `${origin}/customer/booking?cancelBookingId=${bookingId}&cancel=true`;
     return axiosClient.post(`/payments/final-qr/${bookingId}?returnUrl=${encodeURIComponent(rUrl)}&cancelUrl=${encodeURIComponent(cUrl)}`);
+  },
+
+  checkDepositStatus: async (bookingId: number): Promise<boolean> => {
+    const res = await axiosClient.get(`/Booking/${bookingId}`);
+    const status = res?.data?.status || res?.status;
+    return status === 'Deposited' || status === 'Confirmed' || status === 'Washing' || status === 'Completed';
   }
 };

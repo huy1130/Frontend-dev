@@ -1,8 +1,23 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Calendar, Sparkles, Star, Quote, ArrowRight } from 'lucide-react'
 import { mockCustomerReviews } from '../../mock/homeData'
+import { systemParameterService } from '../../services/systemParameterService'
 
 export default function CallToAction() {
+  const [hotline, setHotline] = useState<string>('0901234567')
+
+  useEffect(() => {
+    systemParameterService
+      .getSystemParameter()
+      .then((data) => {
+        if (data?.contactPhone) setHotline(data.contactPhone)
+      })
+      .catch((err) => {
+        console.warn('Lỗi khi lấy thông số hotline ở CallToAction:', err)
+      })
+  }, [])
+
+  const cleanTel = hotline.replace(/\s+/g, '')
   return (
     <section id="booking" className="py-24 bg-slate-100 dark:bg-gradient-to-b dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 relative overflow-hidden transition-colors duration-300">
       {/* Background Orbs */}
@@ -89,10 +104,10 @@ export default function CallToAction() {
               </a>
 
               <a
-                href="tel:1900888999"
+                href={`tel:${cleanTel}`}
                 className="w-full py-4 px-6 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm text-center border border-white/20 transition-all"
               >
-                Gọi Hotline: 1900 888 999
+                Gọi Hotline: {hotline}
               </a>
             </div>
 

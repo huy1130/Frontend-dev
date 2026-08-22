@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { Calendar } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { systemParameterService } from '../../services/systemParameterService'
 
 export default function Hero() {
   const [userRole, setUserRole] = useState<string | null>(() => localStorage.getItem('userRole'))
+  const [hotline, setHotline] = useState<string>('0901234567')
 
   useEffect(() => {
     setUserRole(localStorage.getItem('userRole'))
+    systemParameterService
+      .getSystemParameter()
+      .then((data) => {
+        if (data?.contactPhone) setHotline(data.contactPhone)
+      })
+      .catch((err) => {
+        console.warn('Lỗi khi lấy thông số hotline ở Hero:', err)
+      })
   }, [])
+
+  const cleanTel = hotline.replace(/\s+/g, '')
 
   return (
     <section className="relative w-full bg-dark-950 text-white transition-colors duration-300 overflow-hidden">
@@ -73,7 +85,7 @@ export default function Hero() {
             </Link>
 
             <a
-              href="tel:1900888999"
+              href={`tel:${cleanTel}`}
               className="px-7 py-2.5 bg-transparent border border-white text-white font-semibold text-sm sm:text-base hover:bg-white/10 transition-colors drop-shadow-lg rounded-sm"
             >
               Tư Vấn Miễn Phí

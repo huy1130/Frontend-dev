@@ -1,7 +1,23 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Logo from '../common/Logo'
+import { systemParameterService } from '../../services/systemParameterService'
 
 export default function Footer() {
+  const [hotline, setHotline] = useState<string>('0901234567')
+
+  useEffect(() => {
+    systemParameterService
+      .getSystemParameter()
+      .then((data) => {
+        if (data?.contactPhone) setHotline(data.contactPhone)
+      })
+      .catch((err) => {
+        console.warn('Lỗi khi lấy thông số hotline ở Footer:', err)
+      })
+  }, [])
+
+  const cleanTel = hotline.replace(/\s+/g, '')
+
   const links = [
     {
       title: 'KHÁM PHÁ',
@@ -24,7 +40,7 @@ export default function Footer() {
       title: 'HỖ TRỢ & LIÊN HỆ',
       items: [
         { name: 'Chi nhánh hệ thống', href: '#branches' },
-        { name: 'Hotline: 0933 003 999', href: 'tel:0933003999' },
+        { name: `Hotline: ${hotline}`, href: `tel:${cleanTel}` },
       ],
     },
   ]

@@ -23,7 +23,8 @@ import {
   Camera,
   Copy,
   ExternalLink,
-  AlertTriangle
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../../components/layout/NavBar'
@@ -407,8 +408,8 @@ export default function CustomerHistory() {
   const filteredData = historyData.filter((item) => {
     if (filterStatus === 'all') return true
     if (filterStatus === 'Completed') return item.status === 'Completed' || item.status === 'CheckedOut'
-    if (filterStatus === 'Pending') return item.status === 'Pending' || item.status === 'Confirmed' || item.status === 'Washing'
-    if (filterStatus === 'Cancelled') return item.status === 'Cancelled' || item.status === 'NoShow' || item.status === 'Processed'
+    if (filterStatus === 'Pending') return item.status === 'Pending' || item.status === 'Deposited' || item.status === 'Confirmed' || item.status === 'Washing'
+    if (filterStatus === 'Cancelled') return item.status === 'Cancelled' || item.status === 'RefundPending' || item.status === 'NoShow' || item.status === 'Processed'
     return item.status === filterStatus
   })
 
@@ -570,6 +571,12 @@ export default function CustomerHistory() {
                           <span>Đã Hoàn Thành</span>
                         </span>
                       )}
+                      {item.status === 'RefundPending' && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300 text-[11px] font-extrabold shadow-xs">
+                          <RotateCcw className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-spin" />
+                          <span>Chờ Hoàn Cọc</span>
+                        </span>
+                      )}
                       {item.status === 'Cancelled' && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-extrabold shadow-xs">
                           <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
@@ -678,6 +685,15 @@ export default function CustomerHistory() {
                           >
                             <CreditCard className="w-3.5 h-3.5" />
                             <span>Thanh Toán Cọc PayOS</span>
+                          </button>
+                        )}
+                        {(item.status === 'Pending' || item.status === 'Deposited') && (
+                          <button
+                            onClick={() => setConfirmCancelBookingId(item.bookingId)}
+                            className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold rounded-xl transition-all border border-rose-200 hover:border-rose-300 cursor-pointer flex items-center gap-1.5 shrink-0"
+                          >
+                            <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Hủy Lịch</span>
                           </button>
                         )}
                         <button
@@ -1630,54 +1646,88 @@ export default function CustomerHistory() {
       )}
 
       {/* Modal Xác Nhận Hủy Lịch Hẹn */}
-      {confirmCancelBookingId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-7 text-center space-y-5 animate-in zoom-in-95 duration-200 border border-slate-100">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto border-2 border-rose-200 text-rose-600 shadow-lg shadow-rose-500/10">
-              <AlertTriangle className="w-8 h-8" />
-            </div>
+      {confirmCancelBookingId && (() => {
+        const targetBooking = historyData.find(b => b.bookingId === confirmCancelBookingId)
+        const daysUntilBooking = targetBooking?.bookingDate
+          ? Math.floor((new Date(targetBooking.bookingDate).getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
+          : 0
+        const isDeposited = targetBooking?.status === 'Deposited'
+        const isRefundable = isDeposited && daysUntilBooking >= 1
 
-            <div>
-              <h3 className="text-xl font-black text-slate-900">
-                Xác Nhận Hủy Lịch Hẹn
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
-                Bạn có chắc chắn muốn hủy đơn đặt lịch <strong className="text-orange-600">#{confirmCancelBookingId}</strong> này không?
-                <span className="block mt-1.5 text-rose-600 font-semibold">
-                  ⚠️ Thao tác này sẽ hủy suất giữ chỗ và không thể hoàn tác sau khi xác nhận.
-                </span>
-              </p>
-            </div>
+        return (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-7 text-center space-y-5 animate-in zoom-in-95 duration-200 border border-slate-100">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto border-2 border-rose-200 text-rose-600 shadow-lg shadow-rose-500/10">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
 
-            <div className="pt-2 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                disabled={isCancellingDeposit}
-                onClick={() => setConfirmCancelBookingId(null)}
-                className="py-3 px-4 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all text-xs sm:text-sm cursor-pointer border border-slate-200"
-              >
-                Quay Lại
-              </button>
+              <div>
+                <h3 className="text-xl font-black text-slate-900">
+                  Xác Nhận Hủy Lịch Hẹn
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+                  Bạn có chắc chắn muốn hủy đơn đặt lịch <strong className="text-orange-600">#{confirmCancelBookingId}</strong> này không?
+                </p>
 
-              <button
-                type="button"
-                disabled={isCancellingDeposit}
-                onClick={() => handleConfirmCancel(confirmCancelBookingId)}
-                className="py-3 px-4 rounded-xl font-extrabold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all text-xs sm:text-sm cursor-pointer shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5 disabled:opacity-70"
-              >
-                {isCancellingDeposit ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
-                    <span>Đang Hủy...</span>
-                  </>
+                {isDeposited ? (
+                  isRefundable ? (
+                    <div className="mt-3 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 text-left space-y-1">
+                      <p className="font-bold flex items-center gap-1.5 text-emerald-900">
+                        <RotateCcw className="w-4 h-4 text-emerald-600" />
+                        Đủ Điều Kiện Hoàn 100% Tiền Cọc
+                      </p>
+                      <p className="leading-relaxed text-slate-700">
+                        Bạn hủy lịch trước {daysUntilBooking} ngày (đủ điều kiện trước 1 ngày). Đơn sẽ chuyển sang trạng thái <strong>Chờ Hoàn Cọc (RefundPending)</strong>. Vui lòng liên hệ Hotline/Quản lý để nhận lại cọc.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-3 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 text-left space-y-1">
+                      <p className="font-bold flex items-center gap-1.5 text-rose-900">
+                        <AlertCircle className="w-4 h-4 text-rose-600" />
+                        Hủy Sát Giờ - Không Hoàn Cọc
+                      </p>
+                      <p className="leading-relaxed text-slate-700">
+                        Theo quy định, bạn đang hủy lịch sát ngày/giờ hẹn (dưới 1 ngày). Khoản tiền cọc sẽ <strong>KHÔNG ĐƯỢC HOÀN LẠI</strong>.
+                      </p>
+                    </div>
+                  )
                 ) : (
-                  <span>Xác Nhận Hủy</span>
+                  <span className="block mt-2 text-slate-500 text-xs font-medium">
+                    ⚠️ Thao tác này sẽ hủy suất giữ chỗ và không thể hoàn tác sau khi xác nhận.
+                  </span>
                 )}
-              </button>
+              </div>
+
+              <div className="pt-2 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  disabled={isCancellingDeposit}
+                  onClick={() => setConfirmCancelBookingId(null)}
+                  className="py-3 px-4 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all text-xs sm:text-sm cursor-pointer border border-slate-200"
+                >
+                  Quay Lại
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isCancellingDeposit}
+                  onClick={() => handleConfirmCancel(confirmCancelBookingId)}
+                  className="py-3 px-4 rounded-xl font-extrabold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all text-xs sm:text-sm cursor-pointer shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5 disabled:opacity-70"
+                >
+                  {isCancellingDeposit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Đang Hủy...</span>
+                    </>
+                  ) : (
+                    <span>Xác Nhận Hủy</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Modal Thông Báo Thanh Toán Cọc Thành Công */}
       {successDepositBookingId && (

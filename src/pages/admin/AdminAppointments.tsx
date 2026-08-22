@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Check, AlertCircle, Camera, Sparkles, Scan, Search, FileText, AlertTriangle, Copy, Banknote } from 'lucide-react'
+import { CalendarDays, CarFront, Phone, Clock, User, CheckCircle2, PlayCircle, LogOut, Eye, X, QrCode, Check, AlertCircle, Camera, Sparkles, Scan, Search, FileText, AlertTriangle, Copy, Banknote, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { QRCodeSVG } from 'qrcode.react'
 import { staffService, TodayBookingDto } from '../../services/staffService'
@@ -454,6 +454,8 @@ export default function AdminAppointments() {
         return <span className="font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-md text-xs">Đã Bàn Giao Xe</span>
       case 'Cancelled':
         return <span className="font-bold px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-md text-xs">Đã Hủy</span>
+      case 'RefundPending':
+        return <span className="font-bold px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 rounded-md text-xs inline-flex items-center gap-1"><RotateCcw className="w-3 h-3 text-amber-600 animate-spin" /> Chờ Hoàn Cọc</span>
       case 'NoShow':
       case 'No-Show':
         return <span className="font-bold px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 rounded-md text-xs">Khách Không Đến</span>
@@ -768,6 +770,22 @@ export default function AdminAppointments() {
                         className="flex-1 md:flex-none w-full md:w-36 h-10 px-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20 whitespace-nowrap cursor-pointer"
                       >
                         <CheckCircle2 className="w-4 h-4" /> Xác nhận
+                      </button>
+                    )}
+                    {booking.status === 'RefundPending' && (
+                      <button
+                        onClick={() => setConfirmActionModal({
+                          bookingId: booking.bookingId,
+                          customerName: booking.customerName,
+                          licensePlate: booking.licensePlate,
+                          adminStatus: 'Cancelled',
+                          successMsg: `🎉 Đã xác nhận hoàn tiền cọc và hủy đơn #${booking.bookingId} thành công!`,
+                          title: 'Xác Nhận Đã Hoàn Tiền Cọc',
+                          message: `Bạn có chắc chắn đã chuyển khoản hoàn lại 100% tiền cọc cho khách hàng ${booking.customerName || ''} (${booking.licensePlate || ''}) và muốn chuyển đơn #${booking.bookingId} sang trạng thái "Đã Hủy" không?`
+                        })}
+                        className="flex-1 md:flex-none w-full md:w-44 h-10 px-3 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/20 whitespace-nowrap cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" /> Xác Nhận Hoàn Cọc
                       </button>
                     )}
                     {booking.status === 'Confirmed' && (
