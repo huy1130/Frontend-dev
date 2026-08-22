@@ -172,7 +172,7 @@ export default function Transactions() {
   }, [completedBookings])
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="p-4 sm:p-6 w-full max-w-full mx-auto space-y-6 font-sans">
       {/* Top Header Card */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -344,20 +344,20 @@ export default function Transactions() {
       </div>
 
       {/* Transactions Table Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden w-full">
+        <div className="overflow-x-auto w-full">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-extrabold uppercase tracking-wider">
-                <th className="p-4 pl-6">Mã Đơn &amp; Ngày Hoàn Thành</th>
-                <th className="p-4">Khách Hàng</th>
-                <th className="p-4">Phương Tiện</th>
-                <th className="p-4">Dịch Vụ Dùng</th>
-                <th className="p-4">Giá Gốc</th>
-                <th className="p-4">Giảm Giá</th>
-                <th className="p-4">Thực Thu (Doanh Thu)</th>
-                <th className="p-4">Trạng Thái</th>
-                <th className="p-4 pr-6 text-center">Chi Tiết</th>
+                <th className="py-3 pl-4 pr-2.5 whitespace-nowrap text-[11px]">Mã Đơn &amp; Ngày</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Khách Hàng</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Phương Tiện</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Dịch Vụ Dùng</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Giá Gốc</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Giảm Giá</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Thực Thu</th>
+                <th className="py-3 px-2.5 whitespace-nowrap text-[11px]">Trạng Thái</th>
+                <th className="py-3 pl-2.5 pr-4 text-center whitespace-nowrap text-[11px]">Chi Tiết</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -386,7 +386,7 @@ export default function Transactions() {
 
                   return (
                     <tr key={item.bookingId} className="hover:bg-emerald-50/30 transition-colors">
-                      <td className="p-4 pl-6 font-bold text-slate-900">
+                      <td className="py-3 pl-4 pr-2.5 font-bold text-slate-900 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <Receipt className="w-4 h-4 text-emerald-600" />
                           <span>#{item.bookingId}</span>
@@ -396,12 +396,14 @@ export default function Transactions() {
                         </div>
                       </td>
 
-                      <td className="p-4">
+                      <td className="py-3 px-2.5 whitespace-nowrap">
                         <div className="font-extrabold text-slate-900">{item.customerName || 'Khách vãng lai'}</div>
-                        <div className="text-[11px] text-slate-400 font-medium">{item.customerPhone || 'N/A'}</div>
+                        {item.customerPhone && (
+                          <div className="text-[11px] text-slate-400 font-medium">{item.customerPhone}</div>
+                        )}
                       </td>
 
-                      <td className="p-4">
+                      <td className="py-3 px-2.5 whitespace-nowrap">
                         <div className="font-extrabold text-slate-900">{item.licensePlate}</div>
                         <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md mt-0.5 ${isBike ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}`}>
                           {isBike ? <Bike className="w-3 h-3" /> : <Car className="w-3 h-3" />}
@@ -409,7 +411,7 @@ export default function Transactions() {
                         </span>
                       </td>
 
-                      <td className="p-4">
+                      <td className="py-3 px-2.5 whitespace-nowrap">
                         <div className="font-bold text-slate-900">{item.serviceName}</div>
                         {item.addOns && item.addOns.length > 0 && (
                           <div className="text-[11px] text-emerald-600 font-semibold mt-0.5">
@@ -418,26 +420,26 @@ export default function Transactions() {
                         )}
                       </td>
 
-                      <td className="p-4 font-bold text-slate-600">
+                      <td className="py-3 px-2.5 font-bold text-slate-600 whitespace-nowrap">
                         {formatVND(origPrice)}
                       </td>
 
-                      <td className="p-4 font-bold text-rose-500">
+                      <td className="py-3 px-2.5 font-bold text-rose-500 whitespace-nowrap">
                         {discount > 0 ? `-${formatVND(discount)}` : '—'}
                       </td>
 
-                      <td className="p-4 font-black text-emerald-600 text-sm">
+                      <td className="py-3 px-2.5 font-black text-emerald-600 text-sm whitespace-nowrap">
                         {formatVND(finalPrice)}
                       </td>
 
-                      <td className="p-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                      <td className="py-3 px-2.5 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold whitespace-nowrap">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Đã Hoàn Thành</span>
                         </span>
                       </td>
 
-                      <td className="p-4 pr-6 text-center">
+                      <td className="py-3 pl-2.5 pr-4 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleOpenDetail(item)}
                           className="p-2 bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center"
