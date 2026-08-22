@@ -65,10 +65,12 @@ export default function HowItWorks() {
               </div>
 
               {/* Text */}
-              <div className="space-y-3">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors min-h-[56px]">
-                  {step.title}
-                </h3>
+              <div className="flex-1 flex flex-col">
+                <div className="h-16 flex items-start mb-3">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug">
+                    {step.title}
+                  </h3>
+                </div>
                 <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                   {step.description}
                 </p>

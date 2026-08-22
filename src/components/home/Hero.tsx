@@ -53,30 +53,15 @@ export default function Hero() {
             </p>
           </div>
 
-          {/* Quick Stats Bar */}
-          <div className="grid grid-cols-3 gap-4 pt-2 max-w-lg">
-            <div className="flex flex-col items-center justify-center text-center space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">15,400+</div>
-              <div className="text-xs sm:text-sm text-white font-medium drop-shadow-md">Khách Hàng</div>
-            </div>
-            <div className="flex flex-col items-center justify-center text-center space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">8+</div>
-              <div className="text-xs sm:text-sm text-white font-medium drop-shadow-md">Chi Nhánh</div>
-            </div>
-            <div className="flex flex-col items-center justify-center text-center space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">48,900+</div>
-              <div className="text-xs sm:text-sm text-white font-medium drop-shadow-md">Lượt Đặt Lịch</div>
-            </div>
-          </div>
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-4 pt-4">
             <Link
               to={
-                !userRole ? '/login' : 
-                userRole.toLowerCase() === 'customer' ? '/customer/booking' : 
-                userRole.toLowerCase() === 'staff' ? '/staff/appointments' : 
-                '/admin/appointments'
+                !userRole ? '/login' :
+                  userRole.toLowerCase() === 'customer' ? '/customer/booking' :
+                    userRole.toLowerCase() === 'staff' ? '/staff/appointments' :
+                      '/admin/appointments'
               }
               className="px-6 py-2.5 bg-[#f97316] text-white font-semibold text-sm sm:text-base hover:bg-orange-600 transition-colors flex items-center gap-2 drop-shadow-lg rounded-sm"
             >

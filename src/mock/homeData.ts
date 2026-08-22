@@ -1,17 +1,8 @@
 import {
-  HeroStats,
   ProcessStep,
   Feature,
-  MembershipTier,
   CustomerReview
 } from '../types/home'
-
-export const mockHeroStats: HeroStats = {
-  customers: 15400,
-  bookings: 48900,
-  branches: 8,
-  satisfactionRate: 99.2
-}
 
 export const mockProcessSteps: ProcessStep[] = [
   {
@@ -74,8 +65,6 @@ export const mockFeatures: Feature[] = [
     highlightText: 'Đẳng cấp'
   }
 ]
-
-export const mockTiers: any[] = [];
 
 export const mockCustomerReviews: CustomerReview[] = [
   {
