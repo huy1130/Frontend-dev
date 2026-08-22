@@ -54,15 +54,20 @@ export default function Requests() {
       setIsFetchingSlots(true)
       try {
         const slotRes = await timeSlotService.getAvailableSlots(formData.bookingDate)
-        setSlots(slotRes)
-        if (slotRes.length > 0) {
+        const sortedSlots = [...slotRes].sort((a, b) => {
+          const [hA, mA] = a.startTime.split(':').map(Number)
+          const [hB, mB] = b.startTime.split(':').map(Number)
+          return (hA * 60 + mA) - (hB * 60 + mB)
+        })
+        setSlots(sortedSlots)
+        if (sortedSlots.length > 0) {
           // Check if current selected slot is valid, else pick first valid future slot
           setFormData(prev => {
-            const isSlotValid = slotRes.some(s => s.slotId === prev.slotId)
+            const isSlotValid = sortedSlots.some(s => s.slotId === prev.slotId)
             if (isSlotValid) return prev
 
             const now = new Date()
-            const validSlot = slotRes.find(s => {
+            const validSlot = sortedSlots.find(s => {
               const [hours, minutes] = s.startTime.split(':').map(Number)
               const slotTime = new Date()
               slotTime.setHours(hours, minutes, 0, 0)

@@ -110,43 +110,30 @@ export default function StaffAppointments() {
         }
 
         if (response.data) {
-          const detailedBookings = await Promise.all(
-            response.data.map(async (b: any) => {
-              try {
-                const detailResponse = await bookingService.getBookingDetail(b.bookingId);
-                const d = detailResponse.data || detailResponse;
-                return {
-                  ...b,
-                  customerPhone: d?.customerPhone || b.customerPhone || 'N/A',
-                  originalPrice: d?.originalPrice ?? b.originalPrice,
-                  finalPrice: d?.finalPrice ?? b.finalPrice,
-                  depositAmount: d?.depositAmount ?? b.depositAmount,
-                  amountToPay: d?.amountToPay
-                };
-              } catch (e) {
-                return { ...b, customerPhone: 'N/A' };
-              }
-            })
-          );
-
-          const mapped: TodayBookingDto[] = detailedBookings.map((b: any) => ({
-            bookingId: b.bookingId,
-            customerName: b.customerName || 'Khách vãng lai',
-            customerPhone: b.customerPhone,
-            licensePlate: b.licensePlate || 'N/A',
-            vehicleType: b.vehicleType || 'N/A',
-            status: b.status,
-            slotId: b.slotId,
-            serviceId: b.serviceId,
-            serviceName: b.serviceName,
-            bookingDate: b.bookingDate,
-            startTime: b.startTime,
-            endTime: b.endTime,
-            originalPrice: b.originalPrice,
-            finalPrice: b.finalPrice,
-            depositAmount: b.depositAmount,
-            amountToPay: b.amountToPay
-          }))
+          const mapped: TodayBookingDto[] = response.data.map((b: any) => {
+            const orig = b.originalPrice ?? 0
+            const final = b.finalPrice ?? orig
+            const deposit = b.depositAmount ?? (orig > 0 ? Math.round(orig / 2) : 0)
+            const toPay = b.amountToPay ?? Math.max(0, final - deposit)
+            return {
+              bookingId: b.bookingId,
+              customerName: b.customerName || 'Khách vãng lai',
+              customerPhone: b.customerPhone || 'N/A',
+              licensePlate: b.licensePlate || 'N/A',
+              vehicleType: b.vehicleType || 'N/A',
+              status: b.status,
+              slotId: b.slotId,
+              serviceId: b.serviceId,
+              serviceName: b.serviceName,
+              bookingDate: b.bookingDate,
+              startTime: b.startTime,
+              endTime: b.endTime,
+              originalPrice: orig,
+              finalPrice: final,
+              depositAmount: deposit,
+              amountToPay: toPay
+            }
+          })
           setBookings(mapped.sort((a, b) => b.bookingId - a.bookingId))
         }
       } else {
