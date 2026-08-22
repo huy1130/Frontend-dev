@@ -234,15 +234,10 @@ export default function CustomerBooking() {
         if (promosRes.length > 0) {
           setAvailablePromos(promosRes)
         }
-        if (loyaltyRes) {
-          if (loyaltyRes.currentTier) {
-            switch (loyaltyRes.currentTier.toLowerCase()) {
-              case 'silver': setMaxDays(10); break;
-              case 'gold': setMaxDays(12); break;
-              case 'platinum': setMaxDays(14); break;
-              default: setMaxDays(7); break;
-            }
-          }
+        if (loyaltyRes?.bookingWindowDays) {
+          setMaxDays(loyaltyRes.bookingWindowDays)
+        }
+        if (myRedemptionsRes && Array.isArray(myRedemptionsRes)) {
           const filteredRedemptions = myRedemptionsRes.filter((r: any) => r.status === 'Issued')
           const rewardsList = Array.isArray(rewardsRes) ? rewardsRes : []
           const enhancedRedemptions = filteredRedemptions.map((r: any) => {
