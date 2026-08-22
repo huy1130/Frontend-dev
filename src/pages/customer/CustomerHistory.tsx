@@ -34,6 +34,7 @@ import { bookingService, BookingResponseDTO } from '../../services/bookingServic
 import { promotionService } from '../../services/promotionService'
 import { loyaltyService } from '../../services/loyaltyService'
 import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
+import { systemParameterService, SystemParameterDto } from '../../services/systemParameterService'
 import { formatDateTime, parseApiDate } from '../../utils/date'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 import { toast } from 'sonner'
@@ -271,6 +272,7 @@ export default function CustomerHistory() {
   const [reportImage5, setReportImage5] = useState<File | null>(null)
   const [isSubmittingReport, setIsSubmittingReport] = useState(false)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [systemParams, setSystemParams] = useState<SystemParameterDto | null>(null)
 
   React.useEffect(() => {
     setCurrentPage(1)
@@ -284,13 +286,18 @@ export default function CustomerHistory() {
 
       if (phoneNumber) {
         try {
-          const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes, myReportsRes] = await Promise.all([
+          const [historyRes, publicPromosRes, eligiblePromosRes, redemptionsRes, myReportsRes, sysParamRes] = await Promise.all([
             bookingService.getBookingHistory(phoneNumber),
             promotionService.getPublicPromotions().catch(() => []),
             promotionService.getEligiblePromotions().catch(() => []),
             loyaltyService.getMyRedemptions().catch(() => []),
-            incidentReportService.getMyReports().catch(() => ({ data: [] }))
+            incidentReportService.getMyReports().catch(() => ({ data: [] })),
+            systemParameterService.getSystemParameter().catch(() => null)
           ])
+
+          if (sysParamRes) {
+            setSystemParams(sysParamRes)
+          }
 
           if (historyRes && historyRes.data) {
             const sorted = historyRes.data.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
@@ -1652,7 +1659,8 @@ export default function CustomerHistory() {
           ? Math.floor((new Date(targetBooking.bookingDate).getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
           : 0
         const isDeposited = targetBooking?.status === 'Deposited'
-        const isRefundable = isDeposited && daysUntilBooking >= 1
+        const refundDays = systemParams?.cancellationRefundDays ?? 1
+        const isRefundable = isDeposited && daysUntilBooking >= refundDays
 
         return (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -1677,7 +1685,7 @@ export default function CustomerHistory() {
                         Đủ Điều Kiện Hoàn 100% Tiền Cọc
                       </p>
                       <p className="leading-relaxed text-slate-700">
-                        Bạn hủy lịch trước {daysUntilBooking} ngày (đủ điều kiện trước 1 ngày). Đơn sẽ chuyển sang trạng thái <strong>Chờ Hoàn Cọc (RefundPending)</strong>. Vui lòng liên hệ Hotline/Quản lý để nhận lại cọc.
+                        Bạn hủy lịch trước {daysUntilBooking} ngày (đủ điều kiện trước {refundDays} ngày). Đơn sẽ chuyển sang trạng thái <strong>Chờ Hoàn Cọc (RefundPending)</strong>. Vui lòng liên hệ Hotline/Quản lý để nhận lại cọc.
                       </p>
                     </div>
                   ) : (
@@ -1687,7 +1695,7 @@ export default function CustomerHistory() {
                         Hủy Sát Giờ - Không Hoàn Cọc
                       </p>
                       <p className="leading-relaxed text-slate-700">
-                        Theo quy định, bạn đang hủy lịch sát ngày/giờ hẹn (dưới 1 ngày). Khoản tiền cọc sẽ <strong>KHÔNG ĐƯỢC HOÀN LẠI</strong>.
+                        Theo quy định, bạn đang hủy lịch sát ngày/giờ hẹn (dưới {refundDays} ngày). Khoản tiền cọc sẽ <strong>KHÔNG ĐƯỢC HOÀN LẠI</strong>.
                       </p>
                     </div>
                   )
