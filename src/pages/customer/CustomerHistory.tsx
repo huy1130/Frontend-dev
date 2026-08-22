@@ -1656,7 +1656,7 @@ export default function CustomerHistory() {
       {confirmCancelBookingId && (() => {
         const targetBooking = historyData.find(b => b.bookingId === confirmCancelBookingId)
         const daysUntilBooking = targetBooking?.bookingDate
-          ? Math.floor((new Date(targetBooking.bookingDate).getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
+          ? Math.floor((new Date(targetBooking.bookingDate).getTime() - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24))
           : 0
         const isDeposited = targetBooking?.status === 'Deposited'
         const refundDays = systemParams?.cancellationRefundDays ?? 1
@@ -1685,7 +1685,7 @@ export default function CustomerHistory() {
                         Đủ Điều Kiện Hoàn 100% Tiền Cọc
                       </p>
                       <p className="leading-relaxed text-slate-700">
-                        Bạn hủy lịch trước {daysUntilBooking} ngày (đủ điều kiện trước {refundDays} ngày). Đơn sẽ chuyển sang trạng thái <strong>Chờ Hoàn Cọc (RefundPending)</strong>. Vui lòng liên hệ Hotline/Quản lý để nhận lại cọc.
+                        Bạn hủy lịch trước {daysUntilBooking} ngày (đủ điều kiện trước {refundDays} ngày). Đơn sẽ chuyển sang trạng thái <strong>Chờ Hoàn Cọc </strong>. Vui lòng liên hệ Hotline/Quản lý để nhận lại cọc.
                       </p>
                     </div>
                   ) : (
