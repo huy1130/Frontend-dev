@@ -281,7 +281,7 @@ export default function TierManagement() {
 
                 {/* Real Benefit Description from DB */}
                 <div className="space-y-2.5">
-                  <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Mô Tả Đặc Quyền Hạng Thẻ (DB):</h4>
+                  <h4 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">Mô Tả Đặc Quyền Hạng Thẻ:</h4>
                   {tier.benefitDescription ? (
                     tier.benefitDescription.split('\n').filter(b => b.trim() !== '').map((perk, i) => (
                       <div key={i} className="flex items-start gap-2.5 text-xs font-medium text-slate-600">
