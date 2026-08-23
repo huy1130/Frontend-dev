@@ -157,9 +157,9 @@ export default function Dashboard() {
     const inProgressOrDepositedBookings = dailyDataList.reduce((acc, d) => acc + d.inProgressBookings, 0)
     const cancelledBookings = dailyDataList.reduce((acc, d) => acc + d.cancelledBookings, 0)
     const discountAmount = dailyDataList.reduce((acc, d) => acc + d.discountAmount, 0)
-    const depositRevenue = dailyDataList.reduce((acc, d) => acc + d.depositRevenue, 0)
+    const depositRevenue = 0
     const completedRevenue = dailyDataList.reduce((acc, d) => acc + d.completedRevenue, 0)
-    const totalRevenue = dailyDataList.reduce((acc, d) => acc + d.totalRevenue, 0)
+    const totalRevenue = completedRevenue
 
     return {
       totalBookings,
@@ -300,16 +300,15 @@ export default function Dashboard() {
       {/* KPI Cards */}
       {totals && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Card 1: Tổng doanh thu */}
+          {/* Card 1: Tổng doanh thu hoàn thành */}
           <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white shadow-lg shadow-orange-500/20 relative overflow-hidden">
             <div className="absolute right-3 top-3 opacity-10">
               <CreditCard className="w-24 h-24" />
             </div>
-            <p className="text-xs font-extrabold text-orange-100 uppercase tracking-wider mb-2">Tổng Doanh Thu</p>
-            <h3 className="text-2xl font-black mb-1">{formatVND(totals.totalRevenue)}</h3>
+            <p className="text-xs font-extrabold text-orange-100 uppercase tracking-wider mb-2">Tổng Doanh Thu Hoàn Thành</p>
+            <h3 className="text-2xl font-black mb-1">{formatVND(totals.completedRevenue)}</h3>
             <div className="flex gap-3 text-[11px] text-orange-100 font-medium flex-wrap">
-              <span>✅ Hoàn thành: {formatVND(totals.completedRevenue)}</span>
-              <span>💰 Tiền cọc: {formatVND(totals.depositRevenue)}</span>
+              <span>✅ Từ {totals.completedBookings} lượt xe đã rửa hoàn tất</span>
             </div>
           </div>
 
@@ -335,13 +334,13 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Card 3: Doanh thu hoàn thành */}
+          {/* Card 3: Giá trị đơn trung bình */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-            <p className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider mb-2">Doanh Thu Hoàn Thành</p>
-            <h3 className="text-2xl font-black text-slate-900 mb-1">{formatVND(totals.completedRevenue)}</h3>
+            <p className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider mb-2">Giá Trị Đơn Trung Bình</p>
+            <h3 className="text-2xl font-black text-slate-900 mb-1">{formatVND(avgOrderValue)}</h3>
             <p className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
               <Wallet className="w-3 h-3" />
-              Trung bình: {formatVND(avgOrderValue)}/lượt
+              Tính trên {totals.completedBookings} đơn hoàn thành
             </p>
           </div>
 
@@ -527,14 +526,13 @@ export default function Dashboard() {
                   <th className="p-4">Đang Xử Lý</th>
                   <th className="p-4">Đã Hủy</th>
                   <th className="p-4">Chiết Khấu</th>
-                  <th className="p-4">DT Cọc</th>
                   <th className="p-4 pr-6 text-right">Tổng Doanh Thu</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
                 {dailyDataList.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-400 font-bold">
+                    <td colSpan={7} className="p-8 text-center text-slate-400 font-bold">
                       Không có dữ liệu.
                     </td>
                   </tr>
@@ -548,9 +546,6 @@ export default function Dashboard() {
                       <td className="p-4 font-bold text-rose-500">{row.cancelledBookings} xe</td>
                       <td className="p-4 font-semibold text-rose-400">
                         {row.discountAmount > 0 ? `-${formatVND(row.discountAmount)}` : '—'}
-                      </td>
-                      <td className="p-4 font-semibold text-blue-600">
-                        {row.depositRevenue > 0 ? formatVND(row.depositRevenue) : '—'}
                       </td>
                       <td className="p-4 pr-6 text-right font-extrabold text-orange-600 text-sm">
                         {formatVND(row.totalRevenue)}
@@ -570,7 +565,6 @@ export default function Dashboard() {
                     <td className="p-4 text-rose-300">
                       {totals.discountAmount > 0 ? `-${formatVND(totals.discountAmount)}` : '—'}
                     </td>
-                    <td className="p-4 text-blue-300">{formatVND(totals.depositRevenue)}</td>
                     <td className="p-4 pr-6 text-right text-amber-400 text-sm">{formatVND(totals.totalRevenue)}</td>
                   </tr>
                 </tfoot>
