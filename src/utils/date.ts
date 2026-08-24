@@ -37,3 +37,17 @@ export const formatDateTime = (dateStr?: string | null) => {
 
   return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`
 }
+
+export const formatDate = (dateStr?: string | null) => {
+  if (!dateStr) return 'N/A'
+  
+  const date = parseApiDate(dateStr)
+  if (!date) return dateStr
+
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+
+  return `${day}/${month}/${year}`
+}
+

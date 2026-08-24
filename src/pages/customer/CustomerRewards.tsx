@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Award, ChevronLeft, ChevronRight, Gift, AlertCircle, Loader2, Tag, CheckCircle2, History, ArrowDownCircle, ArrowUpCircle, Clock } from 'lucide-react'
+import { Award, ChevronLeft, ChevronRight, Gift, AlertCircle, Loader2, Tag, CheckCircle2, History, ArrowDownCircle, ArrowUpCircle, Clock, Calendar } from 'lucide-react'
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { loyaltyService } from '../../services/loyaltyService'
 import { PointTransactionDTO } from '../../types/loyalty'
-import { formatDateTime } from '../../utils/date'
+import { formatDateTime, formatDate } from '../../utils/date'
 import { toast } from 'sonner'
 
 export default function CustomerRewards() {
@@ -172,7 +172,34 @@ export default function CustomerRewards() {
                           </span>
                         </div>
                         <h3 className="text-base font-extrabold text-slate-900 mb-1">{reward.rewardName}</h3>
-                        <p className="text-xs text-slate-500 mb-5 flex-1">{reward.description || 'Không có mô tả'}</p>
+                        <p className="text-xs text-slate-500 mb-3 flex-1">{reward.description || 'Không có mô tả'}</p>
+                        
+                        {/* Minimum Tier & Validity dates info */}
+                        <div className="space-y-1.5 pt-2 border-t border-slate-100 mb-4 text-xs">
+                          {(reward.minimumTier || reward.serviceName) && (
+                            <div className="flex flex-wrap gap-1.5 items-center">
+                              {reward.minimumTier && (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
+                                  Hạng: {reward.minimumTier}
+                                </span>
+                              )}
+                              {reward.serviceName && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 bg-orange-50 text-orange-600 rounded truncate max-w-[200px]">
+                                  Áp dụng: {reward.serviceName}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {(reward.validFrom || reward.validTo) && (
+                            <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                              <Calendar className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                              <span>
+                                Hạn dùng: {reward.validFrom ? formatDate(reward.validFrom) : '...'} - {reward.validTo ? formatDate(reward.validTo) : 'Vô thời hạn'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
                         <button
                           disabled={currentPoints < reward.pointCost || isRedeeming === reward.rewardId}
                           onClick={() => handleRedeem(reward.rewardId, reward.pointCost, reward.rewardName)}
