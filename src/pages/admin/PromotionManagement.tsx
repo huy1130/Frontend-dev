@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Tag, 
-  Plus, 
-  Search, 
-  Edit3, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  Tag,
+  Plus,
+  Search,
+  Edit3,
+  CheckCircle2,
+  XCircle,
   Loader2,
   AlertCircle,
   AlertTriangle,
@@ -25,10 +25,10 @@ export default function PromotionManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  
+
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [deactivatingId, setDeactivatingId] = useState<number | null>(null);
-  
+
   const [services, setServices] = useState<ServiceDto[]>([]);
 
   const initialFormState: UpsertPromotionDTO = {
@@ -177,17 +177,17 @@ export default function PromotionManagement() {
   };
 
   const filteredPromotions = promotions.filter(p => {
-    const matchSearch = (p.promoName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         (p.promoCode && p.promoCode.toLowerCase().includes(searchTerm.toLowerCase())));
-    const matchStatus = 
+    const matchSearch = (p.promoName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.promoCode && p.promoCode.toLowerCase().includes(searchTerm.toLowerCase())));
+    const matchStatus =
       filterStatus === 'all' ? true :
-      filterStatus === 'active' ? p.isActive : !p.isActive;
+        filterStatus === 'active' ? p.isActive : !p.isActive;
     return matchSearch && matchStatus;
   });
 
   return (
     <div className="space-y-6">
-      
+
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>
@@ -212,19 +212,19 @@ export default function PromotionManagement() {
       {/* Filter & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-2 w-fit bg-slate-100/50 p-1 rounded-2xl border border-slate-200">
-          <button 
+          <button
             onClick={() => setFilterStatus('all')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === 'all' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Tất Cả ({promotions.length})
           </button>
-          <button 
+          <button
             onClick={() => setFilterStatus('active')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === 'active' ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Hoạt Động ({promotions.filter(p => p.isActive).length})
           </button>
-          <button 
+          <button
             onClick={() => setFilterStatus('inactive')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === 'inactive' ? 'bg-white text-rose-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
           >
@@ -265,11 +265,10 @@ export default function PromotionManagement() {
           {filteredPromotions.map((promo) => (
             <div
               key={promo.promotionId}
-              className={`bg-white border rounded-3xl p-6 transition-all shadow-sm relative flex flex-col justify-between space-y-4 ${
-                promo.isActive
-                  ? 'border-slate-200 hover:border-indigo-500/50 hover:shadow-lg'
-                  : 'border-slate-200 opacity-70 bg-slate-50'
-              }`}
+              className={`bg-white border rounded-3xl p-6 transition-all shadow-sm relative flex flex-col justify-between space-y-4 ${promo.isActive
+                ? 'border-slate-200 hover:border-indigo-500/50 hover:shadow-lg'
+                : 'border-slate-200 opacity-70 bg-slate-50'
+                }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -277,10 +276,9 @@ export default function PromotionManagement() {
                     {promo.promoType}
                   </span>
 
-                  <div className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1.5 ${
-                      promo.isActive
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                        : 'bg-rose-50 text-rose-600 border-rose-200'
+                  <div className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1.5 ${promo.isActive
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    : 'bg-rose-50 text-rose-600 border-rose-200'
                     }`}
                   >
                     {promo.isActive ? (
@@ -380,7 +378,7 @@ export default function PromotionManagement() {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                 />
               </div>
-              
+
               {/* Conditional Fields based on PromoType */}
               {formData.promoType === 'Discount' && (
                 <div className="grid grid-cols-2 gap-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
@@ -450,7 +448,7 @@ export default function PromotionManagement() {
                     onChange={(e) => setFormData({ ...formData, targetTier: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all"
                   >
-                    <option value="All">Tất cả khách hàng (bao gồm vãng lai)</option>
+                    <option value="All">Tất cả khách hàng</option>
                     <option value="Member">Member</option>
                     <option value="Silver">Silver</option>
                     <option value="Gold">Gold</option>
