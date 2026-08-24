@@ -7,7 +7,6 @@ import {
   Clock,
   Filter,
   RefreshCw,
-  FileSpreadsheet,
   AlertCircle,
   Loader2,
   Wallet,
@@ -508,12 +507,6 @@ export default function Dashboard() {
                 Từ {startDate} đến {endDate} · {reportData.bookings.length} booking
               </p>
             </div>
-            <button
-              onClick={() => toast.info('Tính năng xuất Excel đang được phát triển!')}
-              className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs rounded-xl transition-colors border border-emerald-200 flex items-center gap-1.5"
-            >
-              <FileSpreadsheet className="w-4 h-4" /> Xuất Excel
-            </button>
           </div>
 
           <div className="overflow-x-auto mt-4">
