@@ -13,7 +13,9 @@ import {
   CreditCard,
   RefreshCw,
   TrendingUp,
-  Receipt
+  Receipt,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { bookingService, BookingResponseDTO } from '../../services/bookingService'
@@ -57,6 +59,10 @@ export default function Transactions() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [searchTerm, setSearchTerm] = useState<string>('')
   const [vehicleFilter, setVehicleFilter] = useState<string>('ALL')
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10)
 
   const startDateInputRef = useRef<HTMLInputElement>(null)
   const endDateInputRef = useRef<HTMLInputElement>(null)
@@ -116,33 +122,58 @@ export default function Transactions() {
     }
   }
 
-  // Filter ONLY Completed / CheckedOut bookings
+  // Filter & Sort ONLY CheckedOut bookings (Mới nhất / Gần nhất lên đầu)
   const completedBookings = useMemo(() => {
-    return bookings.filter((item) => {
-      const st = (item.status || '').toLowerCase()
-      const isCompleted = st === 'completed' || st === 'checkedout'
-      if (!isCompleted) return false
+    return bookings
+      .filter((item) => {
+        const st = (item.status || '').toLowerCase()
+        const isCompleted = st === 'checkedout'
+        if (!isCompleted) return false
 
-      // Search query
-      const searchLower = searchTerm.toLowerCase().trim()
-      const matchesSearch =
-        !searchLower ||
-        item.bookingId.toString().includes(searchLower) ||
-        (item.customerName || '').toLowerCase().includes(searchLower) ||
-        (item.licensePlate || '').toLowerCase().includes(searchLower) ||
-        (item.serviceName || '').toLowerCase().includes(searchLower)
+        // Search query
+        const searchLower = searchTerm.toLowerCase().trim()
+        const matchesSearch =
+          !searchLower ||
+          item.bookingId.toString().includes(searchLower) ||
+          (item.customerName || '').toLowerCase().includes(searchLower) ||
+          (item.licensePlate || '').toLowerCase().includes(searchLower) ||
+          (item.serviceName || '').toLowerCase().includes(searchLower)
 
-      // Vehicle filter
-      const vType = (item.vehicleType || '').toLowerCase()
-      const isBike = vType.includes('bike') || vType.includes('xe máy') || vType.includes('xemay')
-      const matchesVehicle =
-        vehicleFilter === 'ALL' ||
-        (vehicleFilter === 'BIKE' && isBike) ||
-        (vehicleFilter === 'CAR' && !isBike)
+        // Vehicle filter
+        const vType = (item.vehicleType || '').toLowerCase()
+        const isBike = vType.includes('bike') || vType.includes('xe máy') || vType.includes('xemay')
+        const matchesVehicle =
+          vehicleFilter === 'ALL' ||
+          (vehicleFilter === 'BIKE' && isBike) ||
+          (vehicleFilter === 'CAR' && !isBike)
 
-      return matchesSearch && matchesVehicle
-    })
+        return matchesSearch && matchesVehicle
+      })
+      .sort((a, b) => {
+        // Đơn được xử lý mới nhất lên đầu
+        const dateStrA = (a.bookingDate || '').split('T')[0]
+        const dateStrB = (b.bookingDate || '').split('T')[0]
+        const timeA = new Date(`${dateStrA}T${a.startTime || '00:00:00'}`).getTime() || 0
+        const timeB = new Date(`${dateStrB}T${b.startTime || '00:00:00'}`).getTime() || 0
+
+        if (timeB !== timeA) {
+          return timeB - timeA
+        }
+        return b.bookingId - a.bookingId
+      })
   }, [bookings, searchTerm, vehicleFilter])
+
+  // Reset về trang 1 khi lọc hoặc tìm kiếm
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, vehicleFilter, startDate, endDate])
+
+  // Phân trang
+  const totalPages = Math.max(1, Math.ceil(completedBookings.length / itemsPerPage))
+  const paginatedBookings = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return completedBookings.slice(start, start + itemsPerPage)
+  }, [completedBookings, currentPage, itemsPerPage])
 
   // Summary Metrics
   const totalCompletedRevenue = useMemo(() => {
@@ -184,7 +215,7 @@ export default function Transactions() {
             Lịch Sử Giao Dịch Quyết Toán
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm">
-            Tra cứu toàn bộ lịch hẹn đã rửa xe và thanh toán hoàn tất (Completed / CheckedOut).
+            Tra cứu toàn bộ lịch hẹn đã rửa xe và thanh toán hoàn tất (CheckedOut).
           </p>
         </div>
 
@@ -377,7 +408,7 @@ export default function Transactions() {
                   </td>
                 </tr>
               ) : (
-                completedBookings.map((item) => {
+                paginatedBookings.map((item) => {
                   const origPrice = item.originalPrice ?? 0
                   const finalPrice = item.finalPrice ?? origPrice
                   const discount = Math.max(0, origPrice - finalPrice)
@@ -455,6 +486,79 @@ export default function Transactions() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {completedBookings.length > 0 && (
+          <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 font-semibold">
+            <div className="flex items-center gap-2">
+              <span>Hiển thị</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-800 font-extrabold outline-none focus:border-emerald-500 cursor-pointer"
+              >
+                <option value={5}>5 đơn / trang</option>
+                <option value={10}>10 đơn / trang</option>
+                <option value={20}>20 đơn / trang</option>
+                <option value={50}>50 đơn / trang</option>
+              </select>
+              <span>/ tổng số {completedBookings.length} đơn</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-400 mr-1">
+                Trang {currentPage} / {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="p-1.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 font-bold flex items-center justify-center"
+                  title="Trang trước"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1]
+                    const showEllipsis = prev && p - prev > 1
+                    return (
+                      <React.Fragment key={p}>
+                        {showEllipsis && <span className="px-1 text-slate-400">...</span>}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-8 h-8 rounded-xl text-xs font-black transition-all ${
+                            currentPage === p
+                              ? 'bg-emerald-600 text-white shadow-sm'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    )
+                  })}
+
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  className="p-1.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700 font-bold flex items-center justify-center"
+                  title="Trang sau"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Transaction Detail Modal */}
