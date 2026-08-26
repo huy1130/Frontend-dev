@@ -96,7 +96,7 @@ export default function IncidentManagement() {
           <button
             type="button"
             onClick={() => setFilterStatus('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${filterStatus === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
               }`}
           >
             Tất Cả ({reports.length})
@@ -104,7 +104,7 @@ export default function IncidentManagement() {
           <button
             type="button"
             onClick={() => setFilterStatus('Pending')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'Pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${filterStatus === 'Pending' ? 'bg-amber-500 text-white shadow-sm' : 'text-amber-700 bg-amber-50 hover:bg-amber-100'
               }`}
           >
             Chờ Xử Lý ({reports.filter((r) => r.status === 'Pending').length})
@@ -112,7 +112,7 @@ export default function IncidentManagement() {
           <button
             type="button"
             onClick={() => setFilterStatus('InReview')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'InReview' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${filterStatus === 'InReview' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 bg-blue-50 hover:bg-blue-100'
               }`}
           >
             Đang Xem Xét ({reports.filter((r) => r.status === 'InReview').length})
@@ -120,7 +120,7 @@ export default function IncidentManagement() {
           <button
             type="button"
             onClick={() => setFilterStatus('Resolved')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'Resolved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${filterStatus === 'Resolved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
               }`}
           >
             Đã Giải Quyết ({reports.filter((r) => r.status === 'Resolved').length})
@@ -128,7 +128,7 @@ export default function IncidentManagement() {
           <button
             type="button"
             onClick={() => setFilterStatus('Rejected')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === 'Rejected' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${filterStatus === 'Rejected' ? 'bg-rose-600 text-white shadow-sm' : 'text-rose-700 bg-rose-50 hover:bg-rose-100'
               }`}
           >
             Từ Chối ({reports.filter((r) => r.status === 'Rejected').length})
@@ -159,8 +159,8 @@ export default function IncidentManagement() {
                   <th className="px-6 py-4">Khách Hàng</th>
                   <th className="px-6 py-4">Nội Dung Phản Ánh</th>
                   <th className="px-6 py-4">Thời Gian Gửi</th>
-                  <th className="px-6 py-4">Trạng Thái</th>
-                  <th className="px-6 py-4 text-right">Thao Tác</th>
+                  <th className="px-6 py-4 text-center">Trạng Thái</th>
+                  <th className="px-6 py-4 text-center">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -178,35 +178,38 @@ export default function IncidentManagement() {
                     <td className="px-6 py-4 text-xs font-semibold text-slate-500">
                       {formatDateTime(report.createdAt)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       {report.status === 'Pending' && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
-                          Chờ Xử Lý
+                        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Chờ Xử Lý</span>
                         </span>
                       )}
                       {report.status === 'InReview' && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1">
+                        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1.5 whitespace-nowrap">
                           <Eye className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-                          Đang Xem Xét
+                          <span>Đang Xem Xét</span>
                         </span>
                       )}
                       {report.status === 'Resolved' && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          Đã Giải Quyết
+                        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Đã Giải Quyết</span>
                         </span>
                       )}
                       {report.status === 'Rejected' && (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
-                          Từ Chối
+                        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+                          <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Từ Chối</span>
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-center">
                       {['Resolved', 'Rejected'].includes(report.status || '') ? (
                         <button
                           type="button"
                           onClick={() => handleOpenResolveModal(report)}
-                          className="px-3.5 py-1.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 ml-auto"
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5 text-slate-600" />
                           <span>Xem Chi Tiết</span>
@@ -215,9 +218,10 @@ export default function IncidentManagement() {
                         <button
                           type="button"
                           onClick={() => handleOpenResolveModal(report)}
-                          className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white border border-slate-900 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
                         >
-                          Xử Lý Khiếu Nại
+                          <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Xử Lý Khiếu Nại</span>
                         </button>
                       )}
                     </td>
@@ -333,36 +337,39 @@ export default function IncidentManagement() {
                     type="button"
                     disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                     onClick={() => setResolveStatus('InReview')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'InReview'
-                        ? 'bg-blue-50 text-blue-700 border-blue-500 shadow-sm'
+                    className={`inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'InReview'
+                        ? 'bg-blue-50 text-blue-700 border-blue-500 shadow-xs'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                       } ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    Đang Xem Xét
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Đang Xem Xét</span>
                   </button>
 
                   <button
                     type="button"
                     disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                     onClick={() => setResolveStatus('Resolved')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Resolved'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-500 shadow-sm'
+                    className={`inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Resolved'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-500 shadow-xs'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                       } ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    Đã Giải Quyết
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Đã Giải Quyết</span>
                   </button>
 
                   <button
                     type="button"
                     disabled={['Resolved', 'Rejected'].includes(selectedReport.status || '')}
                     onClick={() => setResolveStatus('Rejected')}
-                    className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Rejected'
-                        ? 'bg-rose-50 text-rose-700 border-rose-500 shadow-sm'
+                    className={`inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold text-xs transition-all border ${resolveStatus === 'Rejected'
+                        ? 'bg-rose-50 text-rose-700 border-rose-500 shadow-xs'
                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                       } ${['Resolved', 'Rejected'].includes(selectedReport.status || '') ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    Từ Chối
+                    <XCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Từ Chối</span>
                   </button>
                 </div>
               </div>
@@ -390,23 +397,23 @@ export default function IncidentManagement() {
                   <button
                     type="button"
                     onClick={() => setIsResolveModalOpen(false)}
-                    className="px-5 py-2.5 rounded-xl font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 transition-colors cursor-pointer text-xs"
+                    className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer text-xs"
                   >
-                    Đóng
+                    <span>Đóng</span>
                   </button>
                 ) : (
                   <>
                     <button
                       type="button"
                       onClick={() => setIsResolveModalOpen(false)}
-                      className="px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-xs"
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer text-xs"
                     >
-                      Hủy
+                      <span>Hủy</span>
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-5 py-2.5 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-md flex items-center gap-2 cursor-pointer text-xs disabled:opacity-70"
+                      className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-xs cursor-pointer text-xs disabled:opacity-70"
                     >
                       {isSubmitting ? (
                         <>
@@ -414,7 +421,10 @@ export default function IncidentManagement() {
                           <span>Đang lưu...</span>
                         </>
                       ) : (
-                        <span>Lưu & Cập Nhật Khiếu Nại</span>
+                        <>
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Lưu & Cập Nhật Khiếu Nại</span>
+                        </>
                       )}
                     </button>
                   </>
