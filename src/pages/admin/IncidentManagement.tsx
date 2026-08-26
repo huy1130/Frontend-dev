@@ -175,8 +175,20 @@ export default function IncidentManagement() {
                     <td className="px-6 py-4 text-slate-700 font-medium max-w-xs truncate">
                       {report.customerNote}
                     </td>
-                    <td className="px-6 py-4 text-xs font-semibold text-slate-500">
-                      {formatDateTime(report.createdAt)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const formatted = formatDateTime(report.createdAt)
+                        if (!formatted || formatted === 'N/A' || !formatted.includes(' ')) {
+                          return <span className="text-xs font-semibold text-slate-500">{formatted}</span>
+                        }
+                        const [time, date] = formatted.split(' ')
+                        return (
+                          <div className="whitespace-nowrap leading-tight">
+                            <div className="text-xs font-mono font-bold text-slate-800">{time}</div>
+                            <div className="text-[11px] font-semibold text-slate-400 mt-0.5">{date}</div>
+                          </div>
+                        )
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-center whitespace-nowrap">
                       {report.status === 'Pending' && (

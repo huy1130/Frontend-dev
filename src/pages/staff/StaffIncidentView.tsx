@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { AlertTriangle, XCircle, Eye, Loader2, ShieldAlert, User, Camera, Search } from 'lucide-react'
+import { AlertTriangle, XCircle, Eye, Loader2, ShieldAlert, User, Camera, Search, Clock, CheckCircle2 } from 'lucide-react'
 import { incidentReportService, IncidentReportDto } from '../../services/incidentReportService'
 import { formatDateTime } from '../../utils/date'
 import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
@@ -8,15 +8,39 @@ import { AuthenticatedImage } from '../../components/common/AuthenticatedImage'
 const StatusBadge = ({ status }: { status?: string }) => {
   switch (status) {
     case 'Pending':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Chờ Xử Lý</span>
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+          <Clock className="w-3.5 h-3.5 text-amber-600" />
+          <span>Chờ Xử Lý</span>
+        </span>
+      )
     case 'InReview':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1"><Eye className="w-3.5 h-3.5 text-blue-600 animate-pulse" /> Đang Xem Xét</span>
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+          <Eye className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+          <span>Đang Xem Xét</span>
+        </span>
+      )
     case 'Resolved':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Đã Giải Quyết</span>
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Đã Giải Quyết</span>
+        </span>
+      )
     case 'Rejected':
-      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">Từ Chối</span>
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+          <XCircle className="w-3.5 h-3.5 text-rose-600" />
+          <span>Từ Chối</span>
+        </span>
+      )
     default:
-      return <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200">{status}</span>
+      return (
+        <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-600 border border-slate-200 inline-flex items-center gap-1.5 whitespace-nowrap">
+          {status}
+        </span>
+      )
   }
 }
 
@@ -68,11 +92,11 @@ export default function StaffIncidentView() {
   })
 
   const filterButtons = [
-    { key: 'all', label: 'Tất Cả', count: reports.length, activeClass: 'bg-slate-900 text-white' },
-    { key: 'Pending', label: 'Chờ Xử Lý', count: reports.filter(r => r.status === 'Pending').length, activeClass: 'bg-amber-500 text-white' },
-    { key: 'InReview', label: 'Đang Xem Xét', count: reports.filter(r => r.status === 'InReview').length, activeClass: 'bg-blue-600 text-white' },
-    { key: 'Resolved', label: 'Đã Giải Quyết', count: reports.filter(r => r.status === 'Resolved').length, activeClass: 'bg-emerald-600 text-white' },
-    { key: 'Rejected', label: 'Từ Chối', count: reports.filter(r => r.status === 'Rejected').length, activeClass: 'bg-rose-600 text-white' },
+    { key: 'all', label: 'Tất Cả', count: reports.length, activeClass: 'bg-slate-900 text-white shadow-sm' },
+    { key: 'Pending', label: 'Chờ Xử Lý', count: reports.filter(r => r.status === 'Pending').length, activeClass: 'bg-amber-500 text-white shadow-sm' },
+    { key: 'InReview', label: 'Đang Xem Xét', count: reports.filter(r => r.status === 'InReview').length, activeClass: 'bg-blue-600 text-white shadow-sm' },
+    { key: 'Resolved', label: 'Đã Giải Quyết', count: reports.filter(r => r.status === 'Resolved').length, activeClass: 'bg-emerald-600 text-white shadow-sm' },
+    { key: 'Rejected', label: 'Từ Chối', count: reports.filter(r => r.status === 'Rejected').length, activeClass: 'bg-rose-600 text-white shadow-sm' },
   ]
 
   return (
@@ -90,7 +114,7 @@ export default function StaffIncidentView() {
         </div>
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-          <span className="text-xs font-bold text-amber-700">Chế độ Xem — Chỉ Admin được xử lý</span>
+          <span className="text-xs font-bold text-amber-700">Chỉ Admin được xử lý</span>
         </div>
       </div>
 
@@ -112,7 +136,7 @@ export default function StaffIncidentView() {
               key={btn.key}
               type="button"
               onClick={() => setFilterStatus(btn.key)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${filterStatus === btn.key ? btn.activeClass : 'text-slate-600 hover:bg-slate-100'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${filterStatus === btn.key ? btn.activeClass : 'text-slate-600 hover:bg-slate-100'
                 }`}
             >
               {btn.label} ({btn.count})
@@ -144,8 +168,8 @@ export default function StaffIncidentView() {
                   <th className="px-6 py-4">Khách Hàng</th>
                   <th className="px-6 py-4">Nội Dung Phản Ánh</th>
                   <th className="px-6 py-4">Thời Gian Gửi</th>
-                  <th className="px-6 py-4">Trạng Thái</th>
-                  <th className="px-6 py-4 text-right">Chi Tiết</th>
+                  <th className="px-6 py-4 text-center">Trạng Thái</th>
+                  <th className="px-6 py-4 text-center">Chi Tiết</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -162,19 +186,32 @@ export default function StaffIncidentView() {
                     <td className="px-6 py-4 text-slate-700 font-medium max-w-xs truncate">
                       {report.customerNote}
                     </td>
-                    <td className="px-6 py-4 text-xs font-semibold text-slate-500">
-                      {formatDateTime(report.createdAt)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const formatted = formatDateTime(report.createdAt)
+                        if (!formatted || formatted === 'N/A' || !formatted.includes(' ')) {
+                          return <span className="text-xs font-semibold text-slate-500">{formatted}</span>
+                        }
+                        const [time, date] = formatted.split(' ')
+                        return (
+                          <div className="whitespace-nowrap leading-tight">
+                            <div className="text-xs font-mono font-bold text-slate-800">{time}</div>
+                            <div className="text-[11px] font-semibold text-slate-400 mt-0.5">{date}</div>
+                          </div>
+                        )
+                      })()}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       <StatusBadge status={report.status} />
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-center">
                       <button
                         type="button"
                         onClick={() => handleViewDetail(report)}
-                        className="px-3.5 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ml-auto"
+                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
                       >
-                        <Eye className="w-3.5 h-3.5" /> Xem Chi Tiết
+                        <Eye className="w-3.5 h-3.5 text-slate-600" />
+                        <span>Xem Chi Tiết</span>
                       </button>
                     </td>
                   </tr>
@@ -293,9 +330,9 @@ export default function StaffIncidentView() {
                 <button
                   type="button"
                   onClick={() => setIsDetailOpen(false)}
-                  className="px-5 py-2.5 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer text-xs"
+                  className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer text-xs"
                 >
-                  Đóng
+                  <span>Đóng</span>
                 </button>
               </div>
             </div>
