@@ -11,7 +11,8 @@ import {
   ShieldCheck,
   HelpCircle,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  Award
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -29,7 +30,8 @@ export default function Payments() {
     bikeDepositAmount: 20000,
     carDepositPercentage: 20,
     contactPhone: '0901234567',
-    cancellationRefundDays: 1
+    cancellationRefundDays: 1,
+    vndPerPoint: 10000
   })
 
   // Load System Settings
@@ -43,7 +45,8 @@ export default function Payments() {
           bikeDepositAmount: data.bikeDepositAmount ?? 20000,
           carDepositPercentage: data.carDepositPercentage ?? 20,
           contactPhone: data.contactPhone || '0901234567',
-          cancellationRefundDays: data.cancellationRefundDays ?? 1
+          cancellationRefundDays: data.cancellationRefundDays ?? 1,
+          vndPerPoint: data.vndPerPoint ?? 10000
         })
       }
     } catch (error) {
@@ -74,6 +77,10 @@ export default function Payments() {
       toast.error('Số ngày hủy cọc phải từ 0 trở lên')
       return
     }
+    if (settingsFormData.vndPerPoint !== undefined && settingsFormData.vndPerPoint <= 0) {
+      toast.error('Mức tiền quy đổi 1 điểm phải lớn hơn 0đ')
+      return
+    }
 
     try {
       setSavingSettings(true)
@@ -98,10 +105,10 @@ export default function Payments() {
             Cấu Hình Đặt Cọc Hệ Thống
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Quản Lý &amp; Cấu Hình Thanh Toán Đặt Cọc
+            Quản Lý &amp; Cấu Hình Thanh Toán &amp; Tích Điểm
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm">
-            Thiết lập hạn mức tiền cọc xe máy, tỷ lệ cọc ô tô, chính sách hoàn cọc và thông tin hotline.
+            Thiết lập hạn mức tiền cọc xe máy, tỷ lệ cọc ô tô, chính sách hoàn cọc, điểm thưởng và thông tin hotline.
           </p>
         </div>
 
@@ -116,7 +123,7 @@ export default function Payments() {
       </div>
 
       {/* Current Settings Status Preview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mức Cọc Xe Máy</p>
@@ -153,6 +160,19 @@ export default function Payments() {
           </div>
           <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100">
             <Clock className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tỷ Lệ Tích Điểm</p>
+            <h3 className="text-xl font-black text-purple-600 mt-1">
+              {(systemParams?.vndPerPoint ?? 10000).toLocaleString('vi-VN')} <span className="text-xs font-bold text-purple-700">đ/đ</span>
+            </h3>
+            <p className="text-[11px] text-slate-500 font-medium mt-0.5">Chi tiêu = 1 điểm thưởng</p>
+          </div>
+          <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-100">
+            <Award className="w-6 h-6" />
           </div>
         </div>
 
@@ -287,8 +307,44 @@ export default function Payments() {
             </div>
           </div>
 
-          {/* Card 4: Hotline Liên Hệ */}
+          {/* Card 4: Tỷ lệ tích điểm thưởng */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 hover:border-orange-200 transition-colors">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 shrink-0">
+                <Award className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">Cấu Hình Tỷ Lệ Tích Điểm Thưởng</h3>
+                <p className="text-slate-400 text-xs">Số tiền chi tiêu ứng với 1 điểm thưởng tích lũy cho khách hàng</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Mức Tiền Quy Đổi 1 Điểm (VNĐ)
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="1000"
+                  min="1000"
+                  value={settingsFormData.vndPerPoint ?? 10000}
+                  onChange={(e) => setSettingsFormData({ ...settingsFormData, vndPerPoint: Number(e.target.value) })}
+                  className="w-full pl-4 pr-20 py-3 rounded-xl border border-slate-200 font-bold text-slate-900 text-base focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all"
+                  placeholder="10000"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 font-extrabold text-xs text-slate-400">
+                  VNĐ/điểm
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Mặc định: 10.000đ chi tiêu tích được 1 điểm thưởng.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 5: Hotline Liên Hệ */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 hover:border-orange-200 transition-colors md:col-span-2">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shrink-0">
                 <Phone className="w-5 h-5" />
@@ -328,7 +384,7 @@ export default function Payments() {
               ) : (
                 <Save className="w-5 h-5" />
               )}
-              <span>Lưu &amp; Cập Nhật Tất Cả Cấu Hình Đặt Cọc</span>
+              <span>Lưu &amp; Cập Nhật Tất Cả Cấu Hình Hệ Thống</span>
             </button>
           </div>
         </form>

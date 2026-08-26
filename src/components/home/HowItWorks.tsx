@@ -29,6 +29,7 @@ export default function HowItWorks() {
   const carPercentage = params?.carDepositPercentage ?? 20
   const refundDays = params?.cancellationRefundDays ?? 1
   const phone = params?.contactPhone || '0901234567'
+  const vndPerPoint = params?.vndPerPoint ?? 10000
 
   return (
     <section id="how-it-works" className="py-24 bg-slate-50 dark:bg-dark-900 relative transition-colors duration-300">
@@ -115,7 +116,7 @@ export default function HowItWorks() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Card 1: Deposit Bike */}
             <div className="bg-white/80 dark:bg-dark-800/80 p-5 rounded-2xl border border-slate-200 dark:border-white/10 flex items-start gap-4 shadow-sm">
               <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
@@ -166,6 +167,24 @@ export default function HowItWorks() {
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                   Khi thực hiện hủy trước <strong className="text-slate-900 dark:text-white">{refundDays} ngày</strong> so với giờ hẹn
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4: Point Conversion Rule */}
+            <div className="bg-white/80 dark:bg-dark-800/80 p-5 rounded-2xl border border-slate-200 dark:border-white/10 flex items-start gap-4 shadow-sm">
+              <div className="p-3 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                <Award className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+                  Tỷ Lệ Tích Điểm
+                </span>
+                <div className="text-xl font-black text-purple-600 dark:text-purple-400">
+                  {vndPerPoint.toLocaleString('vi-VN')} <span className="text-xs font-medium text-slate-500">VNĐ/điểm</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                  Tự động tích điểm thưởng thăng hạng thành viên sau khi rửa xe
                 </p>
               </div>
             </div>

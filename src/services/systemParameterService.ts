@@ -6,6 +6,7 @@ export interface SystemParameterDto {
   carDepositPercentage: number
   contactPhone: string
   cancellationRefundDays: number
+  vndPerPoint?: number
 }
 
 export interface SystemParameterUpdateDto {
@@ -13,6 +14,7 @@ export interface SystemParameterUpdateDto {
   carDepositPercentage: number
   contactPhone: string
   cancellationRefundDays: number
+  vndPerPoint?: number
 }
 
 export const systemParameterService = {

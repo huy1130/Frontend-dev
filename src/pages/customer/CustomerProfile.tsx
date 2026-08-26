@@ -4,6 +4,7 @@ import { ArrowLeft, User, Mail, Phone, MapPin, Save, Camera, Loader2, Crown, Spa
 import NavBar from '../../components/layout/NavBar'
 import Footer from '../../components/layout/Footer'
 import { loyaltyService } from '../../services/loyaltyService'
+import { systemParameterService } from '../../services/systemParameterService'
 import { LoyaltySummaryDTO } from '../../types/loyalty'
 
 export default function CustomerProfile() {
@@ -17,12 +18,21 @@ export default function CustomerProfile() {
   const [totalVisits, setTotalVisits] = useState<number>(0);
   const [loyaltySummary, setLoyaltySummary] = useState<LoyaltySummaryDTO | null>(null);
   const [isLoadingLoyalty, setIsLoadingLoyalty] = useState(false);
+  const [vndPerPoint, setVndPerPoint] = useState<number>(10000);
 
   useEffect(() => {
     const fetchLoyalty = async () => {
       try {
         setIsLoadingLoyalty(true);
-        const data = await loyaltyService.getSummary();
+        const [data, sysParams] = await Promise.all([
+          loyaltyService.getSummary(),
+          systemParameterService.getSystemParameter().catch(() => null)
+        ]);
+
+        if (sysParams?.vndPerPoint) {
+          setVndPerPoint(sysParams.vndPerPoint);
+        }
+
         const pointsStr = data.currentPoints.toString();
 
         setLoyaltySummary(data);
@@ -82,20 +92,24 @@ export default function CustomerProfile() {
     : Math.round((spendPercent + visitsPercent) / 2);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-orange-500 selection:text-white flex flex-col">
       <NavBar />
 
-      <main className="flex-1 pt-28 pb-32 px-4 sm:px-6 max-w-3xl w-full mx-auto">
-        <button
-          onClick={() => navigate('/customer')}
-          className="flex items-center gap-2 text-slate-500 hover:text-orange-600 font-semibold mb-6 transition-colors w-fit"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Quay lại Portal</span>
-        </button>
+      <main className="flex-1 pt-24 pb-20 px-4 sm:px-6 max-w-4xl mx-auto w-full space-y-6">
+        {/* TOP BACK BAR */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate('/customer')}
+            className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-orange-600 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Quay lại Portal</span>
+          </button>
+        </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-md shadow-slate-200/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-8 sm:px-10 flex flex-col sm:flex-row items-center gap-6">
+        {/* CUSTOMER HEADER & SUMMARY CARD */}
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-md">
+          <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
             <div className="relative group">
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white flex items-center justify-center text-orange-500 shadow-lg border-4 border-white/20">
                 <User className="w-12 h-12" />
@@ -127,7 +141,7 @@ export default function CustomerProfile() {
                     <span>•</span>
                     <span>Số lần đến: {totalVisits}</span>
                   </div>
-                  <p className="text-[11px] text-white/70 font-medium">Tỷ lệ quy đổi: 10.000đ = 1 điểm tích lũy</p>
+                  <p className="text-[11px] text-white/70 font-medium">Tỷ lệ quy đổi: {vndPerPoint.toLocaleString('vi-VN')}đ = 1 điểm tích lũy</p>
                 </div>
               )}
             </div>
@@ -247,7 +261,7 @@ export default function CustomerProfile() {
                   {/* Point conversion rate info badge */}
                   <div className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold px-1">
                     <Info className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                    <span>Quy tắc tích điểm: <strong>10.000đ = 1 điểm</strong></span>
+                    <span>Quy tắc tích điểm: <strong>{vndPerPoint.toLocaleString('vi-VN')}đ = 1 điểm</strong></span>
                   </div>
 
                   {/* Summary Tip Box */}
