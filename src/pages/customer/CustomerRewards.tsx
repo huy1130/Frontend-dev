@@ -332,6 +332,12 @@ export default function CustomerRewards() {
                                   <p className="text-xs text-slate-500 mt-0.5">
                                     {formatDateTime(tx.createdAt)}
                                   </p>
+                                  {isEarn && tx.expireDate && (
+                                    <p className="text-[11px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      <span>Hạn sử dụng điểm: {formatDate(tx.expireDate)}</span>
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               <div className={`font-extrabold text-base ${pointColor}`}>
